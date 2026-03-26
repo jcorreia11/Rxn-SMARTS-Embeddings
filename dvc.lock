@@ -1,0 +1,38 @@
+schema: '2.0'
+stages:
+  load_data:
+    cmd: python src/smart_rxn_embeddings/preprocessing/load_data.py
+    deps:
+    - path: data/raw/retrorules-v3.0-metanetx.csv
+      hash: md5
+      md5: 285a061483e35ad90299137a69ba4289
+      size: 159532216
+    - path: data/raw/retrorules-v3.0-rhea.csv
+      hash: md5
+      md5: 0937a29d7ff7dd0885a227eaa9c87174
+      size: 60998658
+    - path: src/smart_rxn_embeddings/preprocessing/load_data.py
+      hash: md5
+      md5: 853cfc8e4e438822435ed40bc358de93
+      size: 1961
+    outs:
+    - path: data/processed/clean_smarts.txt
+      hash: md5
+      md5: 8eea03111ae744b133318c59fb49644f
+      size: 155325917
+  validate_smarts:
+    cmd: python src/smart_rxn_embeddings/preprocessing/validate_smarts.py
+    deps:
+    - path: data/processed/clean_smarts.txt
+      hash: md5
+      md5: 8eea03111ae744b133318c59fb49644f
+      size: 155325917
+    - path: src/smart_rxn_embeddings/preprocessing/validate_smarts.py
+      hash: md5
+      md5: c10a0ed35885d9cbf61fa3ddd404ef4e
+      size: 2792
+    outs:
+    - path: data/processed/validated_smarts.csv
+      hash: md5
+      md5: db537fe6d10485cb864da77e22f63106
+      size: 315612644

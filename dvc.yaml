@@ -1,0 +1,17 @@
+stages:
+  load_data:
+    cmd: python src/smart_rxn_embeddings/preprocessing/load_data.py
+    deps:
+      - src/smart_rxn_embeddings/preprocessing/load_data.py
+      - data/raw/retrorules-v3.0-metanetx.csv
+      - data/raw/retrorules-v3.0-rhea.csv
+    outs:
+      - data/processed/clean_smarts.txt
+
+  validate_smarts:
+    cmd: python src/smart_rxn_embeddings/preprocessing/validate_smarts.py
+    deps:
+      - src/smart_rxn_embeddings/preprocessing/validate_smarts.py
+      - data/processed/clean_smarts.txt
+    outs:
+      - data/processed/validated_smarts.csv
