@@ -208,3 +208,6 @@ __marimo__/
 
 # DVC local remote storage
 .dvc-storage/
+
+# Related papers
+related_papers/*
