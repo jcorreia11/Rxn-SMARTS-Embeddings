@@ -38,6 +38,7 @@ def _make_df(n: int = 1, **kwargs) -> pd.DataFrame:
 # load_raw
 # ---------------------------------------------------------------------------
 
+
 class TestLoadRaw:
     def test_concatenates_multiple_files(self, tmp_path):
         for name in ("a.csv", "b.csv"):
@@ -55,6 +56,7 @@ class TestLoadRaw:
 # ---------------------------------------------------------------------------
 # clean
 # ---------------------------------------------------------------------------
+
 
 class TestClean:
     def test_keeps_valid_rows(self):
@@ -96,6 +98,7 @@ class TestClean:
 # ---------------------------------------------------------------------------
 # save
 # ---------------------------------------------------------------------------
+
 
 class TestSave:
     def test_writes_one_smarts_per_line(self, tmp_path):

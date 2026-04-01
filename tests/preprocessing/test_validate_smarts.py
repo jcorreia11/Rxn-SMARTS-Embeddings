@@ -16,6 +16,7 @@ EMPTY_SMARTS = ""
 # _extract
 # ---------------------------------------------------------------------------
 
+
 class TestExtract:
     def test_valid_simple_reaction(self):
         result = _extract(VALID_SIMPLE)
@@ -63,6 +64,7 @@ class TestExtract:
 # validate
 # ---------------------------------------------------------------------------
 
+
 class TestValidate:
     def test_returns_dataframe(self):
         df = validate([VALID_SIMPLE])
@@ -70,7 +72,14 @@ class TestValidate:
 
     def test_dataframe_has_required_columns(self):
         df = validate([VALID_SIMPLE])
-        expected = {"smarts", "valid", "reactant_smarts", "product_smarts", "n_atoms", "n_bonds"}
+        expected = {
+            "smarts",
+            "valid",
+            "reactant_smarts",
+            "product_smarts",
+            "n_atoms",
+            "n_bonds",
+        }
         assert expected.issubset(df.columns)
 
     def test_smarts_column_preserved(self):
