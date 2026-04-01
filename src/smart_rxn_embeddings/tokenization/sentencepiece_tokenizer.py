@@ -1,9 +1,11 @@
 """SentencePiece-based tokenizer for reaction SMARTS."""
 
+import argparse
 import logging
 import tempfile
 from pathlib import Path
 
+import pandas as pd
 import sentencepiece as spm
 
 logger = logging.getLogger(__name__)
@@ -117,3 +119,41 @@ class SentencePieceTokenizer:
     def decode(self, ids: list[int]) -> str:
         """Reconstruct a SMARTS string from integer token IDs."""
         return self._sp.Decode(ids)
+
+
+INPUT_FILE = "data/processed/validated_smarts.csv"
+OUTPUT_PREFIX = "data/processed/sp_tokenizer"
+DEFAULT_VOCAB_SIZE = _DEFAULT_VOCAB_SIZE
+DEFAULT_MODEL_TYPE = _DEFAULT_MODEL_TYPE
+
+
+def main(
+    input_file: str,
+    output_prefix: str,
+    vocab_size: int = DEFAULT_VOCAB_SIZE,
+    model_type: str = DEFAULT_MODEL_TYPE,
+) -> None:
+    df = pd.read_csv(input_file)
+    valid_mask = df["valid"].astype(str).str.upper() == "TRUE"
+    smarts_list = df.loc[valid_mask, "smarts"].tolist()
+    logger.info("Loaded %d valid SMARTS from %s", len(smarts_list), input_file)
+
+    Path(output_prefix).parent.mkdir(parents=True, exist_ok=True)
+    SentencePieceTokenizer.train(smarts_list, output_prefix, vocab_size, model_type)
+
+
+if __name__ == "__main__":  # pragma: no cover
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+
+    parser = argparse.ArgumentParser(
+        description="Train a SentencePiece model on SMARTS."
+    )
+    parser.add_argument("--input", default=INPUT_FILE)
+    parser.add_argument("--output-prefix", default=OUTPUT_PREFIX)
+    parser.add_argument("--vocab-size", type=int, default=DEFAULT_VOCAB_SIZE)
+    parser.add_argument(
+        "--model-type", default=DEFAULT_MODEL_TYPE, choices=["bpe", "unigram"]
+    )
+    args = parser.parse_args()
+
+    main(args.input, args.output_prefix, args.vocab_size, args.model_type)
