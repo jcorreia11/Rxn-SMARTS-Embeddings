@@ -1,8 +1,4 @@
-import io
-import textwrap
-
 import pandas as pd
-import pytest
 
 from smart_rxn_embeddings.preprocessing.load_data import clean, load_raw, save
 
@@ -106,7 +102,7 @@ class TestSave:
         smarts = pd.Series(["[C:1]>>[O:1]", "[N:1]>>[O:1]"])
         out = tmp_path / "out.txt"
         save(smarts, str(out))
-        lines = [l for l in out.read_text().splitlines() if l.strip()]
+        lines = [line for line in out.read_text().splitlines() if line.strip()]
         assert lines == ["[C:1]>>[O:1]", "[N:1]>>[O:1]"]
 
     def test_creates_parent_directory(self, tmp_path):

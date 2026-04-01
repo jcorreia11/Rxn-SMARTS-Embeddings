@@ -1,5 +1,4 @@
 import pandas as pd
-import pytest
 
 from smart_rxn_embeddings.preprocessing.validate_smarts import _extract, validate
 
