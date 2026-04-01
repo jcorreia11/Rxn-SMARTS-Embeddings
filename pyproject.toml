@@ -7,6 +7,7 @@ requires-python = ">=3.9"
 dependencies = [
     "pandas>=2.3.3",
     "rdkit>=2025.9.6",
+    "sentencepiece>=0.2.0",
 ]
 
 [dependency-groups]
