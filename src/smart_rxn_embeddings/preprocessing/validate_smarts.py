@@ -81,7 +81,7 @@ def main(input_file: str, output_file: str) -> None:
     logger.info("Saved validated dataset to %s", output_file)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     logging.basicConfig(level=logging.INFO, format="%(message)s")
 
     parser = argparse.ArgumentParser(description="Validate SMARTS with RDKit.")

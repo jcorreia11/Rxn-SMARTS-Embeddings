@@ -54,7 +54,7 @@ def main(raw_files: list[str], output: str) -> None:
     save(smarts, output)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     logging.basicConfig(level=logging.INFO, format="%(message)s")
 
     parser = argparse.ArgumentParser(description="Load and clean raw SMARTS data.")
