@@ -13,8 +13,8 @@ stages:
       size: 60998658
     - path: src/smart_rxn_embeddings/preprocessing/load_data.py
       hash: md5
-      md5: 853cfc8e4e438822435ed40bc358de93
-      size: 1961
+      md5: 03382b9956e853de11672262f6983b82
+      size: 1982
     outs:
     - path: data/processed/clean_smarts.txt
       hash: md5
@@ -29,10 +29,30 @@ stages:
       size: 155325917
     - path: src/smart_rxn_embeddings/preprocessing/validate_smarts.py
       hash: md5
-      md5: c10a0ed35885d9cbf61fa3ddd404ef4e
-      size: 2792
+      md5: eed58bef82276d8fecd674da2032d3b2
+      size: 2896
     outs:
     - path: data/processed/validated_smarts.csv
       hash: md5
       md5: db537fe6d10485cb864da77e22f63106
       size: 315612644
+  build_vocab:
+    cmd: python src/smart_rxn_embeddings/tokenization/build_vocab.py
+    deps:
+    - path: data/processed/validated_smarts.csv
+      hash: md5
+      md5: db537fe6d10485cb864da77e22f63106
+      size: 315612644
+    - path: src/smart_rxn_embeddings/tokenization/build_vocab.py
+      hash: md5
+      md5: 0f5fb80d2ab683617af8fdb9e85ee467
+      size: 3295
+    - path: src/smart_rxn_embeddings/tokenization/smarts_tokenizer.py
+      hash: md5
+      md5: 48258ed4dbb61429e546f0e1ac5fb62f
+      size: 3134
+    outs:
+    - path: data/processed/vocab.json
+      hash: md5
+      md5: 531326f210da960a3cfa8ecbd1b54bb9
+      size: 324582
