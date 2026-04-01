@@ -1,7 +1,9 @@
+import pandas as pd
 import pytest
 
 from smart_rxn_embeddings.tokenization.sentencepiece_tokenizer import (
     SentencePieceTokenizer,
+    main,
 )
 
 # Diverse enough corpus so sentencepiece has enough unique characters to fill
@@ -107,3 +109,31 @@ class TestInference:
 
     def test_vocab_size_matches_requested(self, trained_tok):
         assert trained_tok.vocab_size == 50
+
+
+# ---------------------------------------------------------------------------
+# main
+# ---------------------------------------------------------------------------
+
+
+class TestMain:
+    def test_main_creates_model_file(self, tmp_path):
+        df = pd.DataFrame({"smarts": _CORPUS[:10], "valid": [True] * 10})
+        input_path = tmp_path / "validated_smarts.csv"
+        df.to_csv(input_path, index=False)
+        output_prefix = str(tmp_path / "sp")
+
+        main(str(input_path), output_prefix, vocab_size=50)
+
+        assert (tmp_path / "sp.model").exists()
+        assert (tmp_path / "sp.vocab").exists()
+
+    def test_main_excludes_invalid_rows(self, tmp_path):
+        smarts = _CORPUS[:10]
+        valid = [True] * 8 + [False, False]
+        df = pd.DataFrame({"smarts": smarts, "valid": valid})
+        input_path = tmp_path / "validated_smarts.csv"
+        df.to_csv(input_path, index=False)
+
+        # Should not raise even though 2 rows are excluded
+        main(str(input_path), str(tmp_path / "sp"), vocab_size=50)
