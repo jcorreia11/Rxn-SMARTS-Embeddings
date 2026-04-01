@@ -211,3 +211,6 @@ __marimo__/
 
 # Related papers
 related_papers/*
+
+# Temporary files
+/temp/*
