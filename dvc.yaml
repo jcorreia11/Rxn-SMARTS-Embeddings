@@ -24,3 +24,12 @@ stages:
       - data/processed/validated_smarts.csv
     outs:
       - data/processed/vocab.json
+
+  train_sentencepiece:
+    cmd: python src/smart_rxn_embeddings/tokenization/sentencepiece_tokenizer.py
+    deps:
+      - src/smart_rxn_embeddings/tokenization/sentencepiece_tokenizer.py
+      - data/processed/validated_smarts.csv
+    outs:
+      - data/processed/sp_tokenizer.model
+      - data/processed/sp_tokenizer.vocab
