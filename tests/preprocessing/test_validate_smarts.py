@@ -1,6 +1,8 @@
+from unittest.mock import MagicMock, patch
+
 import pandas as pd
 
-from smart_rxn_embeddings.preprocessing.validate_smarts import _extract, validate
+from smart_rxn_embeddings.preprocessing.validate_smarts import _extract, main, validate
 
 # ---------------------------------------------------------------------------
 # Fixtures — real reaction SMARTS from RetroRules
@@ -59,6 +61,24 @@ class TestExtract:
         # VALID_SIMPLE: reactant has 2 atoms, product has 2 atoms → total 4
         assert result["n_atoms"] == 4
 
+    def test_reaction_from_smarts_returns_none(self):
+        with patch(
+            "smart_rxn_embeddings.preprocessing.validate_smarts.AllChem.ReactionFromSmarts",
+            return_value=None,
+        ):
+            result = _extract(VALID_SIMPLE)
+        assert result == {"valid": False}
+
+    def test_initialize_raises_returns_invalid(self):
+        mock_rxn = MagicMock()
+        mock_rxn.Initialize.side_effect = RuntimeError("boom")
+        with patch(
+            "smart_rxn_embeddings.preprocessing.validate_smarts.AllChem.ReactionFromSmarts",
+            return_value=mock_rxn,
+        ):
+            result = _extract(VALID_SIMPLE)
+        assert result == {"valid": False}
+
 
 # ---------------------------------------------------------------------------
 # validate
@@ -102,3 +122,20 @@ class TestValidate:
     def test_all_valid(self):
         df = validate([VALID_SIMPLE, VALID_MULTI_REACTANT])
         assert df["valid"].all()
+
+
+# ---------------------------------------------------------------------------
+# main
+# ---------------------------------------------------------------------------
+
+
+class TestMain:
+    def test_main_produces_output_file(self, tmp_path):
+        input_path = tmp_path / "smarts.txt"
+        input_path.write_text(f"{VALID_SIMPLE}\n{INVALID_SMARTS}\n")
+        output_path = tmp_path / "out.csv"
+        main(str(input_path), str(output_path))
+        assert output_path.exists()
+        df = pd.read_csv(output_path)
+        assert len(df) == 2
+        assert "valid" in df.columns
