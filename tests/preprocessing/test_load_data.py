@@ -122,7 +122,9 @@ class TestSave:
 class TestMain:
     def test_main_produces_output_file(self, tmp_path):
         input_path = tmp_path / "data.csv"
-        _make_df(TEMPLATE=["[C:1]>>[O:1]", "[N:1]>>[O:1]"]).to_csv(input_path, index=False)
+        _make_df(TEMPLATE=["[C:1]>>[O:1]", "[N:1]>>[O:1]"]).to_csv(
+            input_path, index=False
+        )
         output_path = tmp_path / "out.txt"
         main([str(input_path)], str(output_path))
         assert output_path.exists()
