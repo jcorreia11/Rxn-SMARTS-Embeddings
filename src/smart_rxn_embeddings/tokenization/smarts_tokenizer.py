@@ -5,20 +5,20 @@ import re
 # Handles all tokens *except* bracketed atom expressions.
 # Order matters — first alternative that matches wins.
 _REST_TOKEN_RE = re.compile(
-    r">>"                    # reaction arrow  (before lone >)
-    r"|Cl|Br"               # two-letter organic-subset atoms  (before single-letter)
-    r"|[BCNOPSFIbcnopsAa*]" # one-letter atoms: aliphatic B C N O P S F I
-                             #                   aromatic   b c n o p s
-                             #                   primitives A (aliphatic) a (aromatic)
-                             #                   wildcard   *
-    r"|/\?|\\\?"             # directional bonds with "or unspecified": /? \?  (before / \)
-    r"|[-=#~:@/\\]"          # bond symbols: - = # ~ : @ / \
-    r"|\(|\)"                # branching / component grouping
-    r"|\."                   # disconnection / component separator
-    r"|%\d{2}"               # two-digit ring closure %nn  (before single digit)
-    r"|\d"                   # single-digit ring closure
-    r"|[!&,;]"               # logical operators that may appear outside brackets
-    r"|>"                    # lone > — agent separator in R>A>P notation
+    r">>"  # reaction arrow  (before lone >)
+    r"|Cl|Br"  # two-letter organic-subset atoms  (before single-letter)
+    r"|[BCNOPSFIbcnopsAa*]"  # one-letter atoms: aliphatic B C N O P S F I
+    #                   aromatic   b c n o p s
+    #                   primitives A (aliphatic) a (aromatic)
+    #                   wildcard   *
+    r"|/\?|\\\?"  # directional bonds with "or unspecified": /? \?  (before / \)
+    r"|[-=#~:@/\\]"  # bond symbols: - = # ~ : @ / \
+    r"|\(|\)"  # branching / component grouping
+    r"|\."  # disconnection / component separator
+    r"|%\d{2}"  # two-digit ring closure %nn  (before single digit)
+    r"|\d"  # single-digit ring closure
+    r"|[!&,;]"  # logical operators that may appear outside brackets
+    r"|>"  # lone > — agent separator in R>A>P notation
 )
 
 

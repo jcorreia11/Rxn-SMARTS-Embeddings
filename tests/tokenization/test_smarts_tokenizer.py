@@ -16,15 +16,15 @@ _ROUND_TRIP_CASES = [
     "[C;H1:1]=[N;H0:2]>>[C;H1:1]-[N;H0:2]",
     "([O;H0:1]-[C;H2:2].[O;H0:3]-[C;H1:4])>>([O;H0]=[C;H1:2].[O;H1:3].[C;H2:4]).[O;H1:1]",
     "c1ccccc1>>c1cccnc1",
-    "[$(C([OH]))]>>O",         # recursive SMARTS with nested brackets
-    "ClCBr",                   # two-letter atoms Cl and Br
-    "C%10CC%10",               # two-digit ring closure
-    "F/C=C/F",                 # directional bonds
-    "F/?C",                    # directional bond /? (up-or-unspecified)
-    "F\\?C",                   # directional bond \? (down-or-unspecified)
-    "C>N>O",                   # reactant > agent > product (lone >)
-    "[!C;R]>>O",               # logical NOT outside brackets? no — inside ✓
-    "*~*",                     # wildcard atoms with any-bond
+    "[$(C([OH]))]>>O",  # recursive SMARTS with nested brackets
+    "ClCBr",  # two-letter atoms Cl and Br
+    "C%10CC%10",  # two-digit ring closure
+    "F/C=C/F",  # directional bonds
+    "F/?C",  # directional bond /? (up-or-unspecified)
+    "F\\?C",  # directional bond \? (down-or-unspecified)
+    "C>N>O",  # reactant > agent > product (lone >)
+    "[!C;R]>>O",  # logical NOT outside brackets? no — inside ✓
+    "*~*",  # wildcard atoms with any-bond
 ]
 
 

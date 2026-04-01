@@ -1,6 +1,8 @@
 import pytest
 
-from smart_rxn_embeddings.tokenization.sentencepiece_tokenizer import SentencePieceTokenizer
+from smart_rxn_embeddings.tokenization.sentencepiece_tokenizer import (
+    SentencePieceTokenizer,
+)
 
 # Diverse enough corpus so sentencepiece has enough unique characters to fill
 # vocab_size=50.  Strings are repeated to give the trainer enough sentence count.
@@ -96,7 +98,7 @@ class TestInference:
         ids_plain = trained_tok.encode(self._SMARTS)
         ids_bos_eos = trained_tok.encode(self._SMARTS, add_bos=True, add_eos=True)
         assert len(ids_bos_eos) == len(ids_plain) + 2
-        assert ids_bos_eos[0] == 2   # bos_id=2
+        assert ids_bos_eos[0] == 2  # bos_id=2
         assert ids_bos_eos[-1] == 3  # eos_id=3
 
     def test_decode_returns_string(self, trained_tok):

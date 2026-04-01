@@ -1,7 +1,6 @@
 import json
 
 import pandas as pd
-import pytest
 
 from smart_rxn_embeddings.tokenization.build_vocab import (
     SPECIAL_TOKENS,
