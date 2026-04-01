@@ -15,3 +15,12 @@ stages:
       - data/processed/clean_smarts.txt
     outs:
       - data/processed/validated_smarts.csv
+
+  build_vocab:
+    cmd: python src/smart_rxn_embeddings/tokenization/build_vocab.py
+    deps:
+      - src/smart_rxn_embeddings/tokenization/build_vocab.py
+      - src/smart_rxn_embeddings/tokenization/smarts_tokenizer.py
+      - data/processed/validated_smarts.csv
+    outs:
+      - data/processed/vocab.json
