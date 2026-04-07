@@ -56,3 +56,23 @@ stages:
       hash: md5
       md5: 531326f210da960a3cfa8ecbd1b54bb9
       size: 324582
+  train_sentencepiece:
+    cmd: python src/smart_rxn_embeddings/tokenization/sentencepiece_tokenizer.py
+    deps:
+    - path: data/processed/validated_smarts.csv
+      hash: md5
+      md5: db537fe6d10485cb864da77e22f63106
+      size: 315612644
+    - path: src/smart_rxn_embeddings/tokenization/sentencepiece_tokenizer.py
+      hash: md5
+      md5: d53356335a2ed558faa300689fe413fc
+      size: 5332
+    outs:
+    - path: data/processed/sp_tokenizer.model
+      hash: md5
+      md5: 25663571bf9b2dae196eebe54e2173f0
+      size: 14924
+    - path: data/processed/sp_tokenizer.vocab
+      hash: md5
+      md5: 34f5432e56a5706b74d77329f3bd4db8
+      size: 11705
