@@ -183,7 +183,9 @@ class TestUnknownTokens:
         def tokenizer_with_unknown(smarts: str) -> list[str]:
             return ["NOT_IN_VOCAB", ">>"]
 
-        ds = SMARTSDataset(["anything"], _VOCAB, tokenizer=tokenizer_with_unknown, max_length=16)
+        ds = SMARTSDataset(
+            ["anything"], _VOCAB, tokenizer=tokenizer_with_unknown, max_length=16
+        )
         assert 1 in ds[0]["input_ids"].tolist()
 
 
