@@ -30,8 +30,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import classification_report, f1_score
-from sklearn.model_selection import StratifiedKFold, cross_validate
+from sklearn.metrics import classification_report
+from sklearn.model_selection import StratifiedKFold, cross_validate, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import LabelEncoder
@@ -51,7 +51,7 @@ VALIDATED_FILE = "data/processed/validated_smarts.csv"
 DEFAULT_SP_MODEL = "data/processed/sp_tokenizer.model"
 DEFAULT_SP_VOCAB_SIZE = 1000
 DEFAULT_N_SAMPLES = 10_000
-DEFAULT_EC_DEPTH = 1   # 1 = top-level class, 2 = subclass, 3 = sub-subclass
+DEFAULT_EC_DEPTH = 1  # 1 = top-level class, 2 = subclass, 3 = sub-subclass
 DEFAULT_FOLDS = 5
 RANDOM_SEED = 42
 
@@ -100,9 +100,7 @@ def load_labelled_smarts(
     val = val.dropna(subset=["smarts"])
     val["label"] = val["smarts"].map(ec_map)
     val = val.dropna(subset=["label"])
-    logger.info(
-        "After join with validated set: %d SMARTS with EC labels", len(val)
-    )
+    logger.info("After join with validated set: %d SMARTS with EC labels", len(val))
 
     # --- Class balance summary ---
     counts = val["label"].value_counts()
@@ -162,7 +160,7 @@ def build_pipeline(tokenizer_fn: callable) -> Pipeline:
                 TfidfVectorizer(
                     analyzer="word",
                     tokenizer=tokenizer_fn,
-                    token_pattern=None,   # rely entirely on our tokenizer
+                    token_pattern=None,  # rely entirely on our tokenizer
                     lowercase=False,
                     sublinear_tf=True,
                 ),
@@ -173,8 +171,8 @@ def build_pipeline(tokenizer_fn: callable) -> Pipeline:
                     max_iter=1000,
                     solver="lbfgs",
                     C=1.0,
+                    class_weight="balanced",
                     random_state=RANDOM_SEED,
-                    n_jobs=-1,
                 ),
             ),
         ]
@@ -189,9 +187,12 @@ def build_pipeline(tokenizer_fn: callable) -> Pipeline:
 def evaluate(
     name: str,
     pipeline: Pipeline,
-    X: list[str],
-    y: np.ndarray,
+    X_train: list[str],
+    y_train: np.ndarray,
+    X_test: list[str],
+    y_test: np.ndarray,
     n_folds: int,
+    label_names: list[str],
 ) -> dict:
     cv = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=RANDOM_SEED)
 
@@ -199,22 +200,23 @@ def evaluate(
         warnings.simplefilter("ignore")
         scores = cross_validate(
             pipeline,
-            X,
-            y,
+            X_train,
+            y_train,
             cv=cv,
             scoring=["accuracy", "f1_macro", "f1_weighted"],
             return_train_score=False,
-            n_jobs=1,   # pipeline is already parallelised internally
+            n_jobs=1,
         )
 
-    # Full-dataset fit for the classification report
-    pipeline.fit(X, y)
-    y_pred = pipeline.predict(X)
+    # Fit on full train split, evaluate on held-out test split
+    pipeline.fit(X_train, y_train)
+    y_pred = pipeline.predict(X_test)
 
     result = {
         "name": name,
-        "n_samples": len(X),
-        "n_classes": int(np.unique(y).size),
+        "n_train": len(X_train),
+        "n_test": len(X_test),
+        "n_classes": int(np.unique(y_train).size),
         "n_folds": n_folds,
         "accuracy_mean": round(float(scores["test_accuracy"].mean()), 4),
         "accuracy_std": round(float(scores["test_accuracy"].std()), 4),
@@ -225,12 +227,14 @@ def evaluate(
     }
 
     logger.info(
-        "\n%s — %d-fold CV results:\n"
+        "\n%s — %d-fold CV results (train=%d, test=%d):\n"
         "  accuracy : %.4f ± %.4f\n"
         "  f1_macro : %.4f ± %.4f\n"
         "  f1_weighted: %.4f ± %.4f",
         name,
         n_folds,
+        len(X_train),
+        len(X_test),
         result["accuracy_mean"],
         result["accuracy_std"],
         result["f1_macro_mean"],
@@ -239,8 +243,15 @@ def evaluate(
         result["f1_weighted_std"],
     )
 
-    report = classification_report(y, y_pred, zero_division=0)
-    logger.info("\nClassification report (full-dataset fit):\n%s", report)
+    report = classification_report(
+        y_test, y_pred, target_names=label_names, zero_division=0
+    )
+    logger.info("\nClassification report (held-out test set):\n%s", report)
+    logger.info(
+        "Note: classes with very few samples (e.g. EC class 7, n=%d) "
+        "are expected to score 0 — insufficient data, not a model failure.",
+        int((y_test == label_names.index("7")).sum()) if "7" in label_names else 0,
+    )
 
     return result
 
@@ -251,15 +262,16 @@ def evaluate(
 
 
 _ROWS: list[tuple[str, str]] = [
-    ("n_samples",          "Samples"),
-    ("n_classes",          "Classes (EC depth)"),
-    ("n_folds",            "CV folds"),
-    ("accuracy_mean",      "Accuracy (mean)"),
-    ("accuracy_std",       "Accuracy (std)"),
-    ("f1_macro_mean",      "F1 macro (mean)"),
-    ("f1_macro_std",       "F1 macro (std)"),
-    ("f1_weighted_mean",   "F1 weighted (mean)"),
-    ("f1_weighted_std",    "F1 weighted (std)"),
+    ("n_train", "Train samples"),
+    ("n_test", "Test samples"),
+    ("n_classes", "Classes (EC depth)"),
+    ("n_folds", "CV folds"),
+    ("accuracy_mean", "Accuracy (mean)"),
+    ("accuracy_std", "Accuracy (std)"),
+    ("f1_macro_mean", "F1 macro (mean)"),
+    ("f1_macro_std", "F1 macro (std)"),
+    ("f1_weighted_mean", "F1 weighted (mean)"),
+    ("f1_weighted_std", "F1 weighted (std)"),
 ]
 
 
@@ -267,9 +279,7 @@ def print_report(results: list[dict]) -> None:
     col_w = 26
     name_w = 32
 
-    header = f"{'Metric':<{col_w}}" + "".join(
-        f"{r['name']:<{name_w}}" for r in results
-    )
+    header = f"{'Metric':<{col_w}}" + "".join(f"{r['name']:<{name_w}}" for r in results)
     print()
     print(header)
     print("-" * (col_w + name_w * len(results)))
@@ -360,7 +370,18 @@ def main() -> None:
     X = df["smarts"].tolist()
     le = LabelEncoder()
     y = le.fit_transform(df["label"])
-    logger.info("Labels: %s", list(le.classes_))
+    label_names = list(le.classes_)
+    logger.info("Labels: %s", label_names)
+
+    # Stratified 80/20 train/test split — CV runs on train, report on test
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, stratify=y, random_state=RANDOM_SEED
+    )
+    logger.info(
+        "Train: %d samples | Test: %d samples (stratified 80/20)",
+        len(X_train),
+        len(X_test),
+    )
 
     results: list[dict] = []
 
@@ -368,7 +389,16 @@ def main() -> None:
     logger.info("\n--- SmartsTokenizer ---")
     smarts_pipeline = build_pipeline(make_smarts_tokenizer_fn())
     results.append(
-        evaluate("SmartsTokenizer", smarts_pipeline, X, y, args.folds)
+        evaluate(
+            "SmartsTokenizer",
+            smarts_pipeline,
+            X_train,
+            y_train,
+            X_test,
+            y_test,
+            args.folds,
+            label_names,
+        )
     )
 
     # --- SentencePieceTokenizer ---
@@ -382,7 +412,7 @@ def main() -> None:
         )
         sp_model.parent.mkdir(parents=True, exist_ok=True)
         SentencePieceTokenizer.train(
-            X,
+            X_train,
             str(sp_model.with_suffix("")),  # prefix without .model extension
             vocab_size=args.sp_vocab_size,
         )
@@ -391,7 +421,16 @@ def main() -> None:
     logger.info("\n--- SentencePieceTokenizer (%s) ---", sp_model)
     sp_pipeline = build_pipeline(make_sp_tokenizer_fn(str(sp_model)))
     results.append(
-        evaluate("SentencePieceTokenizer", sp_pipeline, X, y, args.folds)
+        evaluate(
+            "SentencePieceTokenizer",
+            sp_pipeline,
+            X_train,
+            y_train,
+            X_test,
+            y_test,
+            args.folds,
+            label_names,
+        )
     )
 
     print_report(results)
