@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=compare_tokenizers
 #SBATCH --account=F202508983CPCAA0G
-#SBATCH --partition=normal-a100-40
+#SBATCH --partition=normal-x86
 #SBATCH --time=04:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
