@@ -4,4 +4,23 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.9"
-dependencies = []
+dependencies = [
+    "pandas>=2.3.3",
+    "rdkit>=2025.9.6",
+    "sentencepiece>=0.2.0",
+    "torch>=2.0.0",
+]
+
+[dependency-groups]
+dev = [
+    "dvc>=3.67.1",
+    "pytest>=8.4.2",
+    "pytest-cov>=6.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/smart_rxn_embeddings"]

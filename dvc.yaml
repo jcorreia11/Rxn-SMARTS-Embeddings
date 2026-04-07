@@ -1,0 +1,35 @@
+stages:
+  load_data:
+    cmd: python src/smart_rxn_embeddings/preprocessing/load_data.py
+    deps:
+      - src/smart_rxn_embeddings/preprocessing/load_data.py
+      - data/raw/retrorules-v3.0-metanetx.csv
+      - data/raw/retrorules-v3.0-rhea.csv
+    outs:
+      - data/processed/clean_smarts.txt
+
+  validate_smarts:
+    cmd: python src/smart_rxn_embeddings/preprocessing/validate_smarts.py
+    deps:
+      - src/smart_rxn_embeddings/preprocessing/validate_smarts.py
+      - data/processed/clean_smarts.txt
+    outs:
+      - data/processed/validated_smarts.csv
+
+  build_vocab:
+    cmd: python src/smart_rxn_embeddings/tokenization/build_vocab.py
+    deps:
+      - src/smart_rxn_embeddings/tokenization/build_vocab.py
+      - src/smart_rxn_embeddings/tokenization/smarts_tokenizer.py
+      - data/processed/validated_smarts.csv
+    outs:
+      - data/processed/vocab.json
+
+  train_sentencepiece:
+    cmd: python src/smart_rxn_embeddings/tokenization/sentencepiece_tokenizer.py
+    deps:
+      - src/smart_rxn_embeddings/tokenization/sentencepiece_tokenizer.py
+      - data/processed/validated_smarts.csv
+    outs:
+      - data/processed/sp_tokenizer.model
+      - data/processed/sp_tokenizer.vocab
