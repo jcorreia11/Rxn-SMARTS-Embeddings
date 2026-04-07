@@ -172,7 +172,6 @@ def build_pipeline(tokenizer_fn: callable) -> Pipeline:
                 LogisticRegression(
                     max_iter=1000,
                     solver="lbfgs",
-                    multi_class="multinomial",
                     C=1.0,
                     random_state=RANDOM_SEED,
                     n_jobs=-1,
