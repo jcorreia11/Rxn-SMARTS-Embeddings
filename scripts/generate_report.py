@@ -140,6 +140,75 @@ def _classifier_table(results: list[dict]) -> str:
     return "\n".join(lines)
 
 
+_EC_NAMES = {
+    "1": "Oxidoreductases",
+    "2": "Transferases",
+    "3": "Hydrolases",
+    "4": "Lyases",
+    "5": "Isomerases",
+    "6": "Ligases",
+    "7": "Translocases",
+}
+
+
+def _per_class_table(clf: list[dict]) -> str:
+    """Markdown table of per-class P/R/F1/support for each tokenizer."""
+    if not clf:
+        return ""
+
+    # Gather all EC classes across tokenizers
+    all_classes = sorted({cls for r in clf for cls in (r.get("per_class") or {})})
+    if not all_classes:
+        return ""
+
+    # Collect support counts (first result wins)
+    support: dict[str, int] = {}
+    for r in clf:
+        for cls, stats in (r.get("per_class") or {}).items():
+            support.setdefault(cls, int(stats.get("support", 0)))
+
+    mean_support = sum(support.values()) / len(support) if support else 0
+    rare_threshold = max(50, mean_support * 0.01)
+
+    # Header
+    name_cols = " | ".join(
+        f"P ({r['name']}) | R ({r['name']}) | F1 ({r['name']})"
+        for r in clf
+    )
+    header = f"| EC Class | Name | Support | {name_cols} |"
+    n_metric_cols = 3 * len(clf)
+    sep = "|----------|------|---------|" + "---------|" * n_metric_cols
+
+    rows = [header, sep]
+    for cls in all_classes:
+        n = support.get(cls, 0)
+        rare_marker = " ★" if n < rare_threshold else ""
+        name = _EC_NAMES.get(cls, "")
+        cols = f"| EC {cls}{rare_marker} | {name} | {n:,} |"
+        for r in clf:
+            pc = (r.get("per_class") or {}).get(cls, {})
+            p = pc.get("precision", 0.0)
+            rec = pc.get("recall", 0.0)
+            f1 = pc.get("f1", 0.0)
+            cols += f" {p:.3f} | {rec:.3f} | {f1:.3f} |"
+        rows.append(cols)
+
+    lines = [
+        "### Per-class breakdown",
+        "",
+        "\n".join(rows),
+        "",
+    ]
+    if any(support.get(cls, 0) < rare_threshold for cls in all_classes):
+        lines += [
+            "> **★ Rare class** — fewer samples than 1 % of class mean or < 50 examples. "
+            "Low scores for these classes reflect data scarcity, not a model failure. "
+            "EC 7 (Translocases) is heavily under-represented in RetroRules.",
+            "",
+        ]
+    return "\n".join(lines)
+
+
 def _summary(metrics: list[dict], clf: list[dict]) -> str:
     lines: list[str] = []
 
@@ -285,7 +354,7 @@ def build_report(
     ]
 
     if clf:
-        sections += [_classifier_table(clf), _fig("ec_classifier"), ""]
+        sections += [_classifier_table(clf), _fig("ec_classifier"), "", _per_class_table(clf)]
     else:
         sections += [
             f"_No classifier results found. "
