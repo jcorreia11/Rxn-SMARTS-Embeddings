@@ -46,6 +46,7 @@ def plot_length_distribution(
     metrics: list[dict], out_dir: Path, fmt: str, dpi: int
 ) -> Path:
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
@@ -94,6 +95,7 @@ def plot_throughput_fertility(
     metrics: list[dict], out_dir: Path, fmt: str, dpi: int
 ) -> Path:
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     import numpy as np
@@ -128,7 +130,9 @@ def plot_throughput_fertility(
     ax2.set_xticks(x)
     ax2.set_xticklabels(names, rotation=15, ha="right", fontsize=10)
     ax2.set_ylabel("Tokens per character", fontsize=11)
-    ax2.set_title("Fertility Ratio (lower = better compression)", fontsize=13, fontweight="bold")
+    ax2.set_title(
+        "Fertility Ratio (lower = better compression)", fontsize=13, fontweight="bold"
+    )
     ax2.grid(axis="y", linestyle="--", alpha=0.4, zorder=0)
     ax2.spines[["top", "right"]].set_visible(False)
     for bar, val in zip(bars2, fertility):
@@ -157,6 +161,7 @@ def plot_ec_classifier(
     clf_results: list[dict], out_dir: Path, fmt: str, dpi: int
 ) -> Path:
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     import numpy as np
@@ -183,7 +188,7 @@ def plot_ec_classifier(
         means = [r.get(mean_k, 0) for r in clf_results]
         stds = [r.get(std_k, 0) for r in clf_results]
         offset = (i - 1) * width
-        bars = ax1.bar(
+        ax1.bar(
             x + offset,
             means,
             width,
@@ -223,7 +228,8 @@ def plot_ec_classifier(
         # Identify rare classes (support < 1% of mean support or < 50 samples)
         mean_support = (
             sum(support_by_class.values()) / len(support_by_class)
-            if support_by_class else 0
+            if support_by_class
+            else 0
         )
         rare_threshold = max(50, mean_support * 0.01)
         rare_classes = {
@@ -248,8 +254,11 @@ def plot_ec_classifier(
         for j, cls in enumerate(all_classes):
             if cls in rare_classes:
                 ax2.axvspan(
-                    j - 0.5, j + 0.5,
-                    color="#fee2e2", alpha=0.55, zorder=0,
+                    j - 0.5,
+                    j + 0.5,
+                    color="#fee2e2",
+                    alpha=0.55,
+                    zorder=0,
                     label="_nolegend_",
                 )
 
@@ -265,9 +274,7 @@ def plot_ec_classifier(
         ax2.set_ylabel("F1 Score", fontsize=11)
         ax2.set_ylim(0, 1.05)
         rare_note = "  (* rare class, shaded)" if rare_classes else ""
-        ax2.set_title(
-            f"Per-class F1 Score{rare_note}", fontsize=13, fontweight="bold"
-        )
+        ax2.set_title(f"Per-class F1 Score{rare_note}", fontsize=13, fontweight="bold")
         ax2.legend(fontsize=10)
         ax2.grid(axis="y", linestyle="--", alpha=0.4, zorder=0)
         ax2.spines[["top", "right"]].set_visible(False)
@@ -285,15 +292,15 @@ def plot_ec_classifier(
 
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(
-        description="Generate tokenizer comparison figures."
-    )
+    p = argparse.ArgumentParser(description="Generate tokenizer comparison figures.")
     p.add_argument("--metrics", required=True, help="tokenizer_metrics.json")
     p.add_argument("--classifier", default=None, help="ec_classifier.json (optional)")
     p.add_argument("--output-dir", default="results/figures", help="Output directory")
     p.add_argument(
-        "--format", default="pdf", choices=["pdf", "png", "svg"],
-        help="Output format (default: pdf)"
+        "--format",
+        default="pdf",
+        choices=["pdf", "png", "svg"],
+        help="Output format (default: pdf)",
     )
     p.add_argument("--dpi", type=int, default=300, help="DPI for raster formats")
     return p.parse_args()
