@@ -274,3 +274,69 @@ class TestTrainer:
         )
         losses = Trainer(model, dataset, collator, cfg, device="cpu").train()
         assert losses[-1] < losses[0], f"Loss did not decrease: {losses}"
+
+
+class TestTrainerValSplit:
+    def test_val_split_creates_separate_datasets(self, tiny_setup, tmp_path):
+        model, dataset, collator = tiny_setup
+        cfg = TrainingConfig(
+            num_epochs=1,
+            batch_size=4,
+            val_split=0.25,
+            checkpoint_dir=str(tmp_path / "ckpts"),
+            output_path=str(tmp_path / "model.pt"),
+        )
+        trainer = Trainer(model, dataset, collator, cfg, device="cpu")
+        assert trainer.val_dataset is not None
+        assert len(trainer.train_dataset) + len(trainer.val_dataset) == len(dataset)
+
+    def test_val_split_zero_no_val_dataset(self, tiny_setup, tmp_path):
+        model, dataset, collator = tiny_setup
+        cfg = TrainingConfig(
+            num_epochs=1,
+            batch_size=4,
+            val_split=0.0,
+            checkpoint_dir=str(tmp_path / "ckpts"),
+            output_path=str(tmp_path / "model.pt"),
+        )
+        trainer = Trainer(model, dataset, collator, cfg, device="cpu")
+        assert trainer.val_dataset is None
+
+    def test_train_with_val_split_returns_train_losses(self, tiny_setup, tmp_path):
+        model, dataset, collator = tiny_setup
+        cfg = TrainingConfig(
+            num_epochs=2,
+            batch_size=4,
+            val_split=0.25,
+            checkpoint_dir=str(tmp_path / "ckpts"),
+            output_path=str(tmp_path / "model.pt"),
+        )
+        losses = Trainer(model, dataset, collator, cfg, device="cpu").train()
+        assert len(losses) == 2
+        assert all(isinstance(v, float) and torch.tensor(v).isfinite() for v in losses)
+
+
+class TestTrainerSchedulerAndClipping:
+    def test_warmup_steps_runs_without_error(self, tiny_setup, tmp_path):
+        model, dataset, collator = tiny_setup
+        cfg = TrainingConfig(
+            num_epochs=2,
+            batch_size=4,
+            warmup_steps=2,
+            checkpoint_dir=str(tmp_path / "ckpts"),
+            output_path=str(tmp_path / "model.pt"),
+        )
+        losses = Trainer(model, dataset, collator, cfg, device="cpu").train()
+        assert len(losses) == 2
+
+    def test_grad_clipping_disabled_with_zero(self, tiny_setup, tmp_path):
+        model, dataset, collator = tiny_setup
+        cfg = TrainingConfig(
+            num_epochs=1,
+            batch_size=4,
+            max_grad_norm=0.0,
+            checkpoint_dir=str(tmp_path / "ckpts"),
+            output_path=str(tmp_path / "model.pt"),
+        )
+        losses = Trainer(model, dataset, collator, cfg, device="cpu").train()
+        assert all(torch.tensor(v).isfinite() for v in losses)
