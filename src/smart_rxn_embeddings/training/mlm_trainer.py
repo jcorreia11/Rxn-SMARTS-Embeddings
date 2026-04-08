@@ -272,9 +272,7 @@ class Trainer:
 
         return train_losses
 
-    def _make_scheduler(
-        self, total_steps: int
-    ) -> torch.optim.lr_scheduler.LambdaLR:
+    def _make_scheduler(self, total_steps: int) -> torch.optim.lr_scheduler.LambdaLR:
         warmup = self.config.warmup_steps
 
         def lr_lambda(step: int) -> float:
@@ -323,7 +321,9 @@ class Trainer:
                 )
 
         avg = total_loss / len(loader)
-        logger.info("Epoch %d/%d | avg train loss %.4f", epoch, self.config.num_epochs, avg)
+        logger.info(
+            "Epoch %d/%d | avg train loss %.4f", epoch, self.config.num_epochs, avg
+        )
         return avg
 
     def _run_val_epoch(
@@ -347,17 +347,22 @@ class Trainer:
                 total_loss += loss.item()
 
                 # Only evaluate masked positions (labels != -100)
-                flat_labels = labels.view(-1)           # (B*L,)
+                flat_labels = labels.view(-1)  # (B*L,)
                 flat_logits = logits.view(-1, logits.size(-1))  # (B*L, V)
                 mask = flat_labels != -100
 
                 if mask.any():
-                    masked_logits = flat_logits[mask]   # (M, V)
-                    masked_labels = flat_labels[mask]   # (M,)
+                    masked_logits = flat_logits[mask]  # (M, V)
+                    masked_labels = flat_labels[mask]  # (M,)
 
                     top5_preds = masked_logits.topk(5, dim=-1).indices  # (M, 5)
                     correct_top1 += (top5_preds[:, 0] == masked_labels).sum().item()
-                    correct_top5 += (top5_preds == masked_labels.unsqueeze(1)).any(dim=1).sum().item()
+                    correct_top5 += (
+                        (top5_preds == masked_labels.unsqueeze(1))
+                        .any(dim=1)
+                        .sum()
+                        .item()
+                    )
                     total_masked += masked_labels.size(0)
 
         avg = total_loss / len(loader)
@@ -366,7 +371,11 @@ class Trainer:
 
         logger.info(
             "Epoch %d/%d | avg val loss %.4f | top-1 acc %.4f | top-5 acc %.4f",
-            epoch, self.config.num_epochs, avg, top1, top5,
+            epoch,
+            self.config.num_epochs,
+            avg,
+            top1,
+            top5,
         )
         return avg, top1, top5
 

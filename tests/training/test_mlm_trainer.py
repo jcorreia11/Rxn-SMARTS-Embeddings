@@ -354,9 +354,8 @@ class TestTrainerAccuracy:
         )
         trainer = Trainer(model, dataset, collator, cfg, device="cpu")
         from torch.utils.data import DataLoader
-        val_loader = DataLoader(
-            trainer.val_dataset, batch_size=4, collate_fn=collator
-        )
+
+        val_loader = DataLoader(trainer.val_dataset, batch_size=4, collate_fn=collator)
         loss, top1, top5 = trainer._run_val_epoch(val_loader, epoch=1)
         assert isinstance(loss, float) and torch.tensor(loss).isfinite()
         assert 0.0 <= top1 <= 1.0
@@ -365,6 +364,7 @@ class TestTrainerAccuracy:
 
     def test_accuracies_saved_in_config_json(self, tiny_setup, tmp_path):
         import json
+
         model, dataset, collator = tiny_setup
         output = tmp_path / "model.pt"
         cfg = TrainingConfig(
