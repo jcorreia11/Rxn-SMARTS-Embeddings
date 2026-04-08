@@ -119,7 +119,7 @@ def _classifier_table(results: list[dict]) -> str:
     n_samples = meta.get("n_samples", "?")
 
     lines = [
-        f"Evaluated on **{n_samples:,}** labelled SMARTS, "
+        f"Evaluated on **{n_samples:}** labelled SMARTS, "
         f"**{n_classes}** EC classes, "
         f"**{n_folds}**-fold stratified cross-validation.\n",
         header, sep,
