@@ -93,10 +93,10 @@ def plot_dataset_overview(
     dpi: int,
 ) -> None:
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     import matplotlib.ticker as ticker
-    import numpy as np
 
     fig, axes = plt.subplots(1, 3, figsize=(18, 5))
 
@@ -108,12 +108,15 @@ def plot_dataset_overview(
     p95 = int(lengths.quantile(0.95))
     p50 = int(lengths.median())
 
-    ax.hist(lengths, bins=80, color=_COLORS[0], alpha=0.85, edgecolor="white",
-            linewidth=0.3)
-    ax.axvline(p50, color="#dc2626", linestyle="--", linewidth=1.5,
-               label=f"Median = {p50}")
-    ax.axvline(p95, color="#d97706", linestyle=":", linewidth=1.5,
-               label=f"95th pct = {p95}")
+    ax.hist(
+        lengths, bins=80, color=_COLORS[0], alpha=0.85, edgecolor="white", linewidth=0.3
+    )
+    ax.axvline(
+        p50, color="#dc2626", linestyle="--", linewidth=1.5, label=f"Median = {p50}"
+    )
+    ax.axvline(
+        p95, color="#d97706", linestyle=":", linewidth=1.5, label=f"95th pct = {p95}"
+    )
     ax.set_xlabel("SMARTS length (characters)", fontsize=12)
     ax.set_ylabel("Count", fontsize=12)
     ax.set_title("(A) SMARTS Length Distribution", fontsize=13, fontweight="bold")
@@ -121,9 +124,13 @@ def plot_dataset_overview(
     ax.legend(fontsize=10)
     ax.spines[["top", "right"]].set_visible(False)
     ax.text(
-        0.97, 0.95,
+        0.97,
+        0.95,
         f"N = {len(df):,}\nMean = {lengths.mean():.0f}\nMax = {lengths.max():,}",
-        transform=ax.transAxes, ha="right", va="top", fontsize=9,
+        transform=ax.transAxes,
+        ha="right",
+        va="top",
+        fontsize=9,
         bbox=dict(boxstyle="round,pad=0.3", facecolor="white", edgecolor="#cccccc"),
     )
 
@@ -132,17 +139,29 @@ def plot_dataset_overview(
     # ------------------------------------------------------------------ #
     ax = axes[1]
     if ec_labels.empty:
-        ax.text(0.5, 0.5, "EC labels not available\n(raw files not found)",
-                ha="center", va="center", transform=ax.transAxes, fontsize=11,
-                color="#888888")
+        ax.text(
+            0.5,
+            0.5,
+            "EC labels not available\n(raw files not found)",
+            ha="center",
+            va="center",
+            transform=ax.transAxes,
+            fontsize=11,
+            color="#888888",
+        )
         ax.set_title("(B) EC Class Distribution", fontsize=13, fontweight="bold")
         ax.axis("off")
     else:
         counts = ec_labels.value_counts().sort_index()
         labels = [f"EC {k}\n{_EC_NAMES.get(k, '')}" for k in counts.index]
         colors = [_COLORS[int(k) - 1 % len(_COLORS)] for k in counts.index]
-        bars = ax.bar(range(len(counts)), counts.values, color=colors,
-                      edgecolor="white", linewidth=0.5)
+        bars = ax.bar(
+            range(len(counts)),
+            counts.values,
+            color=colors,
+            edgecolor="white",
+            linewidth=0.5,
+        )
         ax.set_xticks(range(len(counts)))
         ax.set_xticklabels(labels, fontsize=9)
         ax.set_ylabel("Number of reactions", fontsize=12)
@@ -150,8 +169,14 @@ def plot_dataset_overview(
         ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{int(x):,}"))
         ax.spines[["top", "right"]].set_visible(False)
         for bar, val in zip(bars, counts.values):
-            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() * 1.01,
-                    f"{val:,}", ha="center", va="bottom", fontsize=8)
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                bar.get_height() * 1.01,
+                f"{val:,}",
+                ha="center",
+                va="bottom",
+                fontsize=8,
+            )
 
     # ------------------------------------------------------------------ #
     # Panel C — Train / validation split
@@ -165,24 +190,37 @@ def plot_dataset_overview(
     split_counts = [n_train, n_val]
     split_colors = [_COLORS[0], _COLORS[1]]
 
-    bars = ax.bar(split_labels, split_counts, color=split_colors,
-                  width=0.5, edgecolor="white")
+    bars = ax.bar(
+        split_labels, split_counts, color=split_colors, width=0.5, edgecolor="white"
+    )
     for bar, val in zip(bars, split_counts):
         pct = val / n_total * 100
-        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() * 1.01,
-                f"{val:,}\n({pct:.1f}%)", ha="center", va="bottom", fontsize=11)
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() * 1.01,
+            f"{val:,}\n({pct:.1f}%)",
+            ha="center",
+            va="bottom",
+            fontsize=11,
+        )
 
     ax.set_ylabel("Number of sequences", fontsize=12)
     ax.set_title(
         f"(C) Train / Validation Split\n(val_split = {val_split:.0%})",
-        fontsize=13, fontweight="bold",
+        fontsize=13,
+        fontweight="bold",
     )
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{int(x):,}"))
     ax.spines[["top", "right"]].set_visible(False)
     ax.set_ylim(0, max(split_counts) * 1.18)
     ax.text(
-        0.97, 0.05, f"Total: {n_total:,}",
-        transform=ax.transAxes, ha="right", va="bottom", fontsize=10,
+        0.97,
+        0.05,
+        f"Total: {n_total:,}",
+        transform=ax.transAxes,
+        ha="right",
+        va="bottom",
+        fontsize=10,
         bbox=dict(boxstyle="round,pad=0.3", facecolor="white", edgecolor="#cccccc"),
     )
 
