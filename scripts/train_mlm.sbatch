@@ -23,6 +23,9 @@ cd /projects/F202508983CPCAA0/jcorreia/work/SmartRxnEmbeddings
 
 source ../smartrxn_env/bin/activate
 
+# ---- ensure cu118 torch (pip ignores uv index sources) ----
+pip install --quiet torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+
 # ---- sanity check ----
 echo "Python executable: $(which python)"
 python -V
