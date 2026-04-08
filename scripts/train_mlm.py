@@ -69,6 +69,22 @@ def parse_args() -> argparse.Namespace:
     train.add_argument(
         "--log-every", type=int, default=10, help="Log batch loss every N steps"
     )
+    train.add_argument(
+        "--val-split", type=float, default=0.1,
+        help="Fraction of data held out for validation (default: 0.1)",
+    )
+    train.add_argument(
+        "--warmup-steps", type=int, default=500,
+        help="Linear LR warmup steps before cosine decay (default: 500)",
+    )
+    train.add_argument(
+        "--max-grad-norm", type=float, default=1.0,
+        help="Gradient clipping max norm, 0 to disable (default: 1.0)",
+    )
+    train.add_argument(
+        "--num-workers", type=int, default=4,
+        help="DataLoader worker processes (default: 4)",
+    )
 
     return p.parse_args()
 
@@ -114,6 +130,10 @@ def main() -> None:
         checkpoint_dir=args.checkpoint_dir,
         output_path=args.output,
         log_every=args.log_every,
+        val_split=args.val_split,
+        warmup_steps=args.warmup_steps,
+        max_grad_norm=args.max_grad_norm,
+        num_workers=args.num_workers,
     )
 
     trainer = Trainer(model, dataset, collator, training_config, device=args.device)
