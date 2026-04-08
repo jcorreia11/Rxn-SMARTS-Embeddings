@@ -29,9 +29,6 @@ python -c "import sys; print('sys.path ok, site:', sys.path[0])"
 python -c "import sentencepiece; print('sentencepiece:', sentencepiece.__version__)"
 python -c "import sklearn; print('scikit-learn:', sklearn.__version__)"
 
-# ---- collect environment info ----
-ENV_JSON="${RESULTS_DIR}/env.json"
-
 # ---- config ----
 # Override at submission time if needed:
 #   sbatch --export=ALL,N_SAMPLES=20000 compare_tokenizers.sbatch
@@ -43,6 +40,7 @@ SP_VOCAB_SIZE="${SP_VOCAB_SIZE:-1000}"
 RUN_ID=$(date +%Y%m%d_%H%M%S)
 RESULTS_DIR="results/tokenizer_comparison_${RUN_ID}"
 FIGURES_DIR="${RESULTS_DIR}/figures"
+ENV_JSON="${RESULTS_DIR}/env.json"
 mkdir -p "${RESULTS_DIR}" "${FIGURES_DIR}"
 
 echo "Run ID:        ${RUN_ID}"
