@@ -48,15 +48,19 @@ python -c "import torch; print('torch:', torch.__version__, '| CUDA:', torch.cud
 DATA="${DATA:-data/processed/validated_smarts.csv}"
 VOCAB="${VOCAB:-data/processed/vocab.json}"
 MAX_LENGTH="${MAX_LENGTH:-256}"
-D_MODEL="${D_MODEL:-128}"
-NHEAD="${NHEAD:-4}"
-NUM_LAYERS="${NUM_LAYERS:-4}"
-DIM_FEEDFORWARD="${DIM_FEEDFORWARD:-512}"
+D_MODEL="${D_MODEL:-256}"
+NHEAD="${NHEAD:-8}"
+NUM_LAYERS="${NUM_LAYERS:-6}"
+DIM_FEEDFORWARD="${DIM_FEEDFORWARD:-1024}"
 DROPOUT="${DROPOUT:-0.1}"
 LR="${LR:-1e-4}"
-BATCH_SIZE="${BATCH_SIZE:-64}"
-EPOCHS="${EPOCHS:-20}"
+BATCH_SIZE="${BATCH_SIZE:-128}"
+EPOCHS="${EPOCHS:-40}"
 MASK_PROB="${MASK_PROB:-0.15}"
+VAL_SPLIT="${VAL_SPLIT:-0.1}"
+WARMUP_STEPS="${WARMUP_STEPS:-500}"
+MAX_GRAD_NORM="${MAX_GRAD_NORM:-1.0}"
+NUM_WORKERS="${NUM_WORKERS:-4}"
 
 RUN_ID=$(date +%Y%m%d_%H%M%S)
 CHECKPOINT_DIR="models/checkpoints/${RUN_ID}"
@@ -77,6 +81,10 @@ echo "Learning rate:   ${LR}"
 echo "Batch size:      ${BATCH_SIZE}"
 echo "Epochs:          ${EPOCHS}"
 echo "Mask prob:       ${MASK_PROB}"
+echo "Val split:       ${VAL_SPLIT}"
+echo "Warmup steps:    ${WARMUP_STEPS}"
+echo "Max grad norm:   ${MAX_GRAD_NORM}"
+echo "Num workers:     ${NUM_WORKERS}"
 echo "Checkpoint dir:  ${CHECKPOINT_DIR}"
 echo "Output:          ${OUTPUT}"
 
@@ -96,6 +104,10 @@ python scripts/train_mlm.py \
     --batch-size    "${BATCH_SIZE}" \
     --epochs        "${EPOCHS}" \
     --mask-prob     "${MASK_PROB}" \
+    --val-split     "${VAL_SPLIT}" \
+    --warmup-steps  "${WARMUP_STEPS}" \
+    --max-grad-norm "${MAX_GRAD_NORM}" \
+    --num-workers   "${NUM_WORKERS}" \
     --checkpoint-dir "${CHECKPOINT_DIR}" \
     --output        "${OUTPUT}"
 
@@ -103,6 +115,35 @@ echo ""
 echo "Model weights: ${OUTPUT}"
 echo "Model config:  ${OUTPUT%.pt}.json"
 echo "Best checkpoint: ${CHECKPOINT_DIR}/best.pt"
+
+# ---- collect environment info (on compute node with GPU) ----
+ENV_JSON="${OUTPUT%.pt}_env.json"
+echo ""
+echo "=== Collecting environment info ($(date)) ==="
+python scripts/collect_env.py --output "${ENV_JSON}"
+
+# ---- generate training plot ----
+FIGURE="${OUTPUT%.pt}_training_loss.pdf"
+echo ""
+echo "=== Generating training plot ($(date)) ==="
+python scripts/plot_training.py \
+    --config  "${OUTPUT%.pt}.json" \
+    --output  "${FIGURE%.pdf}" \
+    --format  pdf
+
+# ---- generate report ----
+REPORT="${OUTPUT%.pt}_report.md"
+echo ""
+echo "=== Generating report ($(date)) ==="
+python scripts/generate_mlm_report.py \
+    --config  "${OUTPUT%.pt}.json" \
+    --env     "${ENV_JSON}" \
+    --figure  "${FIGURE}" \
+    --output  "${REPORT}"
+
+echo ""
+echo "Training plot: ${FIGURE}"
+echo "Report:        ${REPORT}"
 echo "=== Job finished on $(date) ==="
 
 deactivate
