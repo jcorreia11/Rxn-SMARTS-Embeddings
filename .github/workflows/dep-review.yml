@@ -28,4 +28,6 @@ jobs:
         # Remove each --ignore-vuln once a patched version is released.
         # VCS deps (e.g. rxnfp from git) are stripped before auditing because pip-audit
         # cannot hash them and fails at the install stage before --skip-editable applies.
-        run: uvx pip-audit --requirement <(uv export --no-dev --no-emit-project --format requirements-txt | grep -v ' @ git+') --ignore-vuln CVE-2025-69872 --ignore-vuln CVE-2026-4539
+        # torch/torchvision/torchaudio are sourced from download.pytorch.org (CUDA builds)
+        # and are not resolvable by pip-audit's internal pip against PyPI.
+        run: uvx pip-audit --requirement <(uv export --no-dev --no-emit-project --format requirements-txt | grep -v ' @ git+' | grep -vE '^torch(vision|audio)?==') --ignore-vuln CVE-2025-69872 --ignore-vuln CVE-2026-4539
