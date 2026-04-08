@@ -213,6 +213,23 @@ def plot_ec_classifier(
         x_cls = np.arange(n_cls)
         width2 = 0.8 / len(clf_results)
 
+        # Collect support per class (use first result that has it)
+        support_by_class: dict[str, int] = {}
+        for r in clf_results:
+            for cls, stats in (r.get("per_class") or {}).items():
+                if cls not in support_by_class:
+                    support_by_class[cls] = int(stats.get("support", 0))
+
+        # Identify rare classes (support < 1% of mean support or < 50 samples)
+        mean_support = (
+            sum(support_by_class.values()) / len(support_by_class)
+            if support_by_class else 0
+        )
+        rare_threshold = max(50, mean_support * 0.01)
+        rare_classes = {
+            cls for cls, n in support_by_class.items() if n < rare_threshold
+        }
+
         for i, r in enumerate(clf_results):
             per_class = r.get("per_class") or {}
             f1s = [per_class.get(cls, {}).get("f1", 0) for cls in all_classes]
@@ -227,11 +244,30 @@ def plot_ec_classifier(
                 zorder=3,
             )
 
+        # Shade rare class columns
+        for j, cls in enumerate(all_classes):
+            if cls in rare_classes:
+                ax2.axvspan(
+                    j - 0.5, j + 0.5,
+                    color="#fee2e2", alpha=0.55, zorder=0,
+                    label="_nolegend_",
+                )
+
+        # X-tick labels: "EC N\n(n=X)" — asterisk for rare classes
+        tick_labels = []
+        for cls in all_classes:
+            n = support_by_class.get(cls, 0)
+            marker = " *" if cls in rare_classes else ""
+            tick_labels.append(f"EC {cls}{marker}\n(n={n:,})")
+
         ax2.set_xticks(x_cls)
-        ax2.set_xticklabels([f"EC {c}" for c in all_classes], fontsize=10)
+        ax2.set_xticklabels(tick_labels, fontsize=9)
         ax2.set_ylabel("F1 Score", fontsize=11)
         ax2.set_ylim(0, 1.05)
-        ax2.set_title("Per-class F1 Score", fontsize=13, fontweight="bold")
+        rare_note = "  (* rare class, shaded)" if rare_classes else ""
+        ax2.set_title(
+            f"Per-class F1 Score{rare_note}", fontsize=13, fontweight="bold"
+        )
         ax2.legend(fontsize=10)
         ax2.grid(axis="y", linestyle="--", alpha=0.4, zorder=0)
         ax2.spines[["top", "right"]].set_visible(False)
