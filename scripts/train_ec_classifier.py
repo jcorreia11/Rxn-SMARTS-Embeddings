@@ -243,15 +243,30 @@ def evaluate(
         result["f1_weighted_std"],
     )
 
-    report = classification_report(
+    report_str = classification_report(
         y_test, y_pred, target_names=label_names, zero_division=0
     )
-    logger.info("\nClassification report (held-out test set):\n%s", report)
+    report_dict = classification_report(
+        y_test, y_pred, target_names=label_names, zero_division=0, output_dict=True
+    )
+    logger.info("\nClassification report (held-out test set):\n%s", report_str)
     logger.info(
         "Note: classes with very few samples (e.g. EC class 7, n=%d) "
         "are expected to score 0 — insufficient data, not a model failure.",
         int((y_test == label_names.index("7")).sum()) if "7" in label_names else 0,
     )
+
+    result["per_class"] = {
+        cls: {
+            "precision": round(report_dict[cls]["precision"], 4),
+            "recall": round(report_dict[cls]["recall"], 4),
+            "f1": round(report_dict[cls]["f1-score"], 4),
+            "support": int(report_dict[cls]["support"]),
+        }
+        for cls in label_names
+        if cls in report_dict
+    }
+    result["n_samples"] = len(X_train) + len(X_test)
 
     return result
 
