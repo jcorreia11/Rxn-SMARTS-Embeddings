@@ -340,3 +340,44 @@ class TestTrainerSchedulerAndClipping:
         )
         losses = Trainer(model, dataset, collator, cfg, device="cpu").train()
         assert all(torch.tensor(v).isfinite() for v in losses)
+
+
+class TestTrainerAccuracy:
+    def test_val_epoch_returns_loss_and_accuracies(self, tiny_setup, tmp_path):
+        model, dataset, collator = tiny_setup
+        cfg = TrainingConfig(
+            num_epochs=1,
+            batch_size=4,
+            val_split=0.25,
+            checkpoint_dir=str(tmp_path / "ckpts"),
+            output_path=str(tmp_path / "model.pt"),
+        )
+        trainer = Trainer(model, dataset, collator, cfg, device="cpu")
+        from torch.utils.data import DataLoader
+        val_loader = DataLoader(
+            trainer.val_dataset, batch_size=4, collate_fn=collator
+        )
+        loss, top1, top5 = trainer._run_val_epoch(val_loader, epoch=1)
+        assert isinstance(loss, float) and torch.tensor(loss).isfinite()
+        assert 0.0 <= top1 <= 1.0
+        assert 0.0 <= top5 <= 1.0
+        assert top5 >= top1
+
+    def test_accuracies_saved_in_config_json(self, tiny_setup, tmp_path):
+        import json
+        model, dataset, collator = tiny_setup
+        output = tmp_path / "model.pt"
+        cfg = TrainingConfig(
+            num_epochs=2,
+            batch_size=4,
+            val_split=0.25,
+            checkpoint_dir=str(tmp_path / "ckpts"),
+            output_path=str(output),
+        )
+        Trainer(model, dataset, collator, cfg, device="cpu").train()
+        saved = json.loads(output.with_suffix(".json").read_text())
+        history = saved["history"]
+        assert len(history["val_top1_accuracy"]) == 2
+        assert len(history["val_top5_accuracy"]) == 2
+        assert all(0.0 <= v <= 1.0 for v in history["val_top1_accuracy"])
+        assert all(0.0 <= v <= 1.0 for v in history["val_top5_accuracy"])
