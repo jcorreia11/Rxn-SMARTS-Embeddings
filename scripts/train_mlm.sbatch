@@ -23,8 +23,19 @@ cd /projects/F202508983CPCAA0/jcorreia/work/SmartRxnEmbeddings
 
 source ../smartrxn_env/bin/activate
 
+# ---- debug: environment info ----
+echo "=== pip config ==="
+pip config list
+echo "=== nvidia-smi ==="
+nvidia-smi || echo "nvidia-smi not available"
+echo "=== torch before install ==="
+pip show torch | grep -E "Name|Version|Location"
+
 # ---- ensure cu118 torch (pip ignores uv index sources) ----
-pip install --quiet torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+
+echo "=== torch after install ==="
+pip show torch | grep -E "Name|Version|Location"
 
 # ---- sanity check ----
 echo "Python executable: $(which python)"
@@ -36,7 +47,7 @@ python -c "import torch; print('torch:', torch.__version__, '| CUDA:', torch.cud
 #   sbatch --export=ALL,EPOCHS=50,D_MODEL=256 train_mlm.sbatch
 DATA="${DATA:-data/processed/validated_smarts.csv}"
 VOCAB="${VOCAB:-data/processed/vocab.json}"
-MAX_LENGTH="${MAX_LENGTH:-128}"
+MAX_LENGTH="${MAX_LENGTH:-256}"
 D_MODEL="${D_MODEL:-128}"
 NHEAD="${NHEAD:-4}"
 NUM_LAYERS="${NUM_LAYERS:-4}"
