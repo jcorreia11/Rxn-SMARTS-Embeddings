@@ -67,7 +67,11 @@ def _winner(results: list[dict], key: str, higher_is_better: bool = True) -> str
     candidates = [(r["name"], r.get(key)) for r in results if r.get(key) is not None]
     if len(candidates) < 2:
         return ""
-    best = max(candidates, key=lambda x: x[1]) if higher_is_better else min(candidates, key=lambda x: x[1])
+    best = (
+        max(candidates, key=lambda x: x[1])
+        if higher_is_better
+        else min(candidates, key=lambda x: x[1])
+    )
     return best[0]
 
 
@@ -81,29 +85,55 @@ def _intrinsic_table(results: list[dict]) -> str:
     header = "| Metric | " + " | ".join(names) + " |"
     sep = "|--------|" + "--------|" * len(names)
 
-    def row(label: str, key: str, fmt_fn=_num, higher_is_better: bool | None = None) -> str:
+    def row(
+        label: str, key: str, fmt_fn=_num, higher_is_better: bool | None = None
+    ) -> str:
         cells = [fmt_fn(r.get(key)) for r in results]
         if higher_is_better is not None and len(results) > 1:
             w = _winner(results, key, higher_is_better)
-            cells = [f"**{c}**" if r["name"] == w else c for c, r in zip(cells, results)]
+            cells = [
+                f"**{c}**" if r["name"] == w else c for c, r in zip(cells, results)
+            ]
         return "| " + label + " | " + " | ".join(cells) + " |"
 
     lines = [
-        header, sep,
-        row("Vocabulary size", "vocab_size", fmt_fn=lambda v: "rule-based" if v is None else f"{v:,}"),
+        header,
+        sep,
+        row(
+            "Vocabulary size",
+            "vocab_size",
+            fmt_fn=lambda v: "rule-based" if v is None else f"{v:,}",
+        ),
         row("Samples evaluated", "n_samples", fmt_fn=lambda v: f"{v:,}"),
         row("Error rate", "error_rate", fmt_fn=_pct, higher_is_better=False),
-        row("Throughput (SMARTS/s)", "throughput_smarts_per_s", fmt_fn=lambda v: _num(v, 0), higher_is_better=True),
-        row("Throughput (chars/s)", "throughput_chars_per_s", fmt_fn=lambda v: _num(v, 0), higher_is_better=True),
+        row(
+            "Throughput (SMARTS/s)",
+            "throughput_smarts_per_s",
+            fmt_fn=lambda v: _num(v, 0),
+            higher_is_better=True,
+        ),
+        row(
+            "Throughput (chars/s)",
+            "throughput_chars_per_s",
+            fmt_fn=lambda v: _num(v, 0),
+            higher_is_better=True,
+        ),
         row("Seq length — mean", "seq_len_mean", higher_is_better=False),
         row("Seq length — median", "seq_len_median", higher_is_better=False),
         row("Seq length — std", "seq_len_std", higher_is_better=False),
         row("Seq length — min", "seq_len_min", fmt_fn=lambda v: _num(v, 0)),
         row("Seq length — max", "seq_len_max", fmt_fn=lambda v: _num(v, 0)),
-        row("Fertility ratio (tokens/char)", "fertility_mean", fmt_fn=lambda v: _num(v, 4), higher_is_better=False),
+        row(
+            "Fertility ratio (tokens/char)",
+            "fertility_mean",
+            fmt_fn=lambda v: _num(v, 4),
+            higher_is_better=False,
+        ),
         row("Unique tokens used", "unique_tokens_used", fmt_fn=lambda v: f"{v:,}"),
         row("Vocabulary utilisation", "vocab_utilisation", fmt_fn=_pct),
-        row("Round-trip fidelity", "round_trip_rate", fmt_fn=_pct, higher_is_better=True),
+        row(
+            "Round-trip fidelity", "round_trip_rate", fmt_fn=_pct, higher_is_better=True
+        ),
     ]
     return "\n".join(lines)
 
@@ -118,7 +148,9 @@ def _classifier_table(results: list[dict]) -> str:
         for r in results:
             m = r.get(mean_key)
             s = r.get(std_key)
-            cells.append(f"{m:.4f} ± {s:.4f}" if m is not None and s is not None else "N/A")
+            cells.append(
+                f"{m:.4f} ± {s:.4f}" if m is not None and s is not None else "N/A"
+            )
         w = _winner(results, mean_key, higher_is_better=True)
         cells = [f"**{c}**" if r["name"] == w else c for c, r in zip(cells, results)]
         return "| " + label + " | " + " | ".join(cells) + " |"
@@ -132,7 +164,8 @@ def _classifier_table(results: list[dict]) -> str:
         f"Evaluated on **{n_samples:}** labelled SMARTS, "
         f"**{n_classes}** EC classes, "
         f"**{n_folds}**-fold stratified cross-validation.\n",
-        header, sep,
+        header,
+        sep,
         row("Accuracy", "accuracy_mean", "accuracy_std"),
         row("F1 macro", "f1_macro_mean", "f1_macro_std"),
         row("F1 weighted", "f1_weighted_mean", "f1_weighted_std"),
@@ -172,8 +205,7 @@ def _per_class_table(clf: list[dict]) -> str:
 
     # Header
     name_cols = " | ".join(
-        f"P ({r['name']}) | R ({r['name']}) | F1 ({r['name']})"
-        for r in clf
+        f"P ({r['name']}) | R ({r['name']}) | F1 ({r['name']})" for r in clf
     )
     header = f"| EC Class | Name | Support | {name_cols} |"
     n_metric_cols = 3 * len(clf)
@@ -230,7 +262,11 @@ def _summary(metrics: list[dict], clf: list[dict]) -> str:
     # Fertility winner
     w_fert = _winner(metrics, "fertility_mean", higher_is_better=False)
     if w_fert:
-        vals = {r["name"]: r.get("fertility_mean") for r in metrics if r.get("fertility_mean") is not None}
+        vals = {
+            r["name"]: r.get("fertility_mean")
+            for r in metrics
+            if r.get("fertility_mean") is not None
+        }
         if len(vals) == 2:
             names = list(vals.keys())
             lines.append(
@@ -260,7 +296,9 @@ def _summary(metrics: list[dict], clf: list[dict]) -> str:
             f"carry more reaction-type signal."
         )
 
-    return "\n".join(lines) if lines else "_Insufficient data to auto-generate summary._"
+    return (
+        "\n".join(lines) if lines else "_Insufficient data to auto-generate summary._"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -334,7 +372,7 @@ def build_report(
 
     sections += [
         "## 1. Intrinsic Metrics",
-        f"",
+        "",
         "Properties measured directly from the tokenization of a shared SMARTS sample.",
         "Bold values indicate the better result where applicable.",
         "",
@@ -354,7 +392,12 @@ def build_report(
     ]
 
     if clf:
-        sections += [_classifier_table(clf), _fig("ec_classifier"), "", _per_class_table(clf)]
+        sections += [
+            _classifier_table(clf),
+            _fig("ec_classifier"),
+            "",
+            _per_class_table(clf),
+        ]
     else:
         sections += [
             f"_No classifier results found. "
@@ -383,16 +426,29 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Generate a Markdown comparison report from benchmark JSONs."
     )
-    parser.add_argument("--metrics", default=DEFAULT_METRICS,
-                        help=f"Intrinsic metrics JSON (default: {DEFAULT_METRICS})")
-    parser.add_argument("--classifier", default=DEFAULT_CLASSIFIER,
-                        help=f"Classifier results JSON (default: {DEFAULT_CLASSIFIER})")
-    parser.add_argument("--output", default=DEFAULT_OUTPUT,
-                        help=f"Output Markdown file (default: {DEFAULT_OUTPUT})")
-    parser.add_argument("--env", default=None,
-                        help="Environment JSON from collect_env.py (optional)")
-    parser.add_argument("--figures-dir", default=None,
-                        help="Directory containing generated figures (optional)")
+    parser.add_argument(
+        "--metrics",
+        default=DEFAULT_METRICS,
+        help=f"Intrinsic metrics JSON (default: {DEFAULT_METRICS})",
+    )
+    parser.add_argument(
+        "--classifier",
+        default=DEFAULT_CLASSIFIER,
+        help=f"Classifier results JSON (default: {DEFAULT_CLASSIFIER})",
+    )
+    parser.add_argument(
+        "--output",
+        default=DEFAULT_OUTPUT,
+        help=f"Output Markdown file (default: {DEFAULT_OUTPUT})",
+    )
+    parser.add_argument(
+        "--env", default=None, help="Environment JSON from collect_env.py (optional)"
+    )
+    parser.add_argument(
+        "--figures-dir",
+        default=None,
+        help="Directory containing generated figures (optional)",
+    )
     return parser.parse_args()
 
 
@@ -411,7 +467,9 @@ def main() -> None:
     clf = _load(str(clf_path)) if clf_path.exists() else []
 
     if not clf:
-        logger.warning("Classifier results not found at %s — Section 2 will be empty.", clf_path)
+        logger.warning(
+            "Classifier results not found at %s — Section 2 will be empty.", clf_path
+        )
 
     env = None
     if args.env and Path(args.env).exists():
