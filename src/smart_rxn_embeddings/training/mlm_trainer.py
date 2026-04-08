@@ -228,6 +228,8 @@ class Trainer:
 
         train_losses: list[float] = []
         val_losses: list[float] = []
+        val_top1: list[float] = []
+        val_top5: list[float] = []
         t_start = time.time()
 
         for epoch in range(1, self.config.num_epochs + 1):
@@ -236,8 +238,10 @@ class Trainer:
 
             monitor = avg_train
             if val_loader is not None:
-                avg_val = self._run_val_epoch(val_loader, epoch)
+                avg_val, top1, top5 = self._run_val_epoch(val_loader, epoch)
                 val_losses.append(avg_val)
+                val_top1.append(top1)
+                val_top5.append(top5)
                 monitor = avg_val
 
             if monitor < self._best_loss:
@@ -258,6 +262,8 @@ class Trainer:
             output_path.with_suffix(".json"),
             train_losses=train_losses,
             val_losses=val_losses,
+            val_top1=val_top1,
+            val_top5=val_top5,
             training_time_s=elapsed,
         )
         logger.info(
@@ -320,21 +326,49 @@ class Trainer:
         logger.info("Epoch %d/%d | avg train loss %.4f", epoch, self.config.num_epochs, avg)
         return avg
 
-    def _run_val_epoch(self, loader: DataLoader, epoch: int) -> float:
+    def _run_val_epoch(
+        self, loader: DataLoader, epoch: int
+    ) -> tuple[float, float, float]:
+        """Returns (avg_loss, top1_accuracy, top5_accuracy) over masked positions."""
         self.model.eval()
         total_loss = 0.0
+        correct_top1 = 0
+        correct_top5 = 0
+        total_masked = 0
+
         with torch.no_grad():
             for batch in loader:
                 input_ids = batch["input_ids"].to(self.device)
                 attention_mask = batch["attention_mask"].to(self.device)
                 labels = batch["labels"].to(self.device)
-                logits = self.model(input_ids, attention_mask)
+
+                logits = self.model(input_ids, attention_mask)  # (B, L, V)
                 loss = self.loss_fn(logits.view(-1, logits.size(-1)), labels.view(-1))
                 total_loss += loss.item()
 
+                # Only evaluate masked positions (labels != -100)
+                flat_labels = labels.view(-1)           # (B*L,)
+                flat_logits = logits.view(-1, logits.size(-1))  # (B*L, V)
+                mask = flat_labels != -100
+
+                if mask.any():
+                    masked_logits = flat_logits[mask]   # (M, V)
+                    masked_labels = flat_labels[mask]   # (M,)
+
+                    top5_preds = masked_logits.topk(5, dim=-1).indices  # (M, 5)
+                    correct_top1 += (top5_preds[:, 0] == masked_labels).sum().item()
+                    correct_top5 += (top5_preds == masked_labels.unsqueeze(1)).any(dim=1).sum().item()
+                    total_masked += masked_labels.size(0)
+
         avg = total_loss / len(loader)
-        logger.info("Epoch %d/%d | avg val   loss %.4f", epoch, self.config.num_epochs, avg)
-        return avg
+        top1 = correct_top1 / total_masked if total_masked > 0 else 0.0
+        top5 = correct_top5 / total_masked if total_masked > 0 else 0.0
+
+        logger.info(
+            "Epoch %d/%d | avg val loss %.4f | top-1 acc %.4f | top-5 acc %.4f",
+            epoch, self.config.num_epochs, avg, top1, top5,
+        )
+        return avg, top1, top5
 
     def _save_weights(self, path: Path) -> None:
         torch.save(self.model.state_dict(), path)
@@ -344,6 +378,8 @@ class Trainer:
         path: Path,
         train_losses: list[float] | None = None,
         val_losses: list[float] | None = None,
+        val_top1: list[float] | None = None,
+        val_top5: list[float] | None = None,
         training_time_s: float | None = None,
     ) -> None:
         import json
@@ -356,6 +392,8 @@ class Trainer:
             "history": {
                 "train_losses": train_losses or [],
                 "val_losses": val_losses or [],
+                "val_top1_accuracy": val_top1 or [],
+                "val_top5_accuracy": val_top5 or [],
                 "training_time_s": training_time_s,
             },
         }
