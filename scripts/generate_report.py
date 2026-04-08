@@ -290,9 +290,10 @@ def _summary(metrics: list[dict], clf: list[dict]) -> str:
 
     # Downstream task
     if clf and len(clf) >= 2:
-        w_acc = _winner(clf, "accuracy_mean", higher_is_better=True)
         vals = {r["name"]: r.get("accuracy_mean", 0) for r in clf}
-        sorted_results = sorted(clf, key=lambda r: r.get("accuracy_mean", 0), reverse=True)
+        sorted_results = sorted(
+            clf, key=lambda r: r.get("accuracy_mean", 0), reverse=True
+        )
         best = sorted_results[0]
         runner_up = sorted_results[1]
         lines.append(

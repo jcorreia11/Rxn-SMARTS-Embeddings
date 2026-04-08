@@ -122,13 +122,15 @@ def _setup_section(meta: dict) -> str:
         "",
         "| Parameter | Value |",
         "|-----------|-------|",
-        f"| Source | RetroRules v3.0 |",
+        "| Source | RetroRules v3.0 |",
         f"| EC label depth | {ec_depth} |",
         f"| EC classes | {ec_classes_str} |",
-        f"| Samples (requested) | {n_req:,} |" if isinstance(n_req, int) else
-        f"| Samples (requested) | {n_req} |",
-        f"| Samples (actual) | {n_actual:,} |" if isinstance(n_actual, int) else
-        f"| Samples (actual) | {n_actual} |",
+        f"| Samples (requested) | {n_req:,} |"
+        if isinstance(n_req, int)
+        else f"| Samples (requested) | {n_req} |",
+        f"| Samples (actual) | {n_actual:,} |"
+        if isinstance(n_actual, int)
+        else f"| Samples (actual) | {n_actual} |",
         f"| Train / test split | {split} |",
         f"| Cross-validation folds | {folds} |",
         f"| Random seed | {seed} |",
@@ -157,8 +159,8 @@ def _setup_section(meta: dict) -> str:
             f"| Feed-forward dimension | {mc.get('dim_feedforward', 'N/A')} |",
             f"| Max sequence length | {mc.get('max_seq_len', 'N/A')} |",
             f"| Vocabulary size | {mc.get('vocab_size', 'N/A'):,} |"
-            if isinstance(mc.get("vocab_size"), int) else
-            f"| Vocabulary size | {mc.get('vocab_size', 'N/A')} |",
+            if isinstance(mc.get("vocab_size"), int)
+            else f"| Vocabulary size | {mc.get('vocab_size', 'N/A')} |",
             f"| Pooling strategy | {pooling} |",
             f"| Weights file | `{Path(weights).name if weights != 'N/A' else 'N/A'}` |",
         ]
@@ -166,9 +168,13 @@ def _setup_section(meta: dict) -> str:
         t_rand = meta.get("embed_time_random_s")
         n_total = meta.get("n_samples_actual", "?")
         if t_pt is not None:
-            lines.append(f"| Embedding extraction (pretrained) | {t_pt:.1f} s ({n_total} sequences) |")
+            lines.append(
+                f"| Embedding extraction (pretrained) | {t_pt:.1f} s ({n_total} sequences) |"
+            )
         if t_rand is not None:
-            lines.append(f"| Embedding extraction (random-init) | {t_rand:.1f} s ({n_total} sequences) |")
+            lines.append(
+                f"| Embedding extraction (random-init) | {t_rand:.1f} s ({n_total} sequences) |"
+            )
         lines += [
             "",
             "The random-embedding baseline uses the **same architecture with randomly "
@@ -191,19 +197,21 @@ def _results_table(results: list[dict], figure_path: str | None) -> str:
     w_f1m = _winner(results, "f1_macro_mean")
     w_f1w = _winner(results, "f1_weighted_mean")
 
-    header = "| Method | Accuracy | F1 macro | F1 weighted | CV time (s) | Fit time (s) |"
-    sep    = "|--------|----------|----------|-------------|-------------|--------------|"
+    header = (
+        "| Method | Accuracy | F1 macro | F1 weighted | CV time (s) | Fit time (s) |"
+    )
+    sep = "|--------|----------|----------|-------------|-------------|--------------|"
 
     rows = [header, sep]
     for r in results:
-        name  = r["name"]
-        acc   = r.get("accuracy_mean")
+        name = r["name"]
+        acc = r.get("accuracy_mean")
         acc_s = r.get("accuracy_std")
-        f1m   = r.get("f1_macro_mean")
+        f1m = r.get("f1_macro_mean")
         f1m_s = r.get("f1_macro_std")
-        f1w   = r.get("f1_weighted_mean")
+        f1w = r.get("f1_weighted_mean")
         f1w_s = r.get("f1_weighted_std")
-        cv_t  = r.get("cv_time_s")
+        cv_t = r.get("cv_time_s")
         fit_t = r.get("fit_time_s")
 
         def _cell(mean, std, winner_name, this_name):
@@ -212,21 +220,23 @@ def _results_table(results: list[dict], figure_path: str | None) -> str:
             s = f"{mean:.4f} ± {std:.4f}" if std is not None else f"{mean:.4f}"
             return f"**{s}**" if winner_name == this_name else s
 
+        cv_cell = f"{cv_t:.1f}" if cv_t is not None else "N/A"
+        fit_cell = f"{fit_t:.1f}" if fit_t is not None else "N/A"
         rows.append(
             f"| {name} "
             f"| {_cell(acc, acc_s, w_acc, name)} "
             f"| {_cell(f1m, f1m_s, w_f1m, name)} "
             f"| {_cell(f1w, f1w_s, w_f1w, name)} "
-            f"| {cv_t:.1f} " if cv_t is not None else "| N/A "
-            f"| {fit_t:.1f} |" if fit_t is not None else "| N/A |"
+            f"| {cv_cell} "
+            f"| {fit_cell} |"
         )
 
     lines = [
         "## 3. Results",
         "",
         f"Evaluated on **{n_samples:,}** labelled SMARTS "
-        if isinstance(n_samples, int) else
-        f"Evaluated on **{n_samples}** labelled SMARTS ",
+        if isinstance(n_samples, int)
+        else f"Evaluated on **{n_samples}** labelled SMARTS ",
         f"across **{n_classes}** EC classes "
         f"with **{n_folds}**-fold stratified cross-validation. "
         "Bold values indicate the best result per metric. "
@@ -366,6 +376,7 @@ def _generate_figure(results: list[dict], output_path: Path) -> str | None:
     """
     try:
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
         import numpy as np
@@ -375,9 +386,9 @@ def _generate_figure(results: list[dict], output_path: Path) -> str | None:
 
     names = [r["name"] for r in results]
     acc_means = [r.get("accuracy_mean", 0) for r in results]
-    acc_stds  = [r.get("accuracy_std",  0) for r in results]
-    f1_means  = [r.get("f1_macro_mean", 0) for r in results]
-    f1_stds   = [r.get("f1_macro_std",  0) for r in results]
+    acc_stds = [r.get("accuracy_std", 0) for r in results]
+    f1_means = [r.get("f1_macro_mean", 0) for r in results]
+    f1_stds = [r.get("f1_macro_std", 0) for r in results]
 
     n = len(names)
     x = np.arange(n)
@@ -385,22 +396,34 @@ def _generate_figure(results: list[dict], output_path: Path) -> str | None:
 
     fig, ax = plt.subplots(figsize=(max(8, n * 1.4), 5))
 
-    bars_acc = ax.bar(
-        x - width / 2, acc_means, width,
-        yerr=acc_stds, capsize=4,
-        label="Accuracy", color="#4c72b0", alpha=0.85, error_kw={"linewidth": 1.2}
+    ax.bar(
+        x - width / 2,
+        acc_means,
+        width,
+        yerr=acc_stds,
+        capsize=4,
+        label="Accuracy",
+        color="#4c72b0",
+        alpha=0.85,
+        error_kw={"linewidth": 1.2},
     )
-    bars_f1 = ax.bar(
-        x + width / 2, f1_means, width,
-        yerr=f1_stds, capsize=4,
-        label="F1 macro", color="#dd8452", alpha=0.85, error_kw={"linewidth": 1.2}
+    ax.bar(
+        x + width / 2,
+        f1_means,
+        width,
+        yerr=f1_stds,
+        capsize=4,
+        label="F1 macro",
+        color="#dd8452",
+        alpha=0.85,
+        error_kw={"linewidth": 1.2},
     )
 
     # Colour-code groups
     group_colours = {
-        "tfidf":     "#e8f4f8",
+        "tfidf": "#e8f4f8",
         "pretrained": "#e8f8e8",
-        "random":    "#f8f0e8",
+        "random": "#f8f0e8",
     }
     for i, name in enumerate(names):
         if name in _TFIDF_NAMES:
@@ -581,6 +604,7 @@ def main() -> None:
     else:
         logger.info("Collecting environment info from current machine...")
         import importlib.util
+
         spec = importlib.util.spec_from_file_location(
             "collect_env", Path(__file__).parent / "collect_env.py"
         )
@@ -588,10 +612,7 @@ def main() -> None:
         spec.loader.exec_module(mod)
         env = mod.collect_env()
 
-    output_path = (
-        Path(args.output) if args.output
-        else results_path.with_suffix(".md")
-    )
+    output_path = Path(args.output) if args.output else results_path.with_suffix(".md")
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     figure_path: str | None = None

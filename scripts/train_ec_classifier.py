@@ -482,7 +482,12 @@ def _extract_embeddings(
     embeddings = embedder.embed(smarts_list, batch_size=batch_size)
     elapsed = time.perf_counter() - t0
     label = "pretrained" if not random_init else "random-init"
-    logger.info("Embedding extraction (%s): %.1f s for %d sequences", label, elapsed, len(smarts_list))
+    logger.info(
+        "Embedding extraction (%s): %.1f s for %d sequences",
+        label,
+        elapsed,
+        len(smarts_list),
+    )
     return embeddings, elapsed
 
 
