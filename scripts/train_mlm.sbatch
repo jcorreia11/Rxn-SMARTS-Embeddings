@@ -31,8 +31,8 @@ nvidia-smi || echo "nvidia-smi not available"
 echo "=== torch before install ==="
 pip show torch | grep -E "Name|Version|Location"
 
-# ---- ensure cu118 torch (pip ignores uv index sources) ----
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+# ---- ensure cu124 torch (driver supports CUDA 12.4; force-reinstall to replace cu130 build) ----
+pip install --force-reinstall torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 
 echo "=== torch after install ==="
 pip show torch | grep -E "Name|Version|Location"

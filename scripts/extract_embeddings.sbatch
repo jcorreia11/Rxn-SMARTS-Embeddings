@@ -23,8 +23,8 @@ cd /projects/F202508983CPCAA0/jcorreia/work/SmartRxnEmbeddings
 
 source ../smartrxn_env/bin/activate
 
-# ---- ensure cu118 torch (pip ignores uv index sources) ----
-pip install --quiet torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+# ---- ensure cu124 torch (driver supports CUDA 12.4; force-reinstall to replace cu130 build) ----
+pip install --force-reinstall --quiet torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 
 # ---- sanity check ----
 echo "Python executable: $(which python)"
