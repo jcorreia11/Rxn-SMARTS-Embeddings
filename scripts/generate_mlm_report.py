@@ -174,6 +174,9 @@ def _results_section(cfg: dict, figure_path: str | None) -> str:
 
     lines = ["## Results", ""]
 
+    val_top1 = history.get("val_top1_accuracy", [])
+    val_top5 = history.get("val_top5_accuracy", [])
+
     if train_losses:
         lines += [
             "| Metric | Value |",
@@ -186,6 +189,16 @@ def _results_section(cfg: dict, figure_path: str | None) -> str:
             lines += [
                 f"| Final val loss | {val_losses[-1]:.4f} |",
                 f"| Best val loss | {min(val_losses):.4f} (epoch {val_losses.index(min(val_losses)) + 1}) |",
+            ]
+        if val_top1:
+            lines += [
+                f"| Final top-1 accuracy | {val_top1[-1]*100:.2f}% |",
+                f"| Best top-1 accuracy | {max(val_top1)*100:.2f}% (epoch {val_top1.index(max(val_top1)) + 1}) |",
+            ]
+        if val_top5:
+            lines += [
+                f"| Final top-5 accuracy | {val_top5[-1]*100:.2f}% |",
+                f"| Best top-5 accuracy | {max(val_top5)*100:.2f}% (epoch {val_top5.index(max(val_top5)) + 1}) |",
             ]
         lines.append("")
 
