@@ -45,7 +45,11 @@ def _load_collect_env():
 
 
 def _load(path: str) -> list[dict]:
-    return json.loads(Path(path).read_text())
+    raw = json.loads(Path(path).read_text())
+    # Support both old list format and new {"meta": ..., "results": [...]} format.
+    if isinstance(raw, dict) and "results" in raw:
+        return raw["results"]
+    return raw
 
 
 def _pct(v) -> str:
@@ -286,15 +290,32 @@ def _summary(metrics: list[dict], clf: list[dict]) -> str:
 
     # Downstream task
     if clf and len(clf) >= 2:
-        w_acc = _winner(clf, "accuracy_mean", higher_is_better=True)
         vals = {r["name"]: r.get("accuracy_mean", 0) for r in clf}
-        names = list(vals.keys())
-        loser = [n for n in names if n != w_acc][0]
-        lines.append(
-            f"- On the EC classification task, **{w_acc}** achieves higher accuracy "
-            f"({vals[w_acc]:.4f} vs {vals[loser]:.4f}), suggesting its token sequences "
-            f"carry more reaction-type signal."
+        sorted_results = sorted(
+            clf, key=lambda r: r.get("accuracy_mean", 0), reverse=True
         )
+        best = sorted_results[0]
+        runner_up = sorted_results[1]
+        lines.append(
+            f"- On the EC classification task, **{best['name']}** achieves the highest accuracy "
+            f"({best.get('accuracy_mean', 0):.4f}), "
+            f"vs runner-up {runner_up['name']} ({runner_up.get('accuracy_mean', 0):.4f})."
+        )
+        # Pretraining gain: compare pretrained vs random embeddings if both present
+        pretrained = {r["name"]: r for r in clf if r["name"].startswith("Pretrained+")}
+        random_emb = {r["name"]: r for r in clf if r["name"].startswith("Random+")}
+        for head in ("logreg", "mlp"):
+            pt_key = f"Pretrained+{head}"
+            rand_key = f"Random+{head}"
+            if pt_key in pretrained and rand_key in random_emb:
+                pt_acc = pretrained[pt_key].get("accuracy_mean", 0)
+                rand_acc = random_emb[rand_key].get("accuracy_mean", 0)
+                gain = pt_acc - rand_acc
+                lines.append(
+                    f"- Pretraining gain ({head}): pretrained embeddings score "
+                    f"{pt_acc:.4f} vs random init {rand_acc:.4f} "
+                    f"(Δ = {gain:+.4f})."
+                )
 
     return (
         "\n".join(lines) if lines else "_Insufficient data to auto-generate summary._"

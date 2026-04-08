@@ -2,6 +2,7 @@
 
 import argparse
 import logging
+import time
 from pathlib import Path
 
 import numpy as np
@@ -93,16 +94,25 @@ def main() -> None:
         device=args.device,
     )
 
+    t0 = time.perf_counter()
     embeddings = embedder.embed(
         smarts_list,
         batch_size=args.batch_size,
         max_length=args.max_length,
     )
+    elapsed_s = time.perf_counter() - t0
 
     assert embeddings.shape[0] == len(smarts_list), (
         f"Embedding count mismatch: {embeddings.shape[0]} embeddings for {len(smarts_list)} SMARTS"
     )
     assert embeddings.ndim == 2, f"Expected 2D array, got shape {embeddings.shape}"
+
+    logger.info(
+        "Extraction complete: %d sequences in %.1f s (%.0f sequences/s)",
+        len(smarts_list),
+        elapsed_s,
+        len(smarts_list) / elapsed_s if elapsed_s > 0 else 0,
+    )
 
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
