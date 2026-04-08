@@ -17,6 +17,7 @@ Usage
 """
 
 import argparse
+import importlib.util
 import json
 import logging
 from datetime import date
@@ -27,6 +28,15 @@ logger = logging.getLogger(__name__)
 DEFAULT_METRICS = "results/tokenizer_metrics.json"
 DEFAULT_CLASSIFIER = "results/ec_classifier.json"
 DEFAULT_OUTPUT = "results/tokenizer_comparison_report.md"
+
+
+def _load_collect_env():
+    spec = importlib.util.spec_from_file_location(
+        "collect_env", Path(__file__).parent / "collect_env.py"
+    )
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.collect_env
 
 
 # ---------------------------------------------------------------------------
@@ -189,52 +199,107 @@ def _summary(metrics: list[dict], clf: list[dict]) -> str:
 # ---------------------------------------------------------------------------
 
 
-def build_report(metrics: list[dict], clf: list[dict]) -> str:
+def _env_section(env: dict) -> str:
+    def _o(v, suffix=""):
+        return f"{v}{suffix}" if v is not None else "N/A"
+
+    lines = [
+        "## 0. Experimental Environment",
+        "",
+        "**Hardware**",
+        "",
+        "| Component | Details |",
+        "|-----------|---------|",
+        f"| CPU | {_o(env.get('cpu_model'))} |",
+        f"| CPU Cores | {_o(env.get('cpu_cores'))} |",
+        f"| RAM | {_o(env.get('ram_gb'), ' GB')} |",
+        f"| OS | {_o(env.get('platform'))} |",
+        "",
+        "**Software**",
+        "",
+        "| Package | Version |",
+        "|---------|---------|",
+        f"| Python | {_o(env.get('python_version'))} |",
+        f"| PyTorch | {_o(env.get('torch_version'))} |",
+        f"| NumPy | {_o(env.get('pkg_numpy'))} |",
+        f"| pandas | {_o(env.get('pkg_pandas'))} |",
+        f"| scikit-learn | {_o(env.get('pkg_scikit_learn'))} |",
+        f"| SentencePiece | {_o(env.get('pkg_sentencepiece'))} |",
+        f"| RDKit | {_o(env.get('pkg_rdkit'))} |",
+    ]
+    return "\n".join(lines)
+
+
+def build_report(
+    metrics: list[dict],
+    clf: list[dict],
+    env: dict | None = None,
+    figures_dir: str | None = None,
+) -> str:
     today = date.today().isoformat()
     tokenizer_names = " vs ".join(r["name"] for r in metrics)
 
+    def _fig(name: str) -> str:
+        if not figures_dir:
+            return ""
+        p = Path(figures_dir) / name
+        # find whichever format exists
+        for ext in ("pdf", "png", "svg"):
+            candidate = p.with_suffix(f".{ext}")
+            if candidate.exists():
+                return f"\n![{name}]({candidate})\n"
+        return f"\n*Figure: {name} (not found at {figures_dir})*\n"
+
     sections = [
-        f"# Tokenizer Comparison Report",
-        f"",
+        "# Tokenizer Comparison Report",
+        "",
         f"**Date:** {today}  ",
         f"**Tokenizers:** {tokenizer_names}",
+        "",
+        "---",
+        "",
+    ]
+
+    if env:
+        sections += [_env_section(env), "", "---", ""]
+
+    sections += [
+        "## 1. Intrinsic Metrics",
         f"",
-        f"---",
-        f"",
-        f"## 1. Intrinsic Metrics",
-        f"",
-        f"Properties measured directly from the tokenization of a shared SMARTS sample.",
-        f"Bold values indicate the better result where applicable.",
-        f"",
+        "Properties measured directly from the tokenization of a shared SMARTS sample.",
+        "Bold values indicate the better result where applicable.",
+        "",
         _intrinsic_table(metrics),
-        f"",
-        f"---",
-        f"",
-        f"## 2. Downstream Task — EC Class Classification",
-        f"",
-        f"Each tokenizer's sequences are featurised with TF-IDF and fed into a "
-        f"logistic regression classifier predicting the top-level EC enzyme class "
-        f"(oxidoreductase, transferase, hydrolase, lyase, isomerase, ligase, translocase). "
-        f"Higher scores indicate the tokenizer encodes more reaction-type information.",
-        f"",
+        _fig("token_length_distribution"),
+        _fig("throughput_fertility"),
+        "",
+        "---",
+        "",
+        "## 2. Downstream Task — EC Class Classification",
+        "",
+        "Each tokenizer's sequences are featurised with TF-IDF and fed into a "
+        "logistic regression classifier predicting the top-level EC enzyme class "
+        "(oxidoreductase, transferase, hydrolase, lyase, isomerase, ligase, translocase). "
+        "Higher scores indicate the tokenizer encodes more reaction-type information.",
+        "",
     ]
 
     if clf:
-        sections += [_classifier_table(clf), f""]
+        sections += [_classifier_table(clf), _fig("ec_classifier"), ""]
     else:
         sections += [
             f"_No classifier results found. "
             f"Run `train_ec_classifier.py --output {DEFAULT_CLASSIFIER}` first._",
-            f"",
+            "",
         ]
 
     sections += [
-        f"---",
-        f"",
-        f"## 3. Summary",
-        f"",
+        "---",
+        "",
+        "## 3. Summary",
+        "",
         _summary(metrics, clf),
-        f"",
+        "",
     ]
 
     return "\n".join(sections)
@@ -255,6 +320,10 @@ def parse_args() -> argparse.Namespace:
                         help=f"Classifier results JSON (default: {DEFAULT_CLASSIFIER})")
     parser.add_argument("--output", default=DEFAULT_OUTPUT,
                         help=f"Output Markdown file (default: {DEFAULT_OUTPUT})")
+    parser.add_argument("--env", default=None,
+                        help="Environment JSON from collect_env.py (optional)")
+    parser.add_argument("--figures-dir", default=None,
+                        help="Directory containing generated figures (optional)")
     return parser.parse_args()
 
 
@@ -275,7 +344,16 @@ def main() -> None:
     if not clf:
         logger.warning("Classifier results not found at %s — Section 2 will be empty.", clf_path)
 
-    report = build_report(metrics, clf)
+    env = None
+    if args.env and Path(args.env).exists():
+        env = json.loads(Path(args.env).read_text())
+        logger.info("Loaded environment from %s", args.env)
+    elif args.env is None:
+        logger.info("No --env provided; collecting environment from current machine...")
+        collect_env = _load_collect_env()
+        env = collect_env()
+
+    report = build_report(metrics, clf, env=env, figures_dir=args.figures_dir)
 
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
