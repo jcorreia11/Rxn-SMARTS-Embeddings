@@ -89,6 +89,13 @@ echo ""
 echo "Results JSON: ${OUTPUT_JSON}"
 echo "Environment:  ${OUTPUT_ENV}"
 echo "Report:       ${OUTPUT_REPORT}"
+
+# ---- commit results to git ----
+echo ""
+echo "=== Committing results to git ($(date)) ==="
+git add "${OUTPUT_JSON}" "${OUTPUT_ENV}" "${OUTPUT_REPORT}"
+git commit -m "[results] Pooling ablation (run ${RUN_ID})"
+
 echo "=== Job finished on $(date) ==="
 
 deactivate
