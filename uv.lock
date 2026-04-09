@@ -2661,6 +2661,7 @@ name = "smartrxnembeddings"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "matplotlib" },
     { name = "pandas", version = "2.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "pandas", version = "3.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "rdkit" },
@@ -2670,19 +2671,19 @@ dependencies = [
     { name = "torch" },
     { name = "torchaudio" },
     { name = "torchvision" },
+    { name = "umap-learn" },
 ]
 
 [package.dev-dependencies]
 dev = [
     { name = "dvc" },
-    { name = "matplotlib" },
     { name = "pytest" },
     { name = "pytest-cov" },
-    { name = "umap-learn" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "matplotlib", specifier = ">=3.10.8" },
     { name = "pandas", specifier = ">=2.3.3" },
     { name = "rdkit", specifier = ">=2025.9.6" },
     { name = "scikit-learn", specifier = ">=1.6.1" },
@@ -2690,15 +2691,14 @@ requires-dist = [
     { name = "torch", specifier = ">=2.0.0", index = "https://download.pytorch.org/whl/cu124" },
     { name = "torchaudio", specifier = ">=2.4.0", index = "https://download.pytorch.org/whl/cu124" },
     { name = "torchvision", specifier = ">=0.19.0", index = "https://download.pytorch.org/whl/cu124" },
+    { name = "umap-learn", specifier = ">=0.5.0" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "dvc", specifier = ">=3.67.1" },
-    { name = "matplotlib", specifier = ">=3.10.8" },
     { name = "pytest", specifier = ">=8.4.2" },
     { name = "pytest-cov", specifier = ">=6.0.0" },
-    { name = "umap-learn", specifier = ">=0.5.0" },
 ]
 
 [[package]]
