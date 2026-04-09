@@ -117,13 +117,15 @@ def load_labelled_smarts(
 
     # --- Optional sample (stratified) ---
     if n_samples and n_samples < len(val):
-        val = val.groupby("label", group_keys=False).apply(
-            lambda g: g.sample(
-                min(len(g), max(1, int(n_samples * len(g) / len(val)))),
+        total = len(val)
+        sampled = [
+            group.sample(
+                min(len(group), max(1, int(n_samples * len(group) / total))),
                 random_state=random_seed,
             )
-        )
-        val = val.sample(frac=1, random_state=random_seed).reset_index(drop=True)
+            for _, group in val.groupby("label")
+        ]
+        val = pd.concat(sampled).sample(frac=1, random_state=random_seed).reset_index(drop=True)
         logger.info("Sampled %d SMARTS (stratified)", len(val))
 
     return val[["smarts", "label"]].reset_index(drop=True)
