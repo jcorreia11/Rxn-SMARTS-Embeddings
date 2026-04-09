@@ -88,6 +88,13 @@ echo "Figure:      ${OUTPUT_FIG}.${FORMAT}"
 echo "Stats:       ${OUTPUT_JSON}"
 echo "Environment: ${OUTPUT_ENV}"
 echo "Report:      ${OUTPUT_REPORT}"
+
+# ---- commit results to git ----
+echo ""
+echo "=== Committing results to git ($(date)) ==="
+git add "${OUTPUT_FIG}.${FORMAT}" "${OUTPUT_JSON}" "${OUTPUT_ENV}" "${OUTPUT_REPORT}"
+git commit -m "[results] Similarity correlation (run ${RUN_ID}, N=${N_REACTIONS})"
+
 echo "=== Job finished on $(date) ==="
 
 deactivate
