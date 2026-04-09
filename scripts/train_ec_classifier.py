@@ -219,7 +219,7 @@ def evaluate(
             cv=cv,
             scoring=["accuracy", "f1_macro", "f1_weighted"],
             return_train_score=False,
-            n_jobs=1,
+            n_jobs=-1,
         )
     cv_time_s = time.perf_counter() - t0_cv
 
@@ -360,7 +360,7 @@ def evaluate_embeddings(
             cv=cv,
             scoring=["accuracy", "f1_macro", "f1_weighted"],
             return_train_score=False,
-            n_jobs=1,
+            n_jobs=-1,
         )
     cv_time_s = time.perf_counter() - t0_cv
 
