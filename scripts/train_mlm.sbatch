@@ -144,6 +144,16 @@ python scripts/generate_mlm_report.py \
 echo ""
 echo "Training plot: ${FIGURE}"
 echo "Report:        ${REPORT}"
+
+# ---- version-track model artifacts with DVC ----
+echo ""
+echo "=== Tracking model artifacts with DVC ($(date)) ==="
+dvc add "${OUTPUT}" "${OUTPUT%.pt}.json"
+
+git add "${OUTPUT}.dvc" "${OUTPUT%.pt}.json.dvc" models/.gitignore
+git commit -m "[DVC] Track MLM model weights and config (run ${RUN_ID})"
+dvc push
+
 echo "=== Job finished on $(date) ==="
 
 deactivate
