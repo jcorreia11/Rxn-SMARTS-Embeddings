@@ -1,13 +1,15 @@
 """MLM collator and trainer for reaction SMARTS."""
 
 import logging
+import math
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
 import torch
 import torch.nn as nn
 from torch import Tensor
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader, Dataset, random_split
 
 logger = logging.getLogger(__name__)
 
@@ -119,6 +121,10 @@ class TrainingConfig:
     checkpoint_dir: Directory for per-epoch best checkpoints.
     output_path:    Final model weights path.
     log_every:      Log batch-level loss every N steps.
+    val_split:      Fraction of data held out for validation (0 = no split).
+    warmup_steps:   Linear LR warmup steps; cosine decay for the remainder.
+    max_grad_norm:  Gradient clipping max norm (0 = disabled).
+    num_workers:    DataLoader worker processes.
     """
 
     learning_rate: float = 1e-4
@@ -128,13 +134,18 @@ class TrainingConfig:
     checkpoint_dir: str = "models/checkpoints"
     output_path: str = "models/smarts_transformer.pt"
     log_every: int = 10
+    val_split: float = 0.0
+    warmup_steps: int = 0
+    max_grad_norm: float = 1.0
+    num_workers: int = 0
 
 
 class Trainer:
     """Trains a :class:`SmartsMLMModel` with MLM objective.
 
-    Saves the best checkpoint (by average epoch loss) to *checkpoint_dir* and
-    the final weights + config to *output_path*.
+    Saves the best checkpoint (by validation loss if ``val_split > 0``,
+    otherwise by train loss) to *checkpoint_dir* and the final weights +
+    config to *output_path*.
 
     Parameters
     ----------
@@ -155,13 +166,28 @@ class Trainer:
         device: str | None = None,
     ) -> None:
         self.model = model
-        self.dataset = dataset
         self.collator = collator
         self.config = config
         self.device = torch.device(
             device or ("cuda" if torch.cuda.is_available() else "cpu")
         )
         self.model.to(self.device)
+
+        if config.val_split > 0.0:
+            n_val = max(1, int(len(dataset) * config.val_split))
+            n_train = len(dataset) - n_val
+            self.train_dataset, self.val_dataset = random_split(
+                dataset, [n_train, n_val]
+            )
+            logger.info(
+                "Train/val split: %d train | %d val (%.0f%%)",
+                n_train,
+                n_val,
+                config.val_split * 100,
+            )
+        else:
+            self.train_dataset = dataset
+            self.val_dataset = None
 
         self.optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate)
         self.loss_fn = nn.CrossEntropyLoss(ignore_index=-100)
@@ -175,39 +201,94 @@ class Trainer:
 
         Returns
         -------
-        List of average losses, one per epoch.
+        List of average *train* losses, one per epoch.
         """
-        loader = DataLoader(
-            self.dataset,
+        pin = self.device.type == "cuda"
+        train_loader = DataLoader(
+            self.train_dataset,
             batch_size=self.config.batch_size,
             shuffle=True,
             collate_fn=self.collator,
+            num_workers=self.config.num_workers,
+            pin_memory=pin,
         )
-        epoch_losses: list[float] = []
+        val_loader = None
+        if self.val_dataset is not None:
+            val_loader = DataLoader(
+                self.val_dataset,
+                batch_size=self.config.batch_size,
+                shuffle=False,
+                collate_fn=self.collator,
+                num_workers=self.config.num_workers,
+                pin_memory=pin,
+            )
+
+        total_steps = len(train_loader) * self.config.num_epochs
+        scheduler = self._make_scheduler(total_steps)
+
+        train_losses: list[float] = []
+        val_losses: list[float] = []
+        val_top1: list[float] = []
+        val_top5: list[float] = []
+        t_start = time.time()
 
         for epoch in range(1, self.config.num_epochs + 1):
-            avg_loss = self._run_epoch(loader, epoch)
-            epoch_losses.append(avg_loss)
+            avg_train = self._run_epoch(train_loader, epoch, scheduler)
+            train_losses.append(avg_train)
 
-            if avg_loss < self._best_loss:
-                self._best_loss = avg_loss
+            monitor = avg_train
+            if val_loader is not None:
+                avg_val, top1, top5 = self._run_val_epoch(val_loader, epoch)
+                val_losses.append(avg_val)
+                val_top1.append(top1)
+                val_top5.append(top5)
+                monitor = avg_val
+
+            if monitor < self._best_loss:
+                self._best_loss = monitor
                 self._save_weights(self._ckpt_dir / "best.pt")
                 logger.info(
                     "Epoch %d/%d | new best loss %.4f — checkpoint saved",
                     epoch,
                     self.config.num_epochs,
-                    avg_loss,
+                    monitor,
                 )
 
+        elapsed = time.time() - t_start
         output_path = Path(self.config.output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         self._save_weights(output_path)
-        self._save_config(output_path.with_suffix(".json"))
-        logger.info("Training complete. Final model saved to %s", output_path)
+        self._save_config(
+            output_path.with_suffix(".json"),
+            train_losses=train_losses,
+            val_losses=val_losses,
+            val_top1=val_top1,
+            val_top5=val_top5,
+            training_time_s=elapsed,
+        )
+        logger.info(
+            "Training complete in %.0f s. Final model saved to %s", elapsed, output_path
+        )
 
-        return epoch_losses
+        return train_losses
 
-    def _run_epoch(self, loader: DataLoader, epoch: int) -> float:
+    def _make_scheduler(self, total_steps: int) -> torch.optim.lr_scheduler.LambdaLR:
+        warmup = self.config.warmup_steps
+
+        def lr_lambda(step: int) -> float:
+            if step < warmup:
+                return step / max(warmup, 1)
+            progress = (step - warmup) / max(total_steps - warmup, 1)
+            return max(0.0, 0.5 * (1.0 + math.cos(math.pi * progress)))
+
+        return torch.optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda)
+
+    def _run_epoch(
+        self,
+        loader: DataLoader,
+        epoch: int,
+        scheduler: torch.optim.lr_scheduler.LambdaLR,
+    ) -> float:
         self.model.train()
         total_loss = 0.0
 
@@ -221,26 +302,95 @@ class Trainer:
 
             self.optimizer.zero_grad()
             loss.backward()
+            if self.config.max_grad_norm > 0:
+                nn.utils.clip_grad_norm_(
+                    self.model.parameters(), self.config.max_grad_norm
+                )
             self.optimizer.step()
+            scheduler.step()
 
             total_loss += loss.item()
             if step % self.config.log_every == 0:
                 logger.info(
-                    "Epoch %d/%d | step %4d | loss %.4f",
+                    "Epoch %d/%d | step %4d | loss %.4f | lr %.2e",
                     epoch,
                     self.config.num_epochs,
                     step,
                     loss.item(),
+                    scheduler.get_last_lr()[0],
                 )
 
         avg = total_loss / len(loader)
-        logger.info("Epoch %d/%d | avg loss %.4f", epoch, self.config.num_epochs, avg)
+        logger.info(
+            "Epoch %d/%d | avg train loss %.4f", epoch, self.config.num_epochs, avg
+        )
         return avg
+
+    def _run_val_epoch(
+        self, loader: DataLoader, epoch: int
+    ) -> tuple[float, float, float]:
+        """Returns (avg_loss, top1_accuracy, top5_accuracy) over masked positions."""
+        self.model.eval()
+        total_loss = 0.0
+        correct_top1 = 0
+        correct_top5 = 0
+        total_masked = 0
+
+        with torch.no_grad():
+            for batch in loader:
+                input_ids = batch["input_ids"].to(self.device)
+                attention_mask = batch["attention_mask"].to(self.device)
+                labels = batch["labels"].to(self.device)
+
+                logits = self.model(input_ids, attention_mask)  # (B, L, V)
+                loss = self.loss_fn(logits.view(-1, logits.size(-1)), labels.view(-1))
+                total_loss += loss.item()
+
+                # Only evaluate masked positions (labels != -100)
+                flat_labels = labels.view(-1)  # (B*L,)
+                flat_logits = logits.view(-1, logits.size(-1))  # (B*L, V)
+                mask = flat_labels != -100
+
+                if mask.any():
+                    masked_logits = flat_logits[mask]  # (M, V)
+                    masked_labels = flat_labels[mask]  # (M,)
+
+                    top5_preds = masked_logits.topk(5, dim=-1).indices  # (M, 5)
+                    correct_top1 += (top5_preds[:, 0] == masked_labels).sum().item()
+                    correct_top5 += (
+                        (top5_preds == masked_labels.unsqueeze(1))
+                        .any(dim=1)
+                        .sum()
+                        .item()
+                    )
+                    total_masked += masked_labels.size(0)
+
+        avg = total_loss / len(loader)
+        top1 = correct_top1 / total_masked if total_masked > 0 else 0.0
+        top5 = correct_top5 / total_masked if total_masked > 0 else 0.0
+
+        logger.info(
+            "Epoch %d/%d | avg val loss %.4f | top-1 acc %.4f | top-5 acc %.4f",
+            epoch,
+            self.config.num_epochs,
+            avg,
+            top1,
+            top5,
+        )
+        return avg, top1, top5
 
     def _save_weights(self, path: Path) -> None:
         torch.save(self.model.state_dict(), path)
 
-    def _save_config(self, path: Path) -> None:
+    def _save_config(
+        self,
+        path: Path,
+        train_losses: list[float] | None = None,
+        val_losses: list[float] | None = None,
+        val_top1: list[float] | None = None,
+        val_top5: list[float] | None = None,
+        training_time_s: float | None = None,
+    ) -> None:
         import json
 
         payload = {
@@ -248,5 +398,12 @@ class Trainer:
             "training_config": {k: v for k, v in self.config.__dict__.items()},
             "mask_id": self.collator.mask_id,
             "extended_vocab_size": self.collator.extended_vocab_size,
+            "history": {
+                "train_losses": train_losses or [],
+                "val_losses": val_losses or [],
+                "val_top1_accuracy": val_top1 or [],
+                "val_top5_accuracy": val_top5 or [],
+                "training_time_s": training_time_s,
+            },
         }
         path.write_text(json.dumps(payload, indent=2))
