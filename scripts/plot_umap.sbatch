@@ -79,6 +79,13 @@ python scripts/plot_umap.py \
 echo ""
 echo "Figure:     ${OUTPUT}.${FORMAT}"
 echo "UMAP cache: ${UMAP_CACHE}"
+
+# ---- commit results to git ----
+echo ""
+echo "=== Committing results to git ($(date)) ==="
+git add "${OUTPUT}.${FORMAT}"
+git commit -m "[results] UMAP embedding space (job ${SLURM_JOB_ID})"
+
 echo "=== Job finished on $(date) ==="
 
 deactivate
