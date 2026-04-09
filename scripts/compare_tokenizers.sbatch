@@ -96,6 +96,13 @@ python scripts/generate_report.py \
 echo ""
 echo "Figures:  ${FIGURES_DIR}/"
 echo "Report:   ${RESULTS_DIR}/tokenizer_comparison_report.md"
+
+# ---- commit results to git ----
+echo ""
+echo "=== Committing results to git ($(date)) ==="
+git add "${RESULTS_DIR}/"
+git commit -m "[results] Tokenizer comparison (run ${RUN_ID}, N=${N_SAMPLES}, EC_DEPTH=${EC_DEPTH})"
+
 echo "=== Job finished on $(date) ==="
 
 deactivate
