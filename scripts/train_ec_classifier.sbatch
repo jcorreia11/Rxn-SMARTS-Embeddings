@@ -117,6 +117,13 @@ echo "Results JSON:  ${OUTPUT}"
 echo "Environment:   ${ENV_JSON}"
 echo "Report:        ${REPORT}"
 echo "Figure:        ${REPORT%.md}.pdf"
+
+# ---- commit results to git ----
+echo ""
+echo "=== Committing results to git ($(date)) ==="
+git add "${OUTPUT}" "${ENV_JSON}" "${REPORT}" "${REPORT%.md}.pdf"
+git commit -m "[results] EC classifier (run ${RUN_ID})"
+
 echo "=== Job finished on $(date) ==="
 
 deactivate
