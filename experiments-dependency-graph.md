@@ -3,24 +3,37 @@
 ## Dependency Graph
 
 ```
-[plot_dataset_stats]  [compare_tokenizers]     ← Phase 0: independent, paper figures
-         |                    |
-         └────── (no deps) ───┘
-
-[train_mlm]                                    ← Phase 1: core training (GPU required)
-         |
-         ├──── [extract_embeddings]             ← Phase 2a: parallel
-         └──── [ablation_pooling]               ← Phase 2b: parallel
-                      |
-          ┌───────────┼─────────────┐
-   [plot_umap]  [similarity_corr]  [train_ec_classifier]  ← Phase 3: parallel (after embeddings)
-                                          |
-                              [nearest_neighbors]          ← Phase 4: optional/qualitative
+[dvc_repro]                                    <- Preprocessing (CPU, run once)
+     |
+     +-------------------------+
+     |                         |
+[plot_dataset_stats]    [train_mlm]            <- Phase 0 (CPU) and Phase 1 (GPU) share preprocessed data
+[compare_tokenizers]         |
+                             +----------------+
+                             |                |
+                  [extract_embeddings]  [ablation_pooling]   <- Phase 2: GPU (parallel)
+                             |
+             +---------------+---------------+
+             |               |               |
+       [plot_umap]  [similarity_corr]  [train_ec_classifier] <- Phase 3: CPU (parallel)
+                                       (also needs WEIGHTS)
+                                             |
+                                   [nearest_neighbors]        <- Phase 4: optional
 ```
 
-## Phase 0 — Independent (submit anytime, parallel)
+## Artifact Persistence (automatic on completion)
 
-No model needed. Pure data analysis / paper figures.
+| Script | Outputs | How |
+|---|---|---|
+| `train_mlm` | `models/*.pt` + `*.json` | `dvc add` + `dvc push` |
+| `extract_embeddings` | `data/embeddings/*.npy` + `*.txt` | `dvc add` + `dvc push` |
+| all others | results JSONs, reports, figures | `git commit` |
+
+---
+
+## Phase 0 -- Independent (submit anytime, parallel, CPU)
+
+No model needed. Run before or alongside Phase 1.
 
 ```bash
 sbatch scripts/plot_dataset_stats.sbatch
@@ -29,9 +42,7 @@ sbatch scripts/compare_tokenizers.sbatch
 
 ---
 
-## Phase 1 — Train MLM (sequential, GPU)
-
-Publication-level overrides: more epochs, more warmup (larger dataset needs longer schedule), slightly tighter gradient clipping.
+## Phase 1 -- Train MLM (GPU)
 
 ```bash
 sbatch --export=ALL,\
@@ -52,22 +63,20 @@ NUM_WORKERS=4 \
 scripts/train_mlm.sbatch
 ```
 
-> After this completes, note the `RUN_ID` from the job log (printed as `Run ID: YYYYMMDD_HHMMSS`) and set:
+> After completion, note the `RUN_ID` from the job log (`Run ID: YYYYMMDD_HHMMSS`) and set:
 > ```bash
-> export RUN_ID=<value_from_log>
 > export WEIGHTS=models/smarts_transformer_${RUN_ID}.pt
 > export CONFIG=models/smarts_transformer_${RUN_ID}.json
 > ```
 
 ---
 
-## Phase 2 — Extract Embeddings + Pooling Ablation (parallel, both GPU)
+## Phase 2 -- Extract Embeddings + Pooling Ablation (parallel, GPU)
 
-Submit simultaneously after Phase 1.
+Submit both simultaneously after Phase 1.
 
 ```bash
-# 2a — extract embeddings (use mean pooling if ablation hasn't run yet;
-#       re-run with winning strategy after ablation — but cls is the default)
+# 2a -- extract embeddings (default: CLS pooling)
 sbatch --export=ALL,\
 WEIGHTS=${WEIGHTS},\
 CONFIG=${CONFIG},\
@@ -77,7 +86,7 @@ OUTPUT=data/embeddings/reaction_embeddings.npy,\
 SMARTS_OUTPUT=data/embeddings/reaction_smarts.txt \
 scripts/extract_embeddings.sbatch
 
-# 2b — CLS vs mean pooling ablation
+# 2b -- CLS vs mean pooling ablation
 sbatch --export=ALL,\
 WEIGHTS=${WEIGHTS},\
 CONFIG=${CONFIG},\
@@ -88,16 +97,20 @@ EMBED_BATCH_SIZE=128 \
 scripts/ablation_pooling.sbatch
 ```
 
-> Once 2b finishes, check which pooling wins and re-run 2a with the winning `POOLING` if needed before Phase 3.
+> Once 2b finishes, check the report for the winning pooling strategy, then set:
+> ```bash
+> export BEST_POOLING=cls   # or mean, whichever won
+> ```
+> If the winner differs from what was used in 2a, re-run `extract_embeddings.sbatch` with `POOLING=${BEST_POOLING}` before submitting Phase 3.
 
 ---
 
-## Phase 3 — Evaluation (parallel, after embeddings are ready)
+## Phase 3 -- Evaluation (parallel, CPU)
 
-Submit all three simultaneously.
+Submit all three simultaneously after 2a completes.
 
 ```bash
-# 3a — UMAP visualization (GPU node for speed, but mostly CPU-bound)
+# 3a -- UMAP visualization
 sbatch --export=ALL,\
 EMBEDDINGS=data/embeddings/reaction_embeddings.npy,\
 SMARTS_FILE=data/embeddings/reaction_smarts.txt,\
@@ -109,8 +122,8 @@ DPI=300,\
 FORMAT=pdf \
 scripts/plot_umap.sbatch
 
-# 3b — Embedding vs Tanimoto similarity correlation
-#       N_REACTIONS=3000 → ~4.5M pairs, statistically robust, still fits in 32GB
+# 3b -- Embedding vs Tanimoto similarity correlation
+#       N_REACTIONS=3000 gives ~4.5M pairs, statistically robust, fits in 32 GB
 sbatch --export=ALL,\
 EMBEDDINGS=data/embeddings/reaction_embeddings.npy,\
 SMARTS_FILE=data/embeddings/reaction_smarts.txt,\
@@ -121,13 +134,12 @@ DPI=300,\
 GRIDSIZE=60 \
 scripts/similarity_correlation.sbatch
 
-# 3c — EC classification benchmark (TF-IDF vs pretrained vs random embeddings)
-#       N_SAMPLES=-1 or large to use all available data; 10-fold CV for publication
+# 3c -- EC classification benchmark (TF-IDF vs pretrained vs random embeddings)
+# Set POOLING to the winner from ablation_pooling (2b) — default in script is mean
 sbatch --export=ALL,\
 WEIGHTS=${WEIGHTS},\
 CONFIG=${CONFIG},\
-VOCAB=data/processed/vocab.json,\
-POOLING=cls,\
+POOLING=${BEST_POOLING},\
 N_SAMPLES=50000,\
 EC_DEPTH=1,\
 FOLDS=10,\
@@ -137,12 +149,11 @@ scripts/train_ec_classifier.sbatch
 
 ---
 
-## Phase 4 — Nearest Neighbors (optional / qualitative examples)
+## Phase 4 -- Nearest Neighbors (optional, qualitative)
 
-Lightweight, CPU-only node. Submit after Phase 2.
+Lightweight CPU job. Submit after Phase 2.
 
 ```bash
-# A few illustrative queries for the paper
 sbatch --export=ALL,\
 EMBEDDINGS=data/embeddings/reaction_embeddings.npy,\
 SMARTS_FILE=data/embeddings/reaction_smarts.txt,\
@@ -159,17 +170,32 @@ scripts/nearest_neighbors.sbatch
 
 | Script | Arg | Default | Recommended | Reason |
 |---|---|---|---|---|
-| `train_mlm` | `EPOCHS` | 40 | 100 | Ensure convergence |
-| `train_mlm` | `WARMUP_STEPS` | 500 | 2000 | Large dataset needs longer warmup |
-| `train_mlm` | `BATCH_SIZE` | 128 | 64 | Better gradient signal per step |
-| `ablation_pooling` | `N_SAMPLES` | 10000 | 20000 | More reliable CV estimate |
-| `ablation_pooling` | `FOLDS` | 5 | 10 | Tighter confidence intervals |
-| `train_ec_classifier` | `N_SAMPLES` | 10000 | 50000+ | Use as much data as available |
-| `train_ec_classifier` | `FOLDS` | 5 | 10 | Publication standard |
-| `similarity_correlation` | `N_REACTIONS` | 1000 | 3000 | Default gives only ~500k pairs — too small |
+| `train_mlm` | `EPOCHS` | 40 | **100** | Ensure convergence |
+| `train_mlm` | `WARMUP_STEPS` | 500 | **2000** | Large dataset needs longer warmup |
+| `train_mlm` | `BATCH_SIZE` | 128 | **64** | Better gradient signal per step |
+| `ablation_pooling` | `N_SAMPLES` | 10000 | **20000** | More reliable CV estimate |
+| `ablation_pooling` | `FOLDS` | 5 | **10** | Tighter confidence intervals |
+| `train_ec_classifier` | `N_SAMPLES` | 10000 | **50000+** | Use as much data as available |
+| `train_ec_classifier` | `FOLDS` | 5 | **10** | Publication standard |
+| `similarity_correlation` | `N_REACTIONS` | 1000 | **3000** | Default gives only ~500k pairs -- too small |
 
 ---
 
-## Note on `dvc_repro.sbatch`
+## Preprocessing -- `dvc_repro.sbatch` (run once, CPU)
 
-If your DVC pipeline is fully configured to orchestrate the stages in the right order, `dvc_repro.sbatch` can run the entire preprocessing pipeline in one shot. However, it runs on CPU-only (`normal-x86`) and does not handle the GPU training scripts — those must still be submitted manually as above. Use it for data preprocessing stages if they're DVC-tracked.
+Runs the full preprocessing chain via `dvc repro`:
+
+```
+raw CSVs -> load_data -> validate_smarts -> build_vocab -> train_sentencepiece
+```
+
+```bash
+sbatch scripts/dvc_repro.sbatch
+```
+
+**One-time HPC remote setup (before first `dvc push`):**
+```bash
+dvc remote add --default hpc_storage /projects/F202508983CPCAA0/jcorreia/dvc-storage
+git add .dvc/config
+git commit -m "[DVC] Set HPC remote storage"
+```
