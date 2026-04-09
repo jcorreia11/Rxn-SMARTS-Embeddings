@@ -57,6 +57,13 @@ python scripts/plot_dataset_stats.py \
 
 echo ""
 echo "Figure: ${OUTPUT}.${FORMAT}"
+
+# ---- commit results to git ----
+echo ""
+echo "=== Committing results to git ($(date)) ==="
+git add "${OUTPUT}.${FORMAT}"
+git commit -m "[results] Dataset overview figure (job ${SLURM_JOB_ID})"
+
 echo "=== Job finished on $(date) ==="
 
 deactivate
