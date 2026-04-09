@@ -1,0 +1,144 @@
+{
+  "meta": {
+    "run_id": "ec_classifier",
+    "date": "2026-04-09",
+    "ec_depth": 1,
+    "n_samples_requested": "all",
+    "n_samples_actual": 214007,
+    "train_test_split": "80/20 stratified",
+    "random_seed": 42,
+    "folds": 5,
+    "label_names": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7"
+    ],
+    "total_time_s": 190.11
+  },
+  "results": [
+    {
+      "name": "SmartsTokenizer",
+      "n_train": 171205,
+      "n_test": 42802,
+      "n_classes": 7,
+      "n_folds": 5,
+      "accuracy_mean": 0.5979,
+      "accuracy_std": 0.0009,
+      "f1_macro_mean": 0.4479,
+      "f1_macro_std": 0.0025,
+      "f1_weighted_mean": 0.627,
+      "f1_weighted_std": 0.0012,
+      "cv_time_s": 36.71,
+      "fit_time_s": 51.56,
+      "per_class": {
+        "1": {
+          "precision": 0.6762,
+          "recall": 0.5168,
+          "f1": 0.5858,
+          "support": 11314
+        },
+        "2": {
+          "precision": 0.8862,
+          "recall": 0.6551,
+          "f1": 0.7533,
+          "support": 18463
+        },
+        "3": {
+          "precision": 0.5612,
+          "recall": 0.5563,
+          "f1": 0.5587,
+          "support": 6753
+        },
+        "4": {
+          "precision": 0.4054,
+          "recall": 0.516,
+          "f1": 0.4541,
+          "support": 3655
+        },
+        "5": {
+          "precision": 0.2141,
+          "recall": 0.8633,
+          "f1": 0.3432,
+          "support": 958
+        },
+        "6": {
+          "precision": 0.2532,
+          "recall": 0.7714,
+          "f1": 0.3813,
+          "support": 1645
+        },
+        "7": {
+          "precision": 0.0456,
+          "recall": 0.9286,
+          "f1": 0.087,
+          "support": 14
+        }
+      },
+      "n_samples": 214007
+    },
+    {
+      "name": "SentencePieceTokenizer",
+      "n_train": 171205,
+      "n_test": 42802,
+      "n_classes": 7,
+      "n_folds": 5,
+      "accuracy_mean": 0.6428,
+      "accuracy_std": 0.0026,
+      "f1_macro_mean": 0.5083,
+      "f1_macro_std": 0.0038,
+      "f1_weighted_mean": 0.6658,
+      "f1_weighted_std": 0.0019,
+      "cv_time_s": 43.84,
+      "fit_time_s": 44.37,
+      "per_class": {
+        "1": {
+          "precision": 0.7391,
+          "recall": 0.569,
+          "f1": 0.643,
+          "support": 11314
+        },
+        "2": {
+          "precision": 0.8961,
+          "recall": 0.6936,
+          "f1": 0.782,
+          "support": 18463
+        },
+        "3": {
+          "precision": 0.5618,
+          "recall": 0.5783,
+          "f1": 0.5699,
+          "support": 6753
+        },
+        "4": {
+          "precision": 0.4346,
+          "recall": 0.5912,
+          "f1": 0.501,
+          "support": 3655
+        },
+        "5": {
+          "precision": 0.2561,
+          "recall": 0.8977,
+          "f1": 0.3985,
+          "support": 958
+        },
+        "6": {
+          "precision": 0.296,
+          "recall": 0.7951,
+          "f1": 0.4314,
+          "support": 1645
+        },
+        "7": {
+          "precision": 0.14,
+          "recall": 1.0,
+          "f1": 0.2456,
+          "support": 14
+        }
+      },
+      "n_samples": 214007
+    }
+  ]
+}
