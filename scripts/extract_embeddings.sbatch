@@ -69,6 +69,16 @@ python scripts/extract_embeddings.py \
 echo ""
 echo "Embeddings: ${OUTPUT}"
 echo "SMARTS list: ${SMARTS_OUTPUT}"
+
+# ---- version-track embedding artifacts with DVC ----
+echo ""
+echo "=== Tracking embedding artifacts with DVC ($(date)) ==="
+dvc add "${OUTPUT}" "${SMARTS_OUTPUT}"
+
+git add "${OUTPUT}.dvc" "${SMARTS_OUTPUT}.dvc" data/embeddings/.gitignore
+git commit -m "[DVC] Track reaction embeddings (pooling=${POOLING})"
+dvc push
+
 echo "=== Job finished on $(date) ==="
 
 deactivate
