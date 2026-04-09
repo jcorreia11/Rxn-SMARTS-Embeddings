@@ -110,6 +110,7 @@ def benchmark_smarts_tokenizer(smarts_list: list[str]) -> dict:
         "unique_tokens_used": len(unique_tokens),
         "vocab_utilisation": None,  # no fixed vocab to compare against
         "round_trip_rate": 1.0,  # guaranteed by "".join(tokens) == smarts
+        "seq_len_values": token_counts,
     }
 
 
@@ -139,7 +140,7 @@ def benchmark_sp_tokenizer(smarts_list: list[str], model_path: str) -> dict:
     fertility_values = [t / c for t, c in zip(token_counts, char_counts) if c > 0]
 
     return {
-        "name": f"SentencePieceTokenizer",
+        "name": "SentencePieceTokenizer",
         "vocab_size": vocab_size,
         "n_samples": len(smarts_list),
         "n_ok": len(smarts_list),
@@ -157,6 +158,7 @@ def benchmark_sp_tokenizer(smarts_list: list[str], model_path: str) -> dict:
         "unique_tokens_used": len(unique_tokens),
         "vocab_utilisation": round(len(unique_tokens) / vocab_size, 4) if vocab_size else 0,
         "round_trip_rate": round(round_trips / len(smarts_list), 4) if smarts_list else 0,
+        "seq_len_values": token_counts,
     }
 
 

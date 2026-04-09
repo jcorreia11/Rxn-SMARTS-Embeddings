@@ -39,7 +39,9 @@ SP_VOCAB_SIZE="${SP_VOCAB_SIZE:-1000}"
 
 RUN_ID=$(date +%Y%m%d_%H%M%S)
 RESULTS_DIR="results/tokenizer_comparison_${RUN_ID}"
-mkdir -p "${RESULTS_DIR}"
+FIGURES_DIR="${RESULTS_DIR}/figures"
+ENV_JSON="${RESULTS_DIR}/env.json"
+mkdir -p "${RESULTS_DIR}" "${FIGURES_DIR}"
 
 echo "Run ID:        ${RUN_ID}"
 echo "Results dir:   ${RESULTS_DIR}"
@@ -48,9 +50,14 @@ echo "EC depth:      ${EC_DEPTH}"
 echo "SP model:      ${SP_MODEL}"
 echo "SP vocab size: ${SP_VOCAB_SIZE}"
 
-# ---- step 1: EC classification (trains SP model if missing) ----
+# ---- step 1: collect environment info ----
 echo ""
-echo "=== Step 1/3: EC classifier comparison ($(date)) ==="
+echo "=== Step 1/5: Collecting environment info ($(date)) ==="
+python scripts/collect_env.py --output "${ENV_JSON}"
+
+# ---- step 2: EC classification (trains SP model if missing) ----
+echo ""
+echo "=== Step 2/5: EC classifier comparison ($(date)) ==="
 python scripts/train_ec_classifier.py \
     --n-samples "${N_SAMPLES}" \
     --ec-depth "${EC_DEPTH}" \
@@ -59,24 +66,36 @@ python scripts/train_ec_classifier.py \
     --folds 5 \
     --output "${RESULTS_DIR}/ec_classifier.json"
 
-# ---- step 2: intrinsic metrics ----
+# ---- step 3: intrinsic metrics ----
 echo ""
-echo "=== Step 2/3: Intrinsic metrics comparison ($(date)) ==="
+echo "=== Step 3/5: Intrinsic metrics comparison ($(date)) ==="
 python scripts/compare_tokenizers.py \
     --n-samples "${N_SAMPLES}" \
     --sp-model "${SP_MODEL}" \
     --output "${RESULTS_DIR}/tokenizer_metrics.json"
 
-# ---- step 3: generate report ----
+# ---- step 4: generate figures ----
 echo ""
-echo "=== Step 3/3: Generating report ($(date)) ==="
-python scripts/generate_report.py \
-    --metrics "${RESULTS_DIR}/tokenizer_metrics.json" \
+echo "=== Step 4/5: Generating figures ($(date)) ==="
+python scripts/plot_tokenizer_comparison.py \
+    --metrics    "${RESULTS_DIR}/tokenizer_metrics.json" \
     --classifier "${RESULTS_DIR}/ec_classifier.json" \
-    --output "${RESULTS_DIR}/tokenizer_comparison_report.md"
+    --output-dir "${FIGURES_DIR}" \
+    --format     pdf
+
+# ---- step 5: generate report ----
+echo ""
+echo "=== Step 5/5: Generating report ($(date)) ==="
+python scripts/generate_report.py \
+    --metrics     "${RESULTS_DIR}/tokenizer_metrics.json" \
+    --classifier  "${RESULTS_DIR}/ec_classifier.json" \
+    --env         "${ENV_JSON}" \
+    --figures-dir "${FIGURES_DIR}" \
+    --output      "${RESULTS_DIR}/tokenizer_comparison_report.md"
 
 echo ""
-echo "Report: ${RESULTS_DIR}/tokenizer_comparison_report.md"
+echo "Figures:  ${FIGURES_DIR}/"
+echo "Report:   ${RESULTS_DIR}/tokenizer_comparison_report.md"
 echo "=== Job finished on $(date) ==="
 
 deactivate
