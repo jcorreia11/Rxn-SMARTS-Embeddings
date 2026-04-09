@@ -51,9 +51,24 @@ src/smart_rxn_embeddings/
 
 scripts/
 ├── train_mlm.py              # CLI entry point for MLM pretraining
-├── train_mlm.sbatch          # SLURM job script (A100)
+├── train_mlm.sbatch          # SLURM job script (A100) — auto dvc-tracks model on completion
+├── extract_embeddings.py     # extract reaction embeddings from trained model
+├── extract_embeddings.sbatch # SLURM job script — auto dvc-tracks embeddings on completion
+├── ablation_pooling.py       # CLS vs mean pooling ablation (EC classification)
+├── ablation_pooling.sbatch
+├── train_ec_classifier.py    # EC number classification benchmark
+├── train_ec_classifier.sbatch
 ├── compare_tokenizers.py     # tokenizer comparison analysis
-└── compare_tokenizers.sbatch
+├── compare_tokenizers.sbatch
+├── similarity_correlation.py # embedding vs Tanimoto similarity correlation
+├── similarity_correlation.sbatch
+├── plot_umap.py              # UMAP visualization of embedding space
+├── plot_umap.sbatch
+├── nearest_neighbors.py      # nearest-neighbor retrieval in embedding space
+├── nearest_neighbors.sbatch
+├── plot_dataset_stats.py     # dataset overview figures
+├── plot_dataset_stats.sbatch
+└── dvc_repro.sbatch          # SLURM job script for DVC preprocessing pipeline
 
 tests/
 ├── preprocessing/
@@ -90,6 +105,12 @@ This runs (in order):
 | `build_vocab` | `validated_smarts.csv` | `data/processed/vocab.json` |
 | `train_sentencepiece` | `validated_smarts.csv` | `data/processed/sp_tokenizer.model` |
 
+Large binary artifacts (model weights, embeddings) are tracked outside the DVC pipeline using `dvc add`, so they can be versioned and shared without re-running training:
+
+```bash
+dvc pull   # restore all tracked artifacts (preprocessed data + model weights + embeddings)
+```
+
 ## Training
 
 ### Locally
@@ -107,22 +128,26 @@ All options:
 data:
   --data PATH          CSV with 'smarts' and 'valid' columns
   --vocab PATH         vocab.json produced by build_vocab.py
-  --max-length INT     pad/truncate sequences to this length (default: 128)
+  --max-length INT     pad/truncate sequences to this length (default: 256)
 
 model:
-  --d-model INT        embedding dimension (default: 128)
-  --nhead INT          attention heads (default: 4)
-  --num-layers INT     encoder layers (default: 4)
-  --dim-feedforward INT  FFN hidden dim (default: 512)
+  --d-model INT        embedding dimension (default: 256)
+  --nhead INT          attention heads (default: 8)
+  --num-layers INT     encoder layers (default: 6)
+  --dim-feedforward INT  FFN hidden dim (default: 1024)
   --dropout FLOAT      dropout probability (default: 0.1)
 
 training:
   --lr FLOAT           learning rate (default: 1e-4)
-  --batch-size INT     batch size (default: 32)
-  --epochs INT         training epochs (default: 10)
+  --batch-size INT     batch size (default: 128)
+  --epochs INT         training epochs (default: 40)
   --mask-prob FLOAT    fraction of tokens masked (default: 0.15)
+  --val-split FLOAT    validation fraction (default: 0.1)
+  --warmup-steps INT   linear LR warmup steps (default: 500)
+  --max-grad-norm FLOAT  gradient clipping norm (default: 1.0)
+  --num-workers INT    DataLoader workers (default: 4)
   --checkpoint-dir DIR best checkpoint directory (default: models/checkpoints)
-  --output PATH        final model weights (default: models/smarts_transformer.pt)
+  --output PATH        final model weights (default: models/smarts_transformer_<RUN_ID>.pt)
   --device STR         'cuda' or 'cpu' (auto-detected if omitted)
 ```
 
@@ -143,9 +168,15 @@ Output files (stamped with `RUN_ID=YYYYMMDD_HHMMSS`):
 
 | File | Description |
 |---|---|
-| `models/smarts_transformer_<RUN_ID>.pt` | Final model weights |
-| `models/smarts_transformer_<RUN_ID>.json` | Model + training config |
+| `models/smarts_transformer_<RUN_ID>.pt` | Final model weights (DVC-tracked) |
+| `models/smarts_transformer_<RUN_ID>.json` | Model + training config (DVC-tracked) |
 | `models/checkpoints/<RUN_ID>/best.pt` | Best epoch checkpoint |
+| `models/smarts_transformer_<RUN_ID>_training_loss.pdf` | Training/validation loss curves |
+| `models/smarts_transformer_<RUN_ID>_report.md` | Run report with config and environment |
+
+The sbatch script automatically runs `dvc add` + `dvc push` on the `.pt` and `.json` files upon completion.
+
+For the full HPC submission workflow (all phases, ordering, and publication-level overrides) see [`experiments-dependency-graph.md`](experiments-dependency-graph.md).
 
 ### Loading a trained model
 
