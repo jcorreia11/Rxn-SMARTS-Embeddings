@@ -318,7 +318,8 @@ def main() -> None:
     plot_throughput_fertility(metrics, out_dir, args.format, args.dpi)
 
     if args.classifier and Path(args.classifier).exists():
-        clf = _load(args.classifier)
+        clf_raw = _load(args.classifier)
+        clf = clf_raw["results"] if isinstance(clf_raw, dict) else clf_raw
         logger.info("Loaded classifier results for: %s", [r["name"] for r in clf])
         plot_ec_classifier(clf, out_dir, args.format, args.dpi)
     else:
