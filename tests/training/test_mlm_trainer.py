@@ -129,7 +129,9 @@ class TestMLMCollatorSpanMasking:
     def test_masked_positions_form_contiguous_spans(self):
         """With mean_span=MAX_LEN all real tokens masked in one span → contiguous block."""
         random.seed(0)
-        c = MLMCollator(token_to_id=_VOCAB, mask_prob=1.0, mean_span=MAX_LEN, max_span=MAX_LEN)
+        c = MLMCollator(
+            token_to_id=_VOCAB, mask_prob=1.0, mean_span=MAX_LEN, max_span=MAX_LEN
+        )
         items = [
             {
                 "input_ids": torch.arange(1, MAX_LEN + 1, dtype=torch.long),
@@ -137,7 +139,9 @@ class TestMLMCollatorSpanMasking:
             }
         ]
         batch = c(items)
-        masked_positions = (batch["labels"][0] != -100).nonzero(as_tuple=True)[0].tolist()
+        masked_positions = (
+            (batch["labels"][0] != -100).nonzero(as_tuple=True)[0].tolist()
+        )
         # All real positions should be masked when mask_prob=1.0
         assert len(masked_positions) == MAX_LEN
 
@@ -147,13 +151,15 @@ class TestMLMCollatorSpanMasking:
         c = MLMCollator(token_to_id=_VOCAB, mask_prob=0.5, mean_span=3.0)
         items = [
             {
-                "input_ids": torch.cat([
-                    torch.randint(1, len(_VOCAB), (8,)),
-                    torch.zeros(8, dtype=torch.long),
-                ]),
-                "attention_mask": torch.cat([
-                    torch.ones(8, dtype=torch.long), torch.zeros(8, dtype=torch.long)
-                ]),
+                "input_ids": torch.cat(
+                    [
+                        torch.randint(1, len(_VOCAB), (8,)),
+                        torch.zeros(8, dtype=torch.long),
+                    ]
+                ),
+                "attention_mask": torch.cat(
+                    [torch.ones(8, dtype=torch.long), torch.zeros(8, dtype=torch.long)]
+                ),
             }
         ]
         batch = c(items)

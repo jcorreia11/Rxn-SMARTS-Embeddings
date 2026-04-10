@@ -111,7 +111,9 @@ class MLMCollator:
         B, L = input_ids.shape
         labels = torch.full_like(input_ids, -100)
         masked_ids = input_ids.clone()
-        p_stop = 1.0 / self.mean_span  # geometric: stop extending with probability p_stop
+        p_stop = (
+            1.0 / self.mean_span
+        )  # geometric: stop extending with probability p_stop
 
         for b in range(B):
             real_pos: list[int] = attention_mask[b].nonzero(as_tuple=True)[0].tolist()
@@ -369,7 +371,9 @@ class Trainer:
             attention_mask = batch["attention_mask"].to(self.device)
             labels = batch["labels"].to(self.device)
 
-            with torch.autocast("cuda", dtype=self._amp_dtype, enabled=self._amp_dtype is not None):
+            with torch.autocast(
+                "cuda", dtype=self._amp_dtype, enabled=self._amp_dtype is not None
+            ):
                 logits = self.model(input_ids, attention_mask)  # (B, L, V)
                 loss = self.loss_fn(logits.view(-1, logits.size(-1)), labels.view(-1))
 
@@ -425,18 +429,22 @@ class Trainer:
                 attention_mask = batch["attention_mask"].to(self.device)
                 labels = batch["labels"].to(self.device)
 
-                with torch.autocast("cuda", dtype=self._amp_dtype, enabled=self._amp_dtype is not None):
+                with torch.autocast(
+                    "cuda", dtype=self._amp_dtype, enabled=self._amp_dtype is not None
+                ):
                     logits = self.model(input_ids, attention_mask)  # (B, L, V)
-                    loss = self.loss_fn(logits.view(-1, logits.size(-1)), labels.view(-1))
+                    loss = self.loss_fn(
+                        logits.view(-1, logits.size(-1)), labels.view(-1)
+                    )
                 total_loss += loss.item()
 
-                flat_labels = labels.view(-1)        # (B*L,)
+                flat_labels = labels.view(-1)  # (B*L,)
                 flat_logits = logits.view(-1, logits.size(-1))  # (B*L, V)
                 masked = flat_labels != -100
 
                 if masked.any():
-                    m_logits = flat_logits[masked]   # (M, V)
-                    m_labels = flat_labels[masked]   # (M,)
+                    m_logits = flat_logits[masked]  # (M, V)
+                    m_labels = flat_labels[masked]  # (M,)
 
                     top5_preds = m_logits.topk(5, dim=-1).indices  # (M, 5)
                     correct_top1 += (top5_preds[:, 0] == m_labels).sum().item()
@@ -460,8 +468,16 @@ class Trainer:
         avg = total_loss / len(loader)
         top1 = correct_top1 / total_masked if total_masked > 0 else 0.0
         top5 = correct_top5 / total_masked if total_masked > 0 else 0.0
-        content_top1 = content_correct_top1 / content_total_masked if content_total_masked > 0 else 0.0
-        content_top5 = content_correct_top5 / content_total_masked if content_total_masked > 0 else 0.0
+        content_top1 = (
+            content_correct_top1 / content_total_masked
+            if content_total_masked > 0
+            else 0.0
+        )
+        content_top5 = (
+            content_correct_top5 / content_total_masked
+            if content_total_masked > 0
+            else 0.0
+        )
 
         logger.info(
             "Epoch %d/%d | avg val loss %.4f | top-1 %.4f | top-5 %.4f"
