@@ -62,6 +62,11 @@ MAX_GRAD_NORM=1.0,\
 NUM_WORKERS=4 \
 scripts/train_mlm.sbatch
 ```
+Last command run:
+
+```
+sbatch --export=ALL,EPOCHS=100,WARMUP_STEPS=2000,BATCH_SIZE=64,LR=1e-4,MAX_LENGTH=256,D_MODEL=256,NHEAD=8,NUM_LAYERS=6,DIM_FEEDFORWARD=1024,DROPOUT=0.1,MASK_PROB=0.25,MEAN_SPAN=3.0,MAX_SPAN=10,VAL_SPLIT=0.1,MAX_GRAD_NORM=1.0,NUM_WORKERS=4 scripts/train_mlm.sbatch
+```
 
 > After completion, note the `RUN_ID` from the job log (`Run ID: YYYYMMDD_HHMMSS`) and set:
 > ```bash
