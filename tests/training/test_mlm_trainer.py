@@ -1,3 +1,5 @@
+import random
+
 import pytest
 import torch
 
@@ -69,6 +71,22 @@ class TestMLMCollatorVocabInjection:
         assert c.mask_id == 99
         assert c.extended_vocab_size == len(vocab_with_mask)
 
+    def test_content_token_ids_excludes_structural_tokens(self):
+        # ">>" is in _VOCAB (id=6) and is a structural token — must be absent
+        c = MLMCollator(token_to_id=_VOCAB)
+        assert _VOCAB[">>"] not in c.content_token_ids
+
+    def test_content_token_ids_excludes_special_tokens(self):
+        c = MLMCollator(token_to_id=_VOCAB)
+        for key in ("[PAD]", "[UNK]", "[BOS]", "[EOS]"):
+            assert _VOCAB[key] not in c.content_token_ids
+
+    def test_content_token_ids_includes_atoms_and_bonds(self):
+        c = MLMCollator(token_to_id=_VOCAB)
+        # "-", "=", "[C:1]", "[O:2]", "c", "n", "1" are all content
+        for key in ("-", "=", "[C:1]", "[O:2]", "c", "n", "1"):
+            assert _VOCAB[key] in c.content_token_ids
+
 
 # ---------------------------------------------------------------------------
 # MLMCollator — collation output
@@ -95,6 +113,56 @@ class TestMLMCollatorOutput:
 # ---------------------------------------------------------------------------
 # MLMCollator — masking correctness
 # ---------------------------------------------------------------------------
+
+
+class TestMLMCollatorSpanMasking:
+    def test_default_mean_span_and_max_span(self):
+        c = MLMCollator(token_to_id=_VOCAB)
+        assert c.mean_span == 3.0
+        assert c.max_span == 10
+
+    def test_custom_span_params_stored(self):
+        c = MLMCollator(token_to_id=_VOCAB, mean_span=5.0, max_span=15)
+        assert c.mean_span == 5.0
+        assert c.max_span == 15
+
+    def test_masked_positions_form_contiguous_spans(self):
+        """With mean_span=MAX_LEN all real tokens masked in one span → contiguous block."""
+        random.seed(0)
+        c = MLMCollator(token_to_id=_VOCAB, mask_prob=1.0, mean_span=MAX_LEN, max_span=MAX_LEN)
+        items = [
+            {
+                "input_ids": torch.arange(1, MAX_LEN + 1, dtype=torch.long),
+                "attention_mask": torch.ones(MAX_LEN, dtype=torch.long),
+            }
+        ]
+        batch = c(items)
+        masked_positions = (batch["labels"][0] != -100).nonzero(as_tuple=True)[0].tolist()
+        # All real positions should be masked when mask_prob=1.0
+        assert len(masked_positions) == MAX_LEN
+
+    def test_span_masking_satisfies_existing_invariants(self):
+        """Span masking must not mask padding and must produce valid token IDs."""
+        random.seed(42)
+        c = MLMCollator(token_to_id=_VOCAB, mask_prob=0.5, mean_span=3.0)
+        items = [
+            {
+                "input_ids": torch.cat([
+                    torch.randint(1, len(_VOCAB), (8,)),
+                    torch.zeros(8, dtype=torch.long),
+                ]),
+                "attention_mask": torch.cat([
+                    torch.ones(8, dtype=torch.long), torch.zeros(8, dtype=torch.long)
+                ]),
+            }
+        ]
+        batch = c(items)
+        # Padding positions never masked
+        assert (batch["labels"][0, 8:] == -100).all()
+        # Changed IDs are within extended vocab
+        changed = batch["input_ids"][0] != items[0]["input_ids"]
+        if changed.any():
+            assert (batch["input_ids"][0][changed] < c.extended_vocab_size).all()
 
 
 class TestMLMCollatorMasking:
@@ -356,11 +424,15 @@ class TestTrainerAccuracy:
         from torch.utils.data import DataLoader
 
         val_loader = DataLoader(trainer.val_dataset, batch_size=4, collate_fn=collator)
-        loss, top1, top5 = trainer._run_val_epoch(val_loader, epoch=1)
+        loss, top1, top5, content_top1, content_top5 = trainer._run_val_epoch(
+            val_loader, epoch=1
+        )
         assert isinstance(loss, float) and torch.tensor(loss).isfinite()
         assert 0.0 <= top1 <= 1.0
         assert 0.0 <= top5 <= 1.0
         assert top5 >= top1
+        assert 0.0 <= content_top1 <= 1.0
+        assert 0.0 <= content_top5 <= 1.0
 
     def test_accuracies_saved_in_config_json(self, tiny_setup, tmp_path):
         import json
@@ -381,3 +453,7 @@ class TestTrainerAccuracy:
         assert len(history["val_top5_accuracy"]) == 2
         assert all(0.0 <= v <= 1.0 for v in history["val_top1_accuracy"])
         assert all(0.0 <= v <= 1.0 for v in history["val_top5_accuracy"])
+        assert len(history["val_content_top1_accuracy"]) == 2
+        assert len(history["val_content_top5_accuracy"]) == 2
+        assert all(0.0 <= v <= 1.0 for v in history["val_content_top1_accuracy"])
+        assert all(0.0 <= v <= 1.0 for v in history["val_content_top5_accuracy"])
