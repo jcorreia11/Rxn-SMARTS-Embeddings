@@ -60,7 +60,15 @@ def parse_args() -> argparse.Namespace:
     train.add_argument("--lr", type=float, default=1e-4)
     train.add_argument("--batch-size", type=int, default=32)
     train.add_argument("--epochs", type=int, default=10)
-    train.add_argument("--mask-prob", type=float, default=0.15)
+    train.add_argument("--mask-prob", type=float, default=0.25)
+    train.add_argument(
+        "--mean-span", type=float, default=3.0,
+        help="Mean span length for geometric span sampling (default: 3.0)",
+    )
+    train.add_argument(
+        "--max-span", type=int, default=10,
+        help="Hard cap on span length (default: 10)",
+    )
     train.add_argument("--checkpoint-dir", default="models/checkpoints")
     train.add_argument("--output", default="models/smarts_transformer.pt")
     train.add_argument(
@@ -101,7 +109,12 @@ def main() -> None:
     logger.info("Loaded %d valid SMARTS from %s", len(smarts_list), args.data)
 
     dataset = SMARTSDataset(smarts_list, token_to_id, max_length=args.max_length)
-    collator = MLMCollator(token_to_id=token_to_id, mask_prob=args.mask_prob)
+    collator = MLMCollator(
+        token_to_id=token_to_id,
+        mask_prob=args.mask_prob,
+        mean_span=args.mean_span,
+        max_span=args.max_span,
+    )
     logger.info(
         "Vocabulary: %d base tokens + [MASK] → %d total (mask_id=%d)",
         len(token_to_id),
