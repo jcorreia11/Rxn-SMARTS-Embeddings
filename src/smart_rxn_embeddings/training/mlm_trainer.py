@@ -230,6 +230,8 @@ class Trainer:
             device or ("cuda" if torch.cuda.is_available() else "cpu")
         )
         self.model.to(self.device)
+        if self.device.type == "cuda":
+            self.model = torch.compile(self.model)
 
         if config.val_split > 0.0:
             n_val = max(1, int(len(dataset) * config.val_split))
@@ -249,6 +251,7 @@ class Trainer:
 
         self.optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate)
         self.loss_fn = nn.CrossEntropyLoss(ignore_index=-100)
+        self._amp_dtype = torch.bfloat16 if self.device.type == "cuda" else None
 
         self._ckpt_dir = Path(config.checkpoint_dir)
         self._ckpt_dir.mkdir(parents=True, exist_ok=True)
@@ -262,6 +265,7 @@ class Trainer:
         List of average *train* losses, one per epoch.
         """
         pin = self.device.type == "cuda"
+        persistent = self.config.num_workers > 0
         train_loader = DataLoader(
             self.train_dataset,
             batch_size=self.config.batch_size,
@@ -269,6 +273,7 @@ class Trainer:
             collate_fn=self.collator,
             num_workers=self.config.num_workers,
             pin_memory=pin,
+            persistent_workers=persistent,
         )
         val_loader = None
         if self.val_dataset is not None:
@@ -279,6 +284,7 @@ class Trainer:
                 collate_fn=self.collator,
                 num_workers=self.config.num_workers,
                 pin_memory=pin,
+                persistent_workers=persistent,
             )
 
         total_steps = len(train_loader) * self.config.num_epochs
@@ -363,8 +369,9 @@ class Trainer:
             attention_mask = batch["attention_mask"].to(self.device)
             labels = batch["labels"].to(self.device)
 
-            logits = self.model(input_ids, attention_mask)  # (B, L, V)
-            loss = self.loss_fn(logits.view(-1, logits.size(-1)), labels.view(-1))
+            with torch.autocast("cuda", dtype=self._amp_dtype, enabled=self._amp_dtype is not None):
+                logits = self.model(input_ids, attention_mask)  # (B, L, V)
+                loss = self.loss_fn(logits.view(-1, logits.size(-1)), labels.view(-1))
 
             self.optimizer.zero_grad()
             loss.backward()
@@ -418,8 +425,9 @@ class Trainer:
                 attention_mask = batch["attention_mask"].to(self.device)
                 labels = batch["labels"].to(self.device)
 
-                logits = self.model(input_ids, attention_mask)  # (B, L, V)
-                loss = self.loss_fn(logits.view(-1, logits.size(-1)), labels.view(-1))
+                with torch.autocast("cuda", dtype=self._amp_dtype, enabled=self._amp_dtype is not None):
+                    logits = self.model(input_ids, attention_mask)  # (B, L, V)
+                    loss = self.loss_fn(logits.view(-1, logits.size(-1)), labels.view(-1))
                 total_loss += loss.item()
 
                 flat_labels = labels.view(-1)        # (B*L,)
