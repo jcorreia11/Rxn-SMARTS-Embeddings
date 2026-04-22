@@ -111,6 +111,15 @@ def load_labelled_smarts(
     val = val.dropna(subset=["label"])
     logger.info("After join with validated set: %d SMARTS with EC labels", len(val))
 
+    # --- Drop classes too rare to survive stratified splitting ---
+    min_count = max(10, int(n_samples / len(val) * 10) + 2) if n_samples else 10
+    class_counts = val["label"].value_counts()
+    valid_classes = class_counts[class_counts >= min_count].index
+    dropped = sorted(set(class_counts.index) - set(valid_classes))
+    if dropped:
+        logger.info("Dropping %d rare classes (<%d samples): %s", len(dropped), min_count, dropped)
+        val = val[val["label"].isin(valid_classes)].reset_index(drop=True)
+
     # --- Class balance summary ---
     counts = val["label"].value_counts()
     logger.info("Class distribution:\n%s", counts.to_string())
