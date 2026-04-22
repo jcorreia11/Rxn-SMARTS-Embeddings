@@ -154,6 +154,12 @@ echo ""
 echo "Training plot: ${FIGURE}"
 echo "Report:        ${REPORT}"
 
+# ---- commit lightweight artifacts to git ----
+echo ""
+echo "=== Committing report and plot to git ($(date)) ==="
+git add "${ENV_JSON}" "${FIGURE}" "${REPORT}"
+git commit -m "[results] MLM training report and plot (run ${RUN_ID})"
+
 # ---- version-track model artifacts with DVC ----
 echo ""
 echo "=== Tracking model artifacts with DVC ($(date)) ==="
