@@ -24,7 +24,13 @@ cd /projects/F202508983CPCAA0/jcorreia/work/SmartRxnEmbeddings
 source ../smartrxn_env/bin/activate
 
 # ---- ensure cu124 torch ----
-pip install --force-reinstall --quiet torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+TORCH_BUILD=$(python -c "import torch; print(torch.__version__)" 2>/dev/null || echo "")
+if [[ "$TORCH_BUILD" != *"cu124"* ]]; then
+    echo "=== Reinstalling torch for cu124 ==="
+    pip install --force-reinstall torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+else
+    echo "=== torch cu124 already present — skipping reinstall ==="
+fi
 
 # ---- sanity check ----
 echo "Python executable: $(which python)"
