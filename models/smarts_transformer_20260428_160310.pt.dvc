@@ -1,0 +1,5 @@
+outs:
+- md5: da06da6dd83030a4e3e443e95625feef
+  size: 28942146
+  hash: md5
+  path: smarts_transformer_20260428_160310.pt
