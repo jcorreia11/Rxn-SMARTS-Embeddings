@@ -41,7 +41,7 @@ RAW_FILES = [
     "data/raw/retrorules-v3.0-rhea.csv",
 ]
 
-_EC_NAMES = {
+_EC_NAMES_D1 = {
     "1": "Oxidoreductases",
     "2": "Transferases",
     "3": "Hydrolases",
@@ -51,17 +51,56 @@ _EC_NAMES = {
     "7": "Translocases",
 }
 
-# One colour per EC class (1–7), chosen for print and colour-blind friendliness
-_EC_COLORS = {
-    "1": "#2563eb",  # blue
-    "2": "#dc2626",  # red
-    "3": "#16a34a",  # green
-    "4": "#d97706",  # amber
-    "5": "#7c3aed",  # violet
-    "6": "#0891b2",  # cyan
-    "7": "#be185d",  # pink
+# Depth-1 colours — print and colour-blind friendly
+_EC_COLORS_D1 = {
+    "1": "#2563eb",
+    "2": "#dc2626",
+    "3": "#16a34a",
+    "4": "#d97706",
+    "5": "#7c3aed",
+    "6": "#0891b2",
+    "7": "#be185d",
 }
+
+# Sequential colormaps keyed by top-level EC — used for depth-2+ shading
+_FAMILY_CMAPS = {
+    "1": "Blues",
+    "2": "Reds",
+    "3": "Greens",
+    "4": "Oranges",
+    "5": "Purples",
+    "6": "GnBu",
+    "7": "RdPu",
+}
+
 _UNLABELLED_COLOR = "#d1d5db"  # light grey for points without an EC label
+
+
+def _make_subclass_palette(subclasses: list[str]) -> tuple[dict, dict]:
+    """Return (label→color, label→display_name) for depth-2+ subclasses.
+
+    Subclasses are grouped by their top-level EC number and assigned shades
+    from that family's sequential colormap so the top-level structure remains
+    readable in the figure.
+    """
+    import matplotlib.cm as cm
+
+    groups: dict[str, list[str]] = {}
+    for sc in subclasses:
+        top = sc.split(".")[0]
+        groups.setdefault(top, []).append(sc)
+
+    colors: dict[str, object] = {}
+    names: dict[str, str] = {}
+    for top, subs in sorted(groups.items()):
+        cmap = cm.get_cmap(_FAMILY_CMAPS.get(top, "Greys"))
+        n = len(subs)
+        top_name = _EC_NAMES_D1.get(top, f"EC {top}")
+        for i, sub in enumerate(sorted(subs)):
+            t = 0.4 + 0.5 * (i / max(1, n - 1)) if n > 1 else 0.65
+            colors[sub] = cmap(t)
+            names[sub] = f"EC {sub} ({top_name[:4]}…)" if len(top_name) > 4 else f"EC {sub} ({top_name})"
+    return colors, names
 
 
 # ---------------------------------------------------------------------------
@@ -69,8 +108,8 @@ _UNLABELLED_COLOR = "#d1d5db"  # light grey for points without an EC label
 # ---------------------------------------------------------------------------
 
 
-def load_ec_labels(raw_files: list[str], smarts_set: set[str]) -> dict[str, str]:
-    """Return {smarts: top-level EC class} for validated SMARTS in *smarts_set*."""
+def load_ec_labels(raw_files: list[str], smarts_set: set[str], depth: int = 1) -> dict[str, str]:
+    """Return {smarts: EC label truncated to *depth* levels} for validated SMARTS."""
     frames = []
     for p in raw_files:
         if not Path(p).exists():
@@ -86,16 +125,19 @@ def load_ec_labels(raw_files: list[str], smarts_set: set[str]) -> dict[str, str]
 
     raw = pd.concat(frames, ignore_index=True).drop_duplicates(subset="TEMPLATE")
 
-    def _top_ec(ecs: str) -> str | None:
+    def _ec_at_depth(ecs: str) -> str | None:
         if not isinstance(ecs, str) or not ecs.strip():
             return None
         first = ecs.split(";")[0].strip()
-        return first.split(".")[0] if first else None
+        if not first:
+            return None
+        parts = first.split(".")
+        return ".".join(parts[:depth])
 
-    raw["ec_class"] = raw["ECS"].apply(_top_ec)
+    raw["ec_class"] = raw["ECS"].apply(_ec_at_depth)
     raw = raw.dropna(subset=["ec_class"])
     raw = raw[raw["TEMPLATE"].isin(smarts_set)]
-    logger.info("SMARTS with EC label: %d / %d", len(raw), len(smarts_set))
+    logger.info("SMARTS with EC label (depth=%d): %d / %d", depth, len(raw), len(smarts_set))
     return dict(zip(raw["TEMPLATE"], raw["ec_class"]))
 
 
@@ -156,6 +198,9 @@ def plot_umap(
     dpi: int,
     point_size: float,
     alpha: float,
+    ec_depth: int = 1,
+    ec_colors: dict | None = None,
+    ec_names: dict | None = None,
 ) -> None:
     """Scatter plot of 2-D UMAP coordinates coloured by EC class."""
     import matplotlib
@@ -164,9 +209,22 @@ def plot_umap(
     import matplotlib.pyplot as plt
     import matplotlib.ticker as ticker
 
+    colors = ec_colors or _EC_COLORS_D1
+    names = ec_names or _EC_NAMES_D1
+
+    # For depth>1 with many subclasses, cap the legend at the top 20 by frequency
+    # so it stays readable; the remaining classes are still plotted but unlabelled.
+    present = sorted(
+        [c for c in colors if (labels == c).any()],
+        key=lambda c: -(labels == c).sum(),
+    )
+    max_legend = 20
+    legend_classes = present[:max_legend]
+    unlabelled_in_legend = len(present) > max_legend
+
     fig, ax = plt.subplots(figsize=(10, 8))
 
-    # Plot unlabelled points first (background)
+    # Unlabelled points first (background)
     mask_unlabelled = labels == ""
     if mask_unlabelled.any():
         ax.scatter(
@@ -181,30 +239,32 @@ def plot_umap(
             zorder=1,
         )
 
-    # Plot EC classes — rarest last so they sit on top
-    ec_classes = sorted(
-        [c for c in _EC_COLORS if (labels == c).any()],
-        key=lambda c: -(labels == c).sum(),  # most common first → rarest on top
-    )
-    for ec in ec_classes:
+    # Plot all classes — most common first, rarest on top
+    for ec in present:
         mask = labels == ec
-        name = _EC_NAMES.get(ec, f"EC {ec}")
+        name = names.get(ec, f"EC {ec}")
+        in_legend = ec in legend_classes
         ax.scatter(
             coords[mask, 0],
             coords[mask, 1],
             s=point_size,
-            c=_EC_COLORS[ec],
+            c=[colors[ec]],
             alpha=alpha,
             linewidths=0,
             rasterized=True,
-            label=f"EC {ec} — {name} (n={mask.sum():,})",
+            label=f"EC {ec} — {name} (n={mask.sum():,})" if in_legend else None,
             zorder=2,
         )
 
+    if unlabelled_in_legend:
+        n_hidden = sum((labels == c).sum() for c in present[max_legend:])
+        ax.scatter([], [], s=0, label=f"… +{len(present) - max_legend} subclasses (n={n_hidden:,})")
+
+    depth_suffix = f" (EC depth {ec_depth})" if ec_depth > 1 else ""
     ax.set_xlabel("UMAP 1", fontsize=12)
     ax.set_ylabel("UMAP 2", fontsize=12)
     ax.set_title(
-        "UMAP of Reaction SMARTS Embedding Space",
+        f"UMAP of Reaction SMARTS Embedding Space{depth_suffix}",
         fontsize=14,
         fontweight="bold",
     )
@@ -212,17 +272,18 @@ def plot_umap(
     ax.xaxis.set_major_formatter(ticker.NullFormatter())
     ax.yaxis.set_major_formatter(ticker.NullFormatter())
 
+    ncols = 2 if ec_depth > 1 else 1
     legend = ax.legend(
         loc="upper right",
-        fontsize=9,
+        fontsize=8,
         framealpha=0.9,
         markerscale=4,
-        title="EC Class",
+        title=f"EC Class (depth {ec_depth})",
         title_fontsize=9,
+        ncols=ncols,
     )
     legend.get_frame().set_linewidth(0.5)
 
-    # Stats box
     n_labelled = (labels != "").sum()
     n_total = len(labels)
     params_str = (
@@ -337,6 +398,13 @@ def parse_args() -> argparse.Namespace:
         default=0.4,
         help="Scatter plot marker alpha (default: 0.4)",
     )
+    p.add_argument(
+        "--ec-depth",
+        type=int,
+        default=1,
+        choices=[1, 2, 3],
+        help="EC label depth: 1='1', 2='1.14', 3='1.14.13' (default: 1)",
+    )
     return p.parse_args()
 
 
@@ -357,19 +425,31 @@ def main() -> None:
     )
 
     # --- EC labels ---
-    ec_map = load_ec_labels(args.raw, set(smarts_list))
+    ec_map = load_ec_labels(args.raw, set(smarts_list), depth=args.ec_depth)
     labels = np.array([ec_map.get(s, "") for s in smarts_list])
     n_labelled = (labels != "").sum()
     logger.info(
-        "EC labels: %d / %d (%.1f%%)",
+        "EC labels (depth=%d): %d / %d (%.1f%%)",
+        args.ec_depth,
         n_labelled,
         len(labels),
         100 * n_labelled / len(labels),
     )
-    for ec in sorted(_EC_NAMES):
-        n = (labels == ec).sum()
-        if n:
-            logger.info("  EC %s (%s): %d", ec, _EC_NAMES[ec], n)
+
+    if args.ec_depth == 1:
+        ec_colors = _EC_COLORS_D1
+        ec_names = _EC_NAMES_D1
+        for ec in sorted(_EC_NAMES_D1):
+            n = (labels == ec).sum()
+            if n:
+                logger.info("  EC %s (%s): %d", ec, _EC_NAMES_D1[ec], n)
+    else:
+        subclasses = sorted(set(labels[labels != ""]))
+        ec_colors, ec_names = _make_subclass_palette(subclasses)
+        logger.info("Subclasses found (depth=%d): %d", args.ec_depth, len(subclasses))
+        for sc in subclasses:
+            n = (labels == sc).sum()
+            logger.info("  EC %s: %d", sc, n)
 
     # --- UMAP ---
     umap_params = {
@@ -412,6 +492,9 @@ def main() -> None:
         dpi=args.dpi,
         point_size=args.point_size,
         alpha=args.alpha,
+        ec_depth=args.ec_depth,
+        ec_colors=ec_colors,
+        ec_names=ec_names,
     )
 
 

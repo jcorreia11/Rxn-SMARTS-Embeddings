@@ -30,7 +30,7 @@ python -V
 # Override at submission time with --export=ALL,VAR=value
 EMBEDDINGS="${EMBEDDINGS:-data/embeddings/reaction_embeddings.npy}"
 SMARTS_FILE="${SMARTS_FILE:-data/embeddings/reaction_smarts.txt}"
-OUTPUT="${OUTPUT:-results/figures/umap_embedding_space}"
+EC_DEPTH="${EC_DEPTH:-1}"
 FORMAT="${FORMAT:-pdf}"
 N_NEIGHBORS="${N_NEIGHBORS:-15}"
 MIN_DIST="${MIN_DIST:-0.1}"
@@ -40,9 +40,12 @@ POINT_SIZE="${POINT_SIZE:-0.8}"
 ALPHA="${ALPHA:-0.4}"
 DPI="${DPI:-300}"
 
-# Cache the 2-D coordinates so re-plotting is instant.
-# Derive cache path from the embeddings filename.
+# Output path encodes the EC depth so depth-1 and depth-2 figures don't overwrite each other.
 EMBEDDINGS_STEM=$(basename "${EMBEDDINGS}" .npy)
+OUTPUT="${OUTPUT:-results/figures/umap_embedding_space_d${EC_DEPTH}}"
+
+# Reuse cached 2-D coordinates — UMAP only depends on embeddings, not on EC labels,
+# so changing EC_DEPTH does not require re-running the reduction.
 UMAP_CACHE="results/figures/${EMBEDDINGS_STEM}_umap_coords.npy"
 
 mkdir -p results/figures
@@ -50,6 +53,7 @@ mkdir -p results/figures
 echo ""
 echo "Embeddings:    ${EMBEDDINGS}"
 echo "SMARTS file:   ${SMARTS_FILE}"
+echo "EC depth:      ${EC_DEPTH}"
 echo "UMAP cache:    ${UMAP_CACHE}"
 echo "Output:        ${OUTPUT}.${FORMAT}"
 echo "n_neighbors:   ${N_NEIGHBORS}"
@@ -74,7 +78,8 @@ python scripts/plot_umap.py \
     --metric        "${METRIC}" \
     --random-state  "${RANDOM_STATE}" \
     --point-size    "${POINT_SIZE}" \
-    --alpha         "${ALPHA}"
+    --alpha         "${ALPHA}" \
+    --ec-depth      "${EC_DEPTH}"
 
 echo ""
 echo "Figure:     ${OUTPUT}.${FORMAT}"
@@ -84,7 +89,7 @@ echo "UMAP cache: ${UMAP_CACHE}"
 echo ""
 echo "=== Committing results to git ($(date)) ==="
 git add "${OUTPUT}.${FORMAT}"
-git commit -m "[results] UMAP embedding space (job ${SLURM_JOB_ID})"
+git commit -m "[results] UMAP embedding space depth=${EC_DEPTH} (job ${SLURM_JOB_ID})"
 
 echo "=== Job finished on $(date) ==="
 
