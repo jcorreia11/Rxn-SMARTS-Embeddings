@@ -111,19 +111,30 @@ def load_labelled_smarts(
     val = val.dropna(subset=["label"])
     logger.info("After join with validated set: %d SMARTS with EC labels", len(val))
 
+    # --- Drop classes too rare to survive stratified splitting ---
+    min_count = max(10, int(n_samples / len(val) * 10) + 2) if n_samples else 10
+    class_counts = val["label"].value_counts()
+    valid_classes = class_counts[class_counts >= min_count].index
+    dropped = sorted(set(class_counts.index) - set(valid_classes))
+    if dropped:
+        logger.info("Dropping %d rare classes (<%d samples): %s", len(dropped), min_count, dropped)
+        val = val[val["label"].isin(valid_classes)].reset_index(drop=True)
+
     # --- Class balance summary ---
     counts = val["label"].value_counts()
     logger.info("Class distribution:\n%s", counts.to_string())
 
     # --- Optional sample (stratified) ---
     if n_samples and n_samples < len(val):
-        val = val.groupby("label", group_keys=False).apply(
-            lambda g: g.sample(
-                min(len(g), max(1, int(n_samples * len(g) / len(val)))),
+        total = len(val)
+        sampled = [
+            group.sample(
+                min(len(group), max(1, int(n_samples * len(group) / total))),
                 random_state=random_seed,
             )
-        )
-        val = val.sample(frac=1, random_state=random_seed).reset_index(drop=True)
+            for _, group in val.groupby("label")
+        ]
+        val = pd.concat(sampled).sample(frac=1, random_state=random_seed).reset_index(drop=True)
         logger.info("Sampled %d SMARTS (stratified)", len(val))
 
     return val[["smarts", "label"]].reset_index(drop=True)
@@ -217,7 +228,7 @@ def evaluate(
             cv=cv,
             scoring=["accuracy", "f1_macro", "f1_weighted"],
             return_train_score=False,
-            n_jobs=1,
+            n_jobs=-1,
         )
     cv_time_s = time.perf_counter() - t0_cv
 
@@ -263,11 +274,13 @@ def evaluate(
         fit_time_s,
     )
 
+    present_labels = sorted(set(y_test) | set(y_pred))
+    present_names = [label_names[l] if isinstance(l, int) and l < len(label_names) else str(l) for l in present_labels]
     report_str = classification_report(
-        y_test, y_pred, target_names=label_names, zero_division=0
+        y_test, y_pred, labels=present_labels, target_names=present_names, zero_division=0
     )
     report_dict = classification_report(
-        y_test, y_pred, target_names=label_names, zero_division=0, output_dict=True
+        y_test, y_pred, labels=present_labels, target_names=present_names, zero_division=0, output_dict=True
     )
     logger.info("\nClassification report (held-out test set):\n%s", report_str)
     logger.info(
@@ -358,7 +371,7 @@ def evaluate_embeddings(
             cv=cv,
             scoring=["accuracy", "f1_macro", "f1_weighted"],
             return_train_score=False,
-            n_jobs=1,
+            n_jobs=-1,
         )
     cv_time_s = time.perf_counter() - t0_cv
 
@@ -404,11 +417,13 @@ def evaluate_embeddings(
         fit_time_s,
     )
 
+    present_labels = sorted(set(y_test) | set(y_pred))
+    present_names = [label_names[l] if isinstance(l, int) and l < len(label_names) else str(l) for l in present_labels]
     report_str = classification_report(
-        y_test, y_pred, target_names=label_names, zero_division=0
+        y_test, y_pred, labels=present_labels, target_names=present_names, zero_division=0
     )
     report_dict = classification_report(
-        y_test, y_pred, target_names=label_names, zero_division=0, output_dict=True
+        y_test, y_pred, labels=present_labels, target_names=present_names, zero_division=0, output_dict=True
     )
     logger.info("\nClassification report (held-out test set):\n%s", report_str)
 
@@ -458,6 +473,7 @@ def _extract_embeddings(
 
     if not random_init:
         state = torch.load(weights_path, map_location="cpu", weights_only=True)
+        state = {k.removeprefix("_orig_mod."): v for k, v in state.items()}
         model.load_state_dict(state)
         logger.info(
             "Loaded pretrained weights from %s (d_model=%d, layers=%d)",

@@ -1,0 +1,23 @@
+{
+  "model_config": {
+    "vocab_size": 4466,
+    "d_model": 128,
+    "nhead": 4,
+    "num_encoder_layers": 4,
+    "dim_feedforward": 512,
+    "dropout": 0.1,
+    "max_seq_len": 256,
+    "pad_id": 0
+  },
+  "training_config": {
+    "learning_rate": 0.0001,
+    "batch_size": 64,
+    "num_epochs": 20,
+    "mask_prob": 0.15,
+    "checkpoint_dir": "models/checkpoints/20260408_144751",
+    "output_path": "models/smarts_transformer_20260408_144751.pt",
+    "log_every": 10
+  },
+  "mask_id": 4465,
+  "extended_vocab_size": 4466
+}

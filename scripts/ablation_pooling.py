@@ -87,13 +87,15 @@ def load_labelled_smarts(
     logger.info("Class distribution:\n%s", counts.to_string())
 
     if n_samples and n_samples < len(val):
-        val = val.groupby("label", group_keys=False).apply(
-            lambda g: g.sample(
-                min(len(g), max(1, int(n_samples * len(g) / len(val)))),
+        total = len(val)
+        parts = [
+            g.sample(
+                min(len(g), max(1, int(n_samples * len(g) / total))),
                 random_state=random_seed,
             )
-        )
-        val = val.sample(frac=1, random_state=random_seed).reset_index(drop=True)
+            for _, g in val.groupby("label")
+        ]
+        val = pd.concat(parts).sample(frac=1, random_state=random_seed).reset_index(drop=True)
         logger.info("Sampled %d SMARTS (stratified)", len(val))
 
     return val[["smarts", "label"]].reset_index(drop=True)
@@ -127,6 +129,7 @@ def extract_both_poolings(
     model_config = TransformerConfig.from_dict(cfg["model_config"])
     model = SmartsMLMModel(model_config)
     state = torch.load(weights_path, map_location="cpu", weights_only=True)
+    state = {k.removeprefix("_orig_mod."): v for k, v in state.items()}
     model.load_state_dict(state)
     logger.info(
         "Loaded pretrained weights from %s (d_model=%d, layers=%d)",

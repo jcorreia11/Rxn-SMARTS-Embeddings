@@ -1,0 +1,5 @@
+outs:
+- md5: bd0f3717c15532c2cfae2ea4f7672131
+  size: 16567
+  hash: md5
+  path: smarts_transformer_20260410_111830.json

@@ -102,6 +102,7 @@ class SmartsEmbedder:
         model_config = TransformerConfig.from_dict(cfg["model_config"])
         model = SmartsMLMModel(model_config)
         state = torch.load(weights_path, map_location="cpu", weights_only=True)
+        state = {k.removeprefix("_orig_mod."): v for k, v in state.items()}
         model.load_state_dict(state)
         logger.info(
             "Loaded model from %s (d_model=%d, layers=%d)",

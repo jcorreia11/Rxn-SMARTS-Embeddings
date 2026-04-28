@@ -27,11 +27,10 @@ python -V
 
 # ---- config ----
 # Override at submission time if needed:
-#   sbatch --export=ALL,VAL_SPLIT=0.1,FORMAT=png plot_dataset_stats.sbatch
+#   sbatch --export=ALL,VAL_SPLIT=0.1 plot_dataset_stats.sbatch
 VALIDATED="${VALIDATED:-data/processed/validated_smarts.csv}"
 RAW_FILES="${RAW_FILES:-data/raw/retrorules-v3.0-rhea.csv data/raw/retrorules-v3.0-metanetx.csv}"
 VAL_SPLIT="${VAL_SPLIT:-0.1}"
-FORMAT="${FORMAT:-pdf}"
 DPI="${DPI:-300}"
 OUTPUT="${OUTPUT:-results/figures/dataset_overview}"
 
@@ -39,30 +38,34 @@ echo ""
 echo "Validated SMARTS: ${VALIDATED}"
 echo "Raw files:        ${RAW_FILES}"
 echo "Val split:        ${VAL_SPLIT}"
-echo "Format:           ${FORMAT}"
-echo "Output:           ${OUTPUT}.${FORMAT}"
+echo "DPI:              ${DPI}"
+echo "Output stem:      ${OUTPUT}"
 
 mkdir -p "$(dirname "${OUTPUT}")"
 
-# ---- generate figure ----
+# ---- generate figures ----
+# Saves: panel_a/b/c as SVG + PNG, combined as PDF
 echo ""
-echo "=== Generating dataset overview figure ($(date)) ==="
+echo "=== Generating dataset overview figures ($(date)) ==="
 python scripts/plot_dataset_stats.py \
     --validated "${VALIDATED}" \
     --raw       ${RAW_FILES} \
     --val-split "${VAL_SPLIT}" \
     --output    "${OUTPUT}" \
-    --format    "${FORMAT}" \
     --dpi       "${DPI}"
 
+FIGURES_DIR="$(dirname "${OUTPUT}")"
 echo ""
-echo "Figure: ${OUTPUT}.${FORMAT}"
+echo "Figures saved to: ${FIGURES_DIR}/"
 
 # ---- commit results to git ----
 echo ""
 echo "=== Committing results to git ($(date)) ==="
-git add "${OUTPUT}.${FORMAT}"
-git commit -m "[results] Dataset overview figure (job ${SLURM_JOB_ID})"
+git add "${FIGURES_DIR}/panel_a_smarts_length."* \
+        "${FIGURES_DIR}/panel_b_ec_distribution."* \
+        "${FIGURES_DIR}/panel_c_train_val_split."* \
+        "${OUTPUT}.pdf"
+git commit -m "[results] Dataset overview figures — SVG+PNG panels + combined PDF (job ${SLURM_JOB_ID})"
 
 echo "=== Job finished on $(date) ==="
 

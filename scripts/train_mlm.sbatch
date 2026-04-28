@@ -28,14 +28,17 @@ echo "=== pip config ==="
 pip config list
 echo "=== nvidia-smi ==="
 nvidia-smi || echo "nvidia-smi not available"
-echo "=== torch before install ==="
-pip show torch | grep -E "Name|Version|Location"
-
-# ---- ensure cu124 torch (driver supports CUDA 12.4; force-reinstall to replace cu130 build) ----
-pip install --force-reinstall torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
-
-echo "=== torch after install ==="
-pip show torch | grep -E "Name|Version|Location"
+echo "=== torch check ==="
+TORCH_BUILD=$(python -c "import torch; print(torch.__version__)" 2>/dev/null || echo "")
+echo "Installed torch: ${TORCH_BUILD:-not found}"
+if [[ "$TORCH_BUILD" != *"cu124"* ]]; then
+    echo "=== Reinstalling torch for cu124 ==="
+    pip install --force-reinstall torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+    echo "=== torch after install ==="
+    python -c "import torch; print('torch:', torch.__version__, '| CUDA:', torch.cuda.is_available())"
+else
+    echo "=== torch cu124 already present — skipping reinstall ==="
+fi
 
 # ---- sanity check ----
 echo "Python executable: $(which python)"
@@ -56,7 +59,9 @@ DROPOUT="${DROPOUT:-0.1}"
 LR="${LR:-1e-4}"
 BATCH_SIZE="${BATCH_SIZE:-128}"
 EPOCHS="${EPOCHS:-40}"
-MASK_PROB="${MASK_PROB:-0.15}"
+MASK_PROB="${MASK_PROB:-0.25}"
+MEAN_SPAN="${MEAN_SPAN:-3.0}"
+MAX_SPAN="${MAX_SPAN:-10}"
 VAL_SPLIT="${VAL_SPLIT:-0.1}"
 WARMUP_STEPS="${WARMUP_STEPS:-500}"
 MAX_GRAD_NORM="${MAX_GRAD_NORM:-1.0}"
@@ -81,6 +86,8 @@ echo "Learning rate:   ${LR}"
 echo "Batch size:      ${BATCH_SIZE}"
 echo "Epochs:          ${EPOCHS}"
 echo "Mask prob:       ${MASK_PROB}"
+echo "Mean span:       ${MEAN_SPAN}"
+echo "Max span:        ${MAX_SPAN}"
 echo "Val split:       ${VAL_SPLIT}"
 echo "Warmup steps:    ${WARMUP_STEPS}"
 echo "Max grad norm:   ${MAX_GRAD_NORM}"
@@ -104,6 +111,8 @@ python scripts/train_mlm.py \
     --batch-size    "${BATCH_SIZE}" \
     --epochs        "${EPOCHS}" \
     --mask-prob     "${MASK_PROB}" \
+    --mean-span     "${MEAN_SPAN}" \
+    --max-span      "${MAX_SPAN}" \
     --val-split     "${VAL_SPLIT}" \
     --warmup-steps  "${WARMUP_STEPS}" \
     --max-grad-norm "${MAX_GRAD_NORM}" \
@@ -144,6 +153,12 @@ python scripts/generate_mlm_report.py \
 echo ""
 echo "Training plot: ${FIGURE}"
 echo "Report:        ${REPORT}"
+
+# ---- commit lightweight artifacts to git ----
+echo ""
+echo "=== Committing report and plot to git ($(date)) ==="
+git add "${ENV_JSON}" "${FIGURE}" "${REPORT}"
+git commit -m "[results] MLM training report and plot (run ${RUN_ID})"
 
 # ---- version-track model artifacts with DVC ----
 echo ""

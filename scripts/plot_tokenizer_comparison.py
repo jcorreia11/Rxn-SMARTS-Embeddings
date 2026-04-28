@@ -1,12 +1,12 @@
 """Generate figures for the tokenizer comparison experiment.
 
 Reads the JSON outputs of compare_tokenizers.py and train_ec_classifier.py
-and produces publication-quality figures.
+and produces publication-quality figures saved as SVG and PNG.
 
 Figures produced:
-  1. token_length_distribution.{fmt}  — overlaid histograms of sequence lengths
-  2. throughput_fertility.{fmt}        — 2-panel: throughput + fertility bar charts
-  3. ec_classifier.{fmt}               — accuracy/F1 with error bars + per-class F1
+  1. token_length_distribution.svg/png  — overlaid histograms of sequence lengths
+  2. throughput_fertility.svg/png        — 2-panel: throughput + fertility bar charts
+  3. ec_classifier.svg/png               — accuracy/F1 with error bars + per-class F1
 
 Usage
 -----
@@ -31,10 +31,11 @@ def _load(path: str) -> list[dict]:
     return json.loads(Path(path).read_text())
 
 
-def _save(fig, path: Path, fmt: str, dpi: int) -> None:
-    out = path.with_suffix(f".{fmt}")
-    fig.savefig(out, dpi=dpi, bbox_inches="tight")
-    logger.info("Saved %s", out)
+def _save(fig, path: Path, dpi: int) -> None:
+    for ext in ("svg", "png"):
+        out = path.with_suffix(f".{ext}")
+        fig.savefig(out, dpi=dpi, bbox_inches="tight")
+        logger.info("Saved %s", out)
 
 
 # ---------------------------------------------------------------------------
@@ -43,7 +44,7 @@ def _save(fig, path: Path, fmt: str, dpi: int) -> None:
 
 
 def plot_length_distribution(
-    metrics: list[dict], out_dir: Path, fmt: str, dpi: int
+    metrics: list[dict], out_dir: Path, dpi: int
 ) -> Path:
     import matplotlib
 
@@ -81,9 +82,9 @@ def plot_length_distribution(
     fig.tight_layout()
 
     out = out_dir / "token_length_distribution"
-    _save(fig, out, fmt, dpi)
+    _save(fig, out, dpi)
     plt.close(fig)
-    return out.with_suffix(f".{fmt}")
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -92,7 +93,7 @@ def plot_length_distribution(
 
 
 def plot_throughput_fertility(
-    metrics: list[dict], out_dir: Path, fmt: str, dpi: int
+    metrics: list[dict], out_dir: Path, dpi: int
 ) -> Path:
     import matplotlib
 
@@ -147,9 +148,9 @@ def plot_throughput_fertility(
 
     fig.tight_layout()
     out = out_dir / "throughput_fertility"
-    _save(fig, out, fmt, dpi)
+    _save(fig, out, dpi)
     plt.close(fig)
-    return out.with_suffix(f".{fmt}")
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -158,7 +159,7 @@ def plot_throughput_fertility(
 
 
 def plot_ec_classifier(
-    clf_results: list[dict], out_dir: Path, fmt: str, dpi: int
+    clf_results: list[dict], out_dir: Path, dpi: int
 ) -> Path:
     import matplotlib
 
@@ -281,9 +282,9 @@ def plot_ec_classifier(
 
     fig.tight_layout()
     out = out_dir / "ec_classifier"
-    _save(fig, out, fmt, dpi)
+    _save(fig, out, dpi)
     plt.close(fig)
-    return out.with_suffix(f".{fmt}")
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -296,13 +297,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--metrics", required=True, help="tokenizer_metrics.json")
     p.add_argument("--classifier", default=None, help="ec_classifier.json (optional)")
     p.add_argument("--output-dir", default="results/figures", help="Output directory")
-    p.add_argument(
-        "--format",
-        default="pdf",
-        choices=["pdf", "png", "svg"],
-        help="Output format (default: pdf)",
-    )
-    p.add_argument("--dpi", type=int, default=300, help="DPI for raster formats")
+    p.add_argument("--dpi", type=int, default=300, help="DPI for raster outputs (default: 300)")
     return p.parse_args()
 
 
@@ -314,13 +309,14 @@ def main() -> None:
     metrics = _load(args.metrics)
     logger.info("Loaded metrics for: %s", [r["name"] for r in metrics])
 
-    plot_length_distribution(metrics, out_dir, args.format, args.dpi)
-    plot_throughput_fertility(metrics, out_dir, args.format, args.dpi)
+    plot_length_distribution(metrics, out_dir, args.dpi)
+    plot_throughput_fertility(metrics, out_dir, args.dpi)
 
     if args.classifier and Path(args.classifier).exists():
-        clf = _load(args.classifier)
+        clf_raw = _load(args.classifier)
+        clf = clf_raw["results"] if isinstance(clf_raw, dict) else clf_raw
         logger.info("Loaded classifier results for: %s", [r["name"] for r in clf])
-        plot_ec_classifier(clf, out_dir, args.format, args.dpi)
+        plot_ec_classifier(clf, out_dir, args.dpi)
     else:
         logger.info("No classifier JSON provided — skipping EC classifier plot.")
 

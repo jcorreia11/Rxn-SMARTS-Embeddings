@@ -1,0 +1,23 @@
+{
+  "meta": {
+    "embeddings_path": "data/embeddings/reaction_embeddings.npy",
+    "smarts_path": "data/embeddings/reaction_smarts.txt",
+    "n_reactions_total": 361751,
+    "n_reactions_sampled": 3000,
+    "n_pairs": 4498500,
+    "seed": 42,
+    "fingerprint": "RDKit structural reaction fingerprint (4096 bits)",
+    "total_time_s": 49.4
+  },
+  "stats": {
+    "pearson_r": 0.606458,
+    "pearson_p": 0.0,
+    "spearman_r": 0.586195,
+    "spearman_p": 0.0,
+    "n_pairs": 4498500,
+    "cosine_mean": 0.74103,
+    "cosine_std": 0.096051,
+    "tanimoto_mean": 0.33845,
+    "tanimoto_std": 0.15987
+  }
+}

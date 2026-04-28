@@ -81,7 +81,7 @@ python scripts/plot_tokenizer_comparison.py \
     --metrics    "${RESULTS_DIR}/tokenizer_metrics.json" \
     --classifier "${RESULTS_DIR}/ec_classifier.json" \
     --output-dir "${FIGURES_DIR}" \
-    --format     pdf
+    --dpi        300
 
 # ---- step 5: generate report ----
 echo ""
