@@ -1,0 +1,9 @@
+Validated SMARTS: 361751 sequences
+Validated SMARTS with EC label: 200441
+Saved results/figures/panel_a_smarts_length.svg
+Saved results/figures/panel_a_smarts_length.png
+Saved results/figures/panel_b_ec_distribution.svg
+Saved results/figures/panel_b_ec_distribution.png
+Saved results/figures/panel_c_train_val_split.svg
+Saved results/figures/panel_c_train_val_split.png
+Saved combined figure to results/figures/dataset_overview.pdf

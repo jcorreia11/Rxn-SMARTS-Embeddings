@@ -1,0 +1,37 @@
+=== Job started on Tue  7 Apr 12:24:15 WEST 2026 ===
+Running on node(s): cnx041
+Python executable: /projects/F202508983CPCAA0/jcorreia/work/smartrxn_env/bin/python
+Python 3.12.3
+sys.path ok, site: 
+DVC version: 3.67.1 (pip)
+-------------------------
+Platform: Python 3.12.3 on Linux-4.18.0-348.el8.0.2.x86_64-x86_64-with-glibc2.28
+Subprojects:
+	dvc_data = 3.18.3
+	dvc_objects = 5.2.0
+	dvc_render = 1.0.2
+	dvc_task = 0.40.2
+	scmrepo = 3.6.2
+Supports:
+	http (aiohttp = 3.13.5, aiohttp-retry = 2.9.1),
+	https (aiohttp = 3.13.5, aiohttp-retry = 2.9.1)
+Config:
+	Global: /home/jcorreia/.config/dvc
+	System: /etc/xdg/dvc
+Cache types: hardlink, symlink
+Cache directory: lustre on 10.11.0.47@o2ib,10.12.0.47@o2ib1:10.11.0.49@o2ib,10.12.0.49@o2ib1:10.11.0.48@o2ib,10.12.0.48@o2ib1:10.11.0.50@o2ib,10.12.0.50@o2ib1:/deucfs01/projects
+Caches: local
+Remotes: local, local
+Workspace directory: lustre on 10.11.0.47@o2ib,10.12.0.47@o2ib1:10.11.0.49@o2ib,10.12.0.49@o2ib1:10.11.0.48@o2ib,10.12.0.48@o2ib1:10.11.0.50@o2ib,10.12.0.50@o2ib1:/deucfs01/projects
+Repo: dvc, git
+Repo.site_cache_dir: /var/tmp/dvc/repo/20156932cf7bd147043cf4193564e377
+Run ID: 20260407_122427
+'data/raw/retrorules-v3.0-metanetx.csv.dvc' didn't change, skipping
+'data/raw/retrorules-v3.0-rhea.csv.dvc' didn't change, skipping
+Stage 'load_data' didn't change, skipping
+Stage 'validate_smarts' didn't change, skipping
+Stage 'build_vocab' didn't change, skipping
+Stage 'train_sentencepiece' didn't change, skipping
+Data and pipelines are up to date.
+Everything is up to date.
+=== Job finished on Tue  7 Apr 12:24:37 WEST 2026 ===

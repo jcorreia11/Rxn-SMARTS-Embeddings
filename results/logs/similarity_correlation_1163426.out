@@ -1,0 +1,33 @@
+=== Job started on Wed 22 Apr 11:27:08 WEST 2026 ===
+Running on node(s): cnx157
+Python executable: /projects/F202508983CPCAA0/jcorreia/work/smartrxn_env/bin/python
+Python 3.12.3
+
+Embeddings:  data/embeddings/reaction_embeddings.npy
+SMARTS file: data/embeddings/reaction_smarts.txt
+N reactions: 3000  (~4498500 pairs)
+Seed:        42
+Figure:      results/figures/sim_corr_1163426.pdf
+JSON:        results/sim_corr_1163426.json
+Report:      results/sim_corr_1163426_report.md
+
+=== Collecting environment info (Wed 22 Apr 11:27:10 WEST 2026) ===
+Environment info saved to results/sim_corr_1163426_env.json
+
+=== Running similarity correlation analysis (Wed 22 Apr 11:27:28 WEST 2026) ===
+
+=== Generating report (Wed 22 Apr 11:28:28 WEST 2026) ===
+
+Figure:      results/figures/sim_corr_1163426.pdf
+Stats:       results/sim_corr_1163426.json
+Environment: results/sim_corr_1163426_env.json
+Report:      results/sim_corr_1163426_report.md
+
+=== Committing results to git (Wed 22 Apr 11:28:28 WEST 2026) ===
+[dev 091b270] [results] Similarity correlation (run sim_corr_1163426, N=3000)
+ 4 files changed, 125 insertions(+)
+ create mode 100644 results/figures/sim_corr_1163426.pdf
+ create mode 100644 results/sim_corr_1163426.json
+ create mode 100644 results/sim_corr_1163426_env.json
+ create mode 100644 results/sim_corr_1163426_report.md
+=== Job finished on Wed 22 Apr 11:28:29 WEST 2026 ===

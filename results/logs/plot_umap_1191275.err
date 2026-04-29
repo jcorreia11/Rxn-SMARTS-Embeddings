@@ -1,0 +1,14 @@
+Loading embeddings from data/embeddings/reaction_embeddings_512.npy...
+Embeddings shape: (361751, 256)
+Loading SMARTS list from data/embeddings/reaction_smarts_512.txt...
+SMARTS with EC label (depth=1): 212952 / 361751
+EC labels (depth=1): 212952 / 361751 (58.9%)
+  EC 1 (Oxidoreductases): 56018
+  EC 2 (Transferases): 92099
+  EC 3 (Hydrolases): 33671
+  EC 4 (Lyases): 18189
+  EC 5 (Isomerases): 4712
+  EC 6 (Ligases): 8193
+  EC 7 (Translocases): 70
+Loading cached UMAP coordinates from results/figures/reaction_embeddings_512_umap_coords.npy
+Figure saved to results/figures/umap_embedding_space_d1.pdf

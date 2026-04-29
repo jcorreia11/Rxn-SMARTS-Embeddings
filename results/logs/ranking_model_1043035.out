@@ -1,0 +1,77 @@
+=== Job started on Tue 17 Mar 13:06:17 WET 2026 ===
+Running on node(s): cnx084
+Python executable: /projects/F202508983CPCAA0/jcorreia/work/react_selection_x86/bin/python
+Python 3.12.3
+sys.path ok, site: 
+Run ID: 20260317_130619
+13:06:34  INFO     === Layer 2 ranking model training (Optuna search) ===
+13:06:34  INFO     Molecules  : /projects/F202508983CPCAA0/jcorreia/work/reaction_selection_pipeline/data/raw/chembl_molecules.csv  (n=5000)
+13:06:34  INFO     Templates  : /projects/F202508983CPCAA0/jcorreia/work/reaction_selection_pipeline/data/processed/retrorules-merged.csv
+13:06:34  INFO     Output     : models/ranking_model_20260317_130619.pkl
+13:06:34  INFO     n_trials=100  cv_folds=3  neg_ratio=3.0  seed=42  n_jobs=8
+13:06:35  INFO     Loaded 5000 valid molecules from /projects/F202508983CPCAA0/jcorreia/work/reaction_selection_pipeline/data/raw/chembl_molecules.csv
+13:06:37  INFO     Loaded 361751 templates from /projects/F202508983CPCAA0/jcorreia/work/reaction_selection_pipeline/data/processed/retrorules-merged.csv
+13:06:37  INFO     Building SubstructureIndex for 361751 templates …
+13:07:23  INFO     SubstructureIndex built: 361751 templates → 198633 unique reactant patterns (1.8x reduction)
+13:07:26  INFO     SubstructureIndex ready (361751 valid templates, 198633 unique patterns)
+13:07:26  INFO     Loading training pairs from data/processed/training_pairs_n10000.parquet …
+13:07:29  INFO     Loaded 436904 pairs from cache.
+13:07:31  INFO     Starting Optuna study 'ranking_model_20260317_130619' (100 trials, 3 CV folds) …
+20:26:56  INFO     Best trial #51  CV ROC-AUC=0.9811
+Params: {
+  "mol_repr": "maccs",
+  "rxn_repr": "reactant_morgan",
+  "rxn_n_bits": 2048,
+  "rxn_radius": 2,
+  "rxn_pool": "max",
+  "n_hidden_layers": 2,
+  "layer_0_size": 512,
+  "layer_1_size": 64,
+  "activation": "relu",
+  "alpha": 0.00158088215643615,
+  "learning_rate": "constant"
+}
+20:26:56  INFO     Computing embeddings with best configuration …
+20:28:35  INFO     Final training on full train split …
+20:38:48  INFO     Training done in 613.3s
+20:38:49  INFO     Test ROC-AUC: 0.9814
+20:38:49  INFO     Test  precision=0.902  recall=0.907  f1=0.905
+20:38:49  INFO     Pre-computing reaction embeddings for all 361751 templates …
+20:38:49  INFO     Pre-computing reaction embeddings for 361751 templates (0 already cached).
+20:41:19  INFO     Saved model to models/ranking_model_20260317_130619.pkl  (89.4 MB)
+20:41:19  INFO     Done. Metadata:
+{
+  "timestamp": "2026-03-18T20:40:53.778245",
+  "molecules_path": "/projects/F202508983CPCAA0/jcorreia/work/reaction_selection_pipeline/data/raw/chembl_molecules.csv",
+  "templates_path": "/projects/F202508983CPCAA0/jcorreia/work/reaction_selection_pipeline/data/processed/retrorules-merged.csv",
+  "n_mols": 5000,
+  "neg_ratio": 3.0,
+  "seed": 42,
+  "n_pairs": 436904,
+  "optuna_best_params": {
+    "mol_repr": "maccs",
+    "rxn_repr": "reactant_morgan",
+    "rxn_n_bits": 2048,
+    "rxn_radius": 2,
+    "rxn_pool": "max",
+    "n_hidden_layers": 2,
+    "layer_0_size": 512,
+    "layer_1_size": 64,
+    "activation": "relu",
+    "alpha": 0.00158088215643615,
+    "learning_rate": "constant"
+  },
+  "metrics": {
+    "roc_auc": 0.981405728009015,
+    "precision": 0.9024879249065889,
+    "recall": 0.906660563057908,
+    "f1": 0.9045694320750839,
+    "n_train": 349523,
+    "n_test": 87381,
+    "pos_rate_train": 0.2500007152605122,
+    "pos_rate_test": 0.2499971389661368,
+    "optuna_cv_auc": 0.9810609708405048,
+    "optuna_n_trials": 100
+  }
+}
+=== Job finished on Wed 18 Mar 20:41:26 WET 2026 ===

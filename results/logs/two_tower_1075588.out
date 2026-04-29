@@ -1,0 +1,234 @@
+=== Job started on Wed 25 Mar 18:31:22 WET 2026 ===
+Running on node(s): gnx531
+Python executable: /projects/F202508983CPCAA0/jcorreia/work/react_selection_x86/bin/python
+Python 3.12.3
+sys.path ok, site: 
+torch: 2.10.0+cu128 | CUDA available: True
+Run ID: 20260325_183200
+Rxn embedder: morgan
+18:32:17  INFO     === Two-tower P(r|m) encoder training ===
+18:32:17  INFO     Molecules  : /projects/F202508983CPCAA0/jcorreia/work/reaction_selection_pipeline/data/raw/chembl_molecules.csv  (n=10000)
+18:32:17  INFO     Templates  : /projects/F202508983CPCAA0/jcorreia/work/reaction_selection_pipeline/data/processed/retrorules-merged.csv
+18:32:17  INFO     Fingerprints: None
+18:32:17  INFO     hidden_dim=512  out_dim=2048  mol_radius=2  loss=ntxent  margin=0.30  temperature=0.070  lr=0.001  batch=256  epochs=200
+18:32:19  INFO     Loaded 10000 valid molecules from /projects/F202508983CPCAA0/jcorreia/work/reaction_selection_pipeline/data/raw/chembl_molecules.csv
+18:32:21  INFO     Loaded 361751 templates from /projects/F202508983CPCAA0/jcorreia/work/reaction_selection_pipeline/data/processed/retrorules-merged.csv
+18:32:21  INFO     Building SubstructureIndex for 361751 templates …
+18:33:07  INFO     SubstructureIndex built: 361751 templates → 198633 unique reactant patterns (1.8x reduction)
+18:33:11  INFO     SubstructureIndex ready (361751 valid templates, 198633 unique patterns)
+18:33:11  INFO     Loading training pairs from data/processed/training_pairs_n20000.parquet …
+18:33:15  INFO     Loaded 877092 pairs from cache.
+18:33:16  INFO     NT-Xent: using 219273 positive pairs (in-batch negatives)
+18:33:40  INFO     Training device: cuda
+18:33:41  INFO     Loaded fingerprint matrix /projects/F202508983CPCAA0/jcorreia/work/reaction_selection_pipeline/data/processed/template_fingerprints.npy  (361751 templates, dim=2048)
+18:33:41  INFO     Building PairDataset (219273 pairs) …
+18:33:53  WARNING  856 templates had zero-norm precomputed fps — re-embedded inline
+18:33:53  WARNING  856 template SMARTS still zero-norm after inline re-embedding and will be skipped
+18:33:58  INFO     Dataset ready: 205238 pairs
+18:34:24  INFO     Epoch   1/200  train_loss=5.1801  val_cos_pos=0.0637  best=0.0637  no_improve=0  6.1s
+18:34:28  INFO     Epoch   2/200  train_loss=5.0557  val_cos_pos=0.0701  best=0.0701  no_improve=0  4.1s
+18:34:32  INFO     Epoch   3/200  train_loss=5.0016  val_cos_pos=0.0732  best=0.0732  no_improve=0  4.1s
+18:34:36  INFO     Epoch   4/200  train_loss=4.9636  val_cos_pos=0.0751  best=0.0751  no_improve=0  4.0s
+18:34:40  INFO     Epoch   5/200  train_loss=4.9329  val_cos_pos=0.0766  best=0.0766  no_improve=0  4.1s
+18:34:44  INFO     Epoch   6/200  train_loss=4.9087  val_cos_pos=0.0784  best=0.0784  no_improve=0  4.4s
+18:34:49  INFO     Epoch   7/200  train_loss=4.8898  val_cos_pos=0.0805  best=0.0805  no_improve=0  4.5s
+18:34:53  INFO     Epoch   8/200  train_loss=4.8737  val_cos_pos=0.0816  best=0.0816  no_improve=0  4.5s
+18:34:57  INFO     Epoch   9/200  train_loss=4.8600  val_cos_pos=0.0821  best=0.0821  no_improve=0  4.1s
+18:35:01  INFO     Epoch  10/200  train_loss=4.8476  val_cos_pos=0.0826  best=0.0826  no_improve=0  4.0s
+18:35:05  INFO     Epoch  11/200  train_loss=4.8381  val_cos_pos=0.0842  best=0.0842  no_improve=0  4.0s
+18:35:09  INFO     Epoch  12/200  train_loss=4.8298  val_cos_pos=0.0844  best=0.0844  no_improve=0  3.7s
+18:35:13  INFO     Epoch  13/200  train_loss=4.8222  val_cos_pos=0.0860  best=0.0860  no_improve=0  3.9s
+18:35:17  INFO     Epoch  14/200  train_loss=4.8154  val_cos_pos=0.0848  best=0.0860  no_improve=1  4.5s
+18:35:21  INFO     Epoch  15/200  train_loss=4.8088  val_cos_pos=0.0874  best=0.0874  no_improve=0  3.8s
+18:35:25  INFO     Epoch  16/200  train_loss=4.8044  val_cos_pos=0.0861  best=0.0874  no_improve=1  3.9s
+18:35:29  INFO     Epoch  17/200  train_loss=4.7990  val_cos_pos=0.0849  best=0.0874  no_improve=2  3.9s
+18:35:34  INFO     Epoch  18/200  train_loss=4.7943  val_cos_pos=0.0878  best=0.0878  no_improve=0  4.5s
+18:35:38  INFO     Epoch  19/200  train_loss=4.7906  val_cos_pos=0.0869  best=0.0878  no_improve=1  4.3s
+18:35:43  INFO     Epoch  20/200  train_loss=4.7864  val_cos_pos=0.0873  best=0.0878  no_improve=2  5.1s
+18:35:47  INFO     Epoch  21/200  train_loss=4.7832  val_cos_pos=0.0882  best=0.0882  no_improve=0  4.3s
+18:35:51  INFO     Epoch  22/200  train_loss=4.7800  val_cos_pos=0.0880  best=0.0882  no_improve=1  3.9s
+18:35:55  INFO     Epoch  23/200  train_loss=4.7762  val_cos_pos=0.0887  best=0.0887  no_improve=0  3.8s
+18:35:59  INFO     Epoch  24/200  train_loss=4.7737  val_cos_pos=0.0888  best=0.0888  no_improve=0  3.5s
+18:36:02  INFO     Epoch  25/200  train_loss=4.7710  val_cos_pos=0.0893  best=0.0893  no_improve=0  3.4s
+18:36:05  INFO     Epoch  26/200  train_loss=4.7684  val_cos_pos=0.0893  best=0.0893  no_improve=1  3.4s
+18:36:09  INFO     Epoch  27/200  train_loss=4.7667  val_cos_pos=0.0894  best=0.0894  no_improve=0  3.4s
+18:36:12  INFO     Epoch  28/200  train_loss=4.7632  val_cos_pos=0.0893  best=0.0894  no_improve=1  3.4s
+18:36:16  INFO     Epoch  29/200  train_loss=4.7611  val_cos_pos=0.0907  best=0.0907  no_improve=0  3.4s
+18:36:19  INFO     Epoch  30/200  train_loss=4.7592  val_cos_pos=0.0898  best=0.0907  no_improve=1  3.4s
+18:36:23  INFO     Epoch  31/200  train_loss=4.7572  val_cos_pos=0.0899  best=0.0907  no_improve=2  3.4s
+18:36:26  INFO     Epoch  32/200  train_loss=4.7555  val_cos_pos=0.0903  best=0.0907  no_improve=3  3.4s
+18:36:29  INFO     Epoch  33/200  train_loss=4.7540  val_cos_pos=0.0906  best=0.0907  no_improve=4  3.4s
+18:36:33  INFO     Epoch  34/200  train_loss=4.7525  val_cos_pos=0.0911  best=0.0911  no_improve=0  3.4s
+18:36:36  INFO     Epoch  35/200  train_loss=4.7504  val_cos_pos=0.0911  best=0.0911  no_improve=1  3.3s
+18:36:39  INFO     Epoch  36/200  train_loss=4.7487  val_cos_pos=0.0917  best=0.0917  no_improve=0  3.3s
+18:36:43  INFO     Epoch  37/200  train_loss=4.7467  val_cos_pos=0.0921  best=0.0921  no_improve=0  3.4s
+18:36:46  INFO     Epoch  38/200  train_loss=4.7460  val_cos_pos=0.0919  best=0.0921  no_improve=1  3.3s
+18:36:50  INFO     Epoch  39/200  train_loss=4.7445  val_cos_pos=0.0923  best=0.0923  no_improve=0  3.4s
+18:36:53  INFO     Epoch  40/200  train_loss=4.7431  val_cos_pos=0.0918  best=0.0923  no_improve=1  3.4s
+18:36:56  INFO     Epoch  41/200  train_loss=4.7419  val_cos_pos=0.0926  best=0.0926  no_improve=0  3.4s
+18:37:00  INFO     Epoch  42/200  train_loss=4.7404  val_cos_pos=0.0918  best=0.0926  no_improve=1  3.4s
+18:37:03  INFO     Epoch  43/200  train_loss=4.7394  val_cos_pos=0.0924  best=0.0926  no_improve=2  3.4s
+18:37:06  INFO     Epoch  44/200  train_loss=4.7385  val_cos_pos=0.0928  best=0.0928  no_improve=0  3.5s
+18:37:10  INFO     Epoch  45/200  train_loss=4.7367  val_cos_pos=0.0927  best=0.0928  no_improve=1  3.4s
+18:37:13  INFO     Epoch  46/200  train_loss=4.7360  val_cos_pos=0.0926  best=0.0928  no_improve=2  3.4s
+18:37:17  INFO     Epoch  47/200  train_loss=4.7352  val_cos_pos=0.0935  best=0.0935  no_improve=0  3.4s
+18:37:20  INFO     Epoch  48/200  train_loss=4.7337  val_cos_pos=0.0934  best=0.0935  no_improve=1  3.4s
+18:37:23  INFO     Epoch  49/200  train_loss=4.7330  val_cos_pos=0.0926  best=0.0935  no_improve=2  3.3s
+18:37:27  INFO     Epoch  50/200  train_loss=4.7322  val_cos_pos=0.0921  best=0.0935  no_improve=3  3.4s
+18:37:30  INFO     Epoch  51/200  train_loss=4.7313  val_cos_pos=0.0926  best=0.0935  no_improve=4  3.4s
+18:37:33  INFO     Epoch  52/200  train_loss=4.7299  val_cos_pos=0.0921  best=0.0935  no_improve=5  3.4s
+18:37:37  INFO     Epoch  53/200  train_loss=4.7295  val_cos_pos=0.0928  best=0.0935  no_improve=6  3.3s
+18:37:40  INFO     Epoch  54/200  train_loss=4.7289  val_cos_pos=0.0929  best=0.0935  no_improve=7  3.3s
+18:37:43  INFO     Epoch  55/200  train_loss=4.7282  val_cos_pos=0.0943  best=0.0943  no_improve=0  3.3s
+18:37:47  INFO     Epoch  56/200  train_loss=4.7274  val_cos_pos=0.0926  best=0.0943  no_improve=1  3.3s
+18:37:50  INFO     Epoch  57/200  train_loss=4.7256  val_cos_pos=0.0929  best=0.0943  no_improve=2  3.4s
+18:37:54  INFO     Epoch  58/200  train_loss=4.7255  val_cos_pos=0.0934  best=0.0943  no_improve=3  3.3s
+18:37:57  INFO     Epoch  59/200  train_loss=4.7248  val_cos_pos=0.0935  best=0.0943  no_improve=4  3.4s
+18:38:00  INFO     Epoch  60/200  train_loss=4.7247  val_cos_pos=0.0941  best=0.0943  no_improve=5  3.4s
+18:38:04  INFO     Epoch  61/200  train_loss=4.7231  val_cos_pos=0.0934  best=0.0943  no_improve=6  3.4s
+18:38:07  INFO     Epoch  62/200  train_loss=4.7225  val_cos_pos=0.0941  best=0.0943  no_improve=7  3.4s
+18:38:10  INFO     Epoch  63/200  train_loss=4.7217  val_cos_pos=0.0938  best=0.0943  no_improve=8  3.3s
+18:38:14  INFO     Epoch  64/200  train_loss=4.7208  val_cos_pos=0.0937  best=0.0943  no_improve=9  3.3s
+18:38:17  INFO     Epoch  65/200  train_loss=4.7207  val_cos_pos=0.0936  best=0.0943  no_improve=10  3.3s
+18:38:20  INFO     Epoch  66/200  train_loss=4.7201  val_cos_pos=0.0937  best=0.0943  no_improve=11  3.3s
+18:38:24  INFO     Epoch  67/200  train_loss=4.7187  val_cos_pos=0.0943  best=0.0943  no_improve=0  3.4s
+18:38:27  INFO     Epoch  68/200  train_loss=4.7182  val_cos_pos=0.0942  best=0.0943  no_improve=1  3.4s
+18:38:30  INFO     Epoch  69/200  train_loss=4.7181  val_cos_pos=0.0940  best=0.0943  no_improve=2  3.3s
+18:38:34  INFO     Epoch  70/200  train_loss=4.7175  val_cos_pos=0.0940  best=0.0943  no_improve=3  3.4s
+18:38:37  INFO     Epoch  71/200  train_loss=4.7165  val_cos_pos=0.0946  best=0.0946  no_improve=0  3.3s
+18:38:40  INFO     Epoch  72/200  train_loss=4.7157  val_cos_pos=0.0943  best=0.0946  no_improve=1  3.3s
+18:38:44  INFO     Epoch  73/200  train_loss=4.7154  val_cos_pos=0.0949  best=0.0949  no_improve=0  3.3s
+18:38:47  INFO     Epoch  74/200  train_loss=4.7156  val_cos_pos=0.0938  best=0.0949  no_improve=1  3.3s
+18:38:50  INFO     Epoch  75/200  train_loss=4.7142  val_cos_pos=0.0946  best=0.0949  no_improve=2  3.3s
+18:38:54  INFO     Epoch  76/200  train_loss=4.7138  val_cos_pos=0.0942  best=0.0949  no_improve=3  3.3s
+18:38:57  INFO     Epoch  77/200  train_loss=4.7130  val_cos_pos=0.0949  best=0.0949  no_improve=0  3.3s
+18:39:00  INFO     Epoch  78/200  train_loss=4.7127  val_cos_pos=0.0936  best=0.0949  no_improve=1  3.3s
+18:39:04  INFO     Epoch  79/200  train_loss=4.7131  val_cos_pos=0.0941  best=0.0949  no_improve=2  3.3s
+18:39:07  INFO     Epoch  80/200  train_loss=4.7123  val_cos_pos=0.0945  best=0.0949  no_improve=3  3.4s
+18:39:10  INFO     Epoch  81/200  train_loss=4.7118  val_cos_pos=0.0945  best=0.0949  no_improve=4  3.3s
+18:39:14  INFO     Epoch  82/200  train_loss=4.7109  val_cos_pos=0.0944  best=0.0949  no_improve=5  3.4s
+18:39:17  INFO     Epoch  83/200  train_loss=4.7105  val_cos_pos=0.0949  best=0.0949  no_improve=6  3.3s
+18:39:20  INFO     Epoch  84/200  train_loss=4.7106  val_cos_pos=0.0939  best=0.0949  no_improve=7  3.3s
+18:39:24  INFO     Epoch  85/200  train_loss=4.7101  val_cos_pos=0.0940  best=0.0949  no_improve=8  3.3s
+18:39:27  INFO     Epoch  86/200  train_loss=4.7092  val_cos_pos=0.0955  best=0.0955  no_improve=0  3.3s
+18:39:30  INFO     Epoch  87/200  train_loss=4.7094  val_cos_pos=0.0942  best=0.0955  no_improve=1  3.3s
+18:39:34  INFO     Epoch  88/200  train_loss=4.7080  val_cos_pos=0.0944  best=0.0955  no_improve=2  3.3s
+18:39:37  INFO     Epoch  89/200  train_loss=4.7082  val_cos_pos=0.0950  best=0.0955  no_improve=3  3.3s
+18:39:40  INFO     Epoch  90/200  train_loss=4.7076  val_cos_pos=0.0946  best=0.0955  no_improve=4  3.3s
+18:39:43  INFO     Epoch  91/200  train_loss=4.7073  val_cos_pos=0.0944  best=0.0955  no_improve=5  3.2s
+18:39:47  INFO     Epoch  92/200  train_loss=4.7068  val_cos_pos=0.0944  best=0.0955  no_improve=6  3.3s
+18:39:50  INFO     Epoch  93/200  train_loss=4.7065  val_cos_pos=0.0946  best=0.0955  no_improve=7  3.3s
+18:39:53  INFO     Epoch  94/200  train_loss=4.7053  val_cos_pos=0.0945  best=0.0955  no_improve=8  3.3s
+18:39:57  INFO     Epoch  95/200  train_loss=4.7063  val_cos_pos=0.0946  best=0.0955  no_improve=9  3.3s
+18:40:00  INFO     Epoch  96/200  train_loss=4.7052  val_cos_pos=0.0948  best=0.0955  no_improve=10  3.3s
+18:40:03  INFO     Epoch  97/200  train_loss=4.7057  val_cos_pos=0.0953  best=0.0955  no_improve=11  3.3s
+18:40:07  INFO     Epoch  98/200  train_loss=4.7042  val_cos_pos=0.0954  best=0.0955  no_improve=12  3.3s
+18:40:10  INFO     Epoch  99/200  train_loss=4.7043  val_cos_pos=0.0947  best=0.0955  no_improve=13  3.3s
+18:40:13  INFO     Epoch 100/200  train_loss=4.7035  val_cos_pos=0.0950  best=0.0955  no_improve=14  3.4s
+18:40:17  INFO     Epoch 101/200  train_loss=4.7036  val_cos_pos=0.0952  best=0.0955  no_improve=15  3.3s
+18:40:20  INFO     Epoch 102/200  train_loss=4.7033  val_cos_pos=0.0959  best=0.0959  no_improve=0  3.3s
+18:40:23  INFO     Epoch 103/200  train_loss=4.7028  val_cos_pos=0.0951  best=0.0959  no_improve=1  3.4s
+18:40:27  INFO     Epoch 104/200  train_loss=4.7025  val_cos_pos=0.0946  best=0.0959  no_improve=2  3.3s
+18:40:30  INFO     Epoch 105/200  train_loss=4.7024  val_cos_pos=0.0955  best=0.0959  no_improve=3  3.3s
+18:40:33  INFO     Epoch 106/200  train_loss=4.7022  val_cos_pos=0.0946  best=0.0959  no_improve=4  3.3s
+18:40:37  INFO     Epoch 107/200  train_loss=4.7016  val_cos_pos=0.0951  best=0.0959  no_improve=5  3.3s
+18:40:40  INFO     Epoch 108/200  train_loss=4.7009  val_cos_pos=0.0954  best=0.0959  no_improve=6  3.3s
+18:40:43  INFO     Epoch 109/200  train_loss=4.7014  val_cos_pos=0.0954  best=0.0959  no_improve=7  3.3s
+18:40:47  INFO     Epoch 110/200  train_loss=4.7008  val_cos_pos=0.0951  best=0.0959  no_improve=8  3.3s
+18:40:50  INFO     Epoch 111/200  train_loss=4.7004  val_cos_pos=0.0953  best=0.0959  no_improve=9  3.3s
+18:40:53  INFO     Epoch 112/200  train_loss=4.6998  val_cos_pos=0.0962  best=0.0962  no_improve=0  3.3s
+18:40:56  INFO     Epoch 113/200  train_loss=4.7000  val_cos_pos=0.0949  best=0.0962  no_improve=1  3.3s
+18:41:00  INFO     Epoch 114/200  train_loss=4.7000  val_cos_pos=0.0961  best=0.0962  no_improve=2  3.3s
+18:41:03  INFO     Epoch 115/200  train_loss=4.6994  val_cos_pos=0.0956  best=0.0962  no_improve=3  3.3s
+18:41:06  INFO     Epoch 116/200  train_loss=4.6995  val_cos_pos=0.0951  best=0.0962  no_improve=4  3.3s
+18:41:10  INFO     Epoch 117/200  train_loss=4.6989  val_cos_pos=0.0955  best=0.0962  no_improve=5  3.3s
+18:41:13  INFO     Epoch 118/200  train_loss=4.6990  val_cos_pos=0.0953  best=0.0962  no_improve=6  3.4s
+18:41:16  INFO     Epoch 119/200  train_loss=4.6981  val_cos_pos=0.0956  best=0.0962  no_improve=7  3.3s
+18:41:20  INFO     Epoch 120/200  train_loss=4.6976  val_cos_pos=0.0959  best=0.0962  no_improve=8  3.3s
+18:41:23  INFO     Epoch 121/200  train_loss=4.6972  val_cos_pos=0.0959  best=0.0962  no_improve=9  3.4s
+18:41:26  INFO     Epoch 122/200  train_loss=4.6978  val_cos_pos=0.0950  best=0.0962  no_improve=10  3.3s
+18:41:30  INFO     Epoch 123/200  train_loss=4.6975  val_cos_pos=0.0957  best=0.0962  no_improve=11  3.4s
+18:41:33  INFO     Epoch 124/200  train_loss=4.6970  val_cos_pos=0.0961  best=0.0962  no_improve=12  3.3s
+18:41:36  INFO     Epoch 125/200  train_loss=4.6966  val_cos_pos=0.0960  best=0.0962  no_improve=13  3.3s
+18:41:40  INFO     Epoch 126/200  train_loss=4.6970  val_cos_pos=0.0950  best=0.0962  no_improve=14  3.3s
+18:41:43  INFO     Epoch 127/200  train_loss=4.6962  val_cos_pos=0.0960  best=0.0962  no_improve=15  3.4s
+18:41:46  INFO     Epoch 128/200  train_loss=4.6960  val_cos_pos=0.0953  best=0.0962  no_improve=16  3.3s
+18:41:50  INFO     Epoch 129/200  train_loss=4.6955  val_cos_pos=0.0963  best=0.0963  no_improve=0  3.4s
+18:41:53  INFO     Epoch 130/200  train_loss=4.6957  val_cos_pos=0.0952  best=0.0963  no_improve=1  3.4s
+18:41:56  INFO     Epoch 131/200  train_loss=4.6945  val_cos_pos=0.0957  best=0.0963  no_improve=2  3.3s
+18:42:00  INFO     Epoch 132/200  train_loss=4.6957  val_cos_pos=0.0965  best=0.0965  no_improve=0  3.3s
+18:42:03  INFO     Epoch 133/200  train_loss=4.6951  val_cos_pos=0.0957  best=0.0965  no_improve=1  3.3s
+18:42:06  INFO     Epoch 134/200  train_loss=4.6943  val_cos_pos=0.0958  best=0.0965  no_improve=2  3.4s
+18:42:10  INFO     Epoch 135/200  train_loss=4.6945  val_cos_pos=0.0958  best=0.0965  no_improve=3  3.3s
+18:42:13  INFO     Epoch 136/200  train_loss=4.6945  val_cos_pos=0.0954  best=0.0965  no_improve=4  3.4s
+18:42:17  INFO     Epoch 137/200  train_loss=4.6935  val_cos_pos=0.0955  best=0.0965  no_improve=5  3.3s
+18:42:20  INFO     Epoch 138/200  train_loss=4.6934  val_cos_pos=0.0961  best=0.0965  no_improve=6  3.4s
+18:42:23  INFO     Epoch 139/200  train_loss=4.6935  val_cos_pos=0.0966  best=0.0966  no_improve=0  3.4s
+18:42:27  INFO     Epoch 140/200  train_loss=4.6933  val_cos_pos=0.0954  best=0.0966  no_improve=1  3.4s
+18:42:30  INFO     Epoch 141/200  train_loss=4.6935  val_cos_pos=0.0963  best=0.0966  no_improve=2  3.4s
+18:42:33  INFO     Epoch 142/200  train_loss=4.6930  val_cos_pos=0.0963  best=0.0966  no_improve=3  3.4s
+18:42:37  INFO     Epoch 143/200  train_loss=4.6928  val_cos_pos=0.0956  best=0.0966  no_improve=4  3.4s
+18:42:40  INFO     Epoch 144/200  train_loss=4.6918  val_cos_pos=0.0964  best=0.0966  no_improve=5  3.3s
+18:42:43  INFO     Epoch 145/200  train_loss=4.6923  val_cos_pos=0.0959  best=0.0966  no_improve=6  3.4s
+18:42:47  INFO     Epoch 146/200  train_loss=4.6917  val_cos_pos=0.0957  best=0.0966  no_improve=7  3.3s
+18:42:50  INFO     Epoch 147/200  train_loss=4.6918  val_cos_pos=0.0960  best=0.0966  no_improve=8  3.4s
+18:42:54  INFO     Epoch 148/200  train_loss=4.6916  val_cos_pos=0.0962  best=0.0966  no_improve=9  3.3s
+18:42:57  INFO     Epoch 149/200  train_loss=4.6914  val_cos_pos=0.0962  best=0.0966  no_improve=10  3.4s
+18:43:00  INFO     Epoch 150/200  train_loss=4.6915  val_cos_pos=0.0960  best=0.0966  no_improve=11  3.3s
+18:43:04  INFO     Epoch 151/200  train_loss=4.6913  val_cos_pos=0.0958  best=0.0966  no_improve=12  3.3s
+18:43:07  INFO     Epoch 152/200  train_loss=4.6910  val_cos_pos=0.0960  best=0.0966  no_improve=13  3.3s
+18:43:10  INFO     Epoch 153/200  train_loss=4.6910  val_cos_pos=0.0964  best=0.0966  no_improve=14  3.3s
+18:43:14  INFO     Epoch 154/200  train_loss=4.6907  val_cos_pos=0.0953  best=0.0966  no_improve=15  3.3s
+18:43:17  INFO     Epoch 155/200  train_loss=4.6906  val_cos_pos=0.0967  best=0.0967  no_improve=0  3.3s
+18:43:20  INFO     Epoch 156/200  train_loss=4.6904  val_cos_pos=0.0961  best=0.0967  no_improve=1  3.4s
+18:43:24  INFO     Epoch 157/200  train_loss=4.6904  val_cos_pos=0.0957  best=0.0967  no_improve=2  3.4s
+18:43:27  INFO     Epoch 158/200  train_loss=4.6901  val_cos_pos=0.0955  best=0.0967  no_improve=3  3.4s
+18:43:30  INFO     Epoch 159/200  train_loss=4.6894  val_cos_pos=0.0956  best=0.0967  no_improve=4  3.4s
+18:43:34  INFO     Epoch 160/200  train_loss=4.6894  val_cos_pos=0.0954  best=0.0967  no_improve=5  3.4s
+18:43:37  INFO     Epoch 161/200  train_loss=4.6897  val_cos_pos=0.0962  best=0.0967  no_improve=6  3.4s
+18:43:40  INFO     Epoch 162/200  train_loss=4.6887  val_cos_pos=0.0966  best=0.0967  no_improve=7  3.4s
+18:43:44  INFO     Epoch 163/200  train_loss=4.6886  val_cos_pos=0.0961  best=0.0967  no_improve=8  3.3s
+18:43:47  INFO     Epoch 164/200  train_loss=4.6887  val_cos_pos=0.0969  best=0.0969  no_improve=0  3.3s
+18:43:50  INFO     Epoch 165/200  train_loss=4.6888  val_cos_pos=0.0965  best=0.0969  no_improve=1  3.3s
+18:43:54  INFO     Epoch 166/200  train_loss=4.6889  val_cos_pos=0.0967  best=0.0969  no_improve=2  3.3s
+18:43:57  INFO     Epoch 167/200  train_loss=4.6886  val_cos_pos=0.0962  best=0.0969  no_improve=3  3.3s
+18:44:00  INFO     Epoch 168/200  train_loss=4.6881  val_cos_pos=0.0956  best=0.0969  no_improve=4  3.3s
+18:44:04  INFO     Epoch 169/200  train_loss=4.6885  val_cos_pos=0.0961  best=0.0969  no_improve=5  3.4s
+18:44:07  INFO     Epoch 170/200  train_loss=4.6880  val_cos_pos=0.0961  best=0.0969  no_improve=6  3.3s
+18:44:10  INFO     Epoch 171/200  train_loss=4.6880  val_cos_pos=0.0965  best=0.0969  no_improve=7  3.3s
+18:44:14  INFO     Epoch 172/200  train_loss=4.6872  val_cos_pos=0.0960  best=0.0969  no_improve=8  3.3s
+18:44:17  INFO     Epoch 173/200  train_loss=4.6876  val_cos_pos=0.0966  best=0.0969  no_improve=9  3.3s
+18:44:20  INFO     Epoch 174/200  train_loss=4.6869  val_cos_pos=0.0966  best=0.0969  no_improve=10  3.3s
+18:44:24  INFO     Epoch 175/200  train_loss=4.6867  val_cos_pos=0.0963  best=0.0969  no_improve=11  3.3s
+18:44:27  INFO     Epoch 176/200  train_loss=4.6868  val_cos_pos=0.0960  best=0.0969  no_improve=12  3.3s
+18:44:30  INFO     Epoch 177/200  train_loss=4.6871  val_cos_pos=0.0973  best=0.0973  no_improve=0  3.3s
+18:44:34  INFO     Epoch 178/200  train_loss=4.6867  val_cos_pos=0.0968  best=0.0973  no_improve=1  3.3s
+18:44:37  INFO     Epoch 179/200  train_loss=4.6862  val_cos_pos=0.0963  best=0.0973  no_improve=2  3.4s
+18:44:40  INFO     Epoch 180/200  train_loss=4.6860  val_cos_pos=0.0961  best=0.0973  no_improve=3  3.4s
+18:44:44  INFO     Epoch 181/200  train_loss=4.6864  val_cos_pos=0.0968  best=0.0973  no_improve=4  3.4s
+18:44:47  INFO     Epoch 182/200  train_loss=4.6866  val_cos_pos=0.0952  best=0.0973  no_improve=5  3.4s
+18:44:51  INFO     Epoch 183/200  train_loss=4.6859  val_cos_pos=0.0965  best=0.0973  no_improve=6  3.3s
+18:44:54  INFO     Epoch 184/200  train_loss=4.6863  val_cos_pos=0.0960  best=0.0973  no_improve=7  3.4s
+18:44:57  INFO     Epoch 185/200  train_loss=4.6857  val_cos_pos=0.0970  best=0.0973  no_improve=8  3.3s
+18:45:01  INFO     Epoch 186/200  train_loss=4.6858  val_cos_pos=0.0960  best=0.0973  no_improve=9  3.4s
+18:45:04  INFO     Epoch 187/200  train_loss=4.6852  val_cos_pos=0.0965  best=0.0973  no_improve=10  3.3s
+18:45:07  INFO     Epoch 188/200  train_loss=4.6846  val_cos_pos=0.0962  best=0.0973  no_improve=11  3.4s
+18:45:11  INFO     Epoch 189/200  train_loss=4.6850  val_cos_pos=0.0957  best=0.0973  no_improve=12  3.4s
+18:45:14  INFO     Epoch 190/200  train_loss=4.6850  val_cos_pos=0.0967  best=0.0973  no_improve=13  3.3s
+18:45:17  INFO     Epoch 191/200  train_loss=4.6849  val_cos_pos=0.0964  best=0.0973  no_improve=14  3.3s
+18:45:21  INFO     Epoch 192/200  train_loss=4.6850  val_cos_pos=0.0960  best=0.0973  no_improve=15  3.3s
+18:45:24  INFO     Epoch 193/200  train_loss=4.6850  val_cos_pos=0.0964  best=0.0973  no_improve=16  3.3s
+18:45:27  INFO     Epoch 194/200  train_loss=4.6850  val_cos_pos=0.0963  best=0.0973  no_improve=17  3.3s
+18:45:31  INFO     Epoch 195/200  train_loss=4.6842  val_cos_pos=0.0963  best=0.0973  no_improve=18  3.4s
+18:45:34  INFO     Epoch 196/200  train_loss=4.6841  val_cos_pos=0.0965  best=0.0973  no_improve=19  3.4s
+18:45:37  INFO     Epoch 197/200  train_loss=4.6842  val_cos_pos=0.0964  best=0.0973  no_improve=20  3.4s
+18:45:37  INFO     Early stopping: no improvement for 20 epochs (patience=20).
+18:45:37  INFO     Restored best encoder (val_cos_pos=0.0973)
+18:45:37  INFO     Saved TwoTowerMolEmbedder to models/two_tower_mol_encoder_morgan_20260325_183200.pt
+18:45:37  INFO     Pre-computing reaction embeddings for all 361751 templates …
+18:45:38  INFO     Pre-computing reaction embeddings for 361751 templates (0 already cached).
+18:48:13  INFO     Saved model to models/two_tower_ranker_morgan_20260325_183200.pkl  (86.1 MB)
+18:48:13  INFO     Done.
+18:48:13  INFO       Encoder : models/two_tower_mol_encoder_morgan_20260325_183200.pt
+18:48:13  INFO       Ranker  : models/two_tower_ranker_morgan_20260325_183200.pkl
+=== Job finished on Wed 25 Mar 18:48:31 WET 2026 ===
