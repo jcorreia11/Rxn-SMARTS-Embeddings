@@ -214,3 +214,7 @@ related_papers/*
 
 # Temporary files
 /temp/*
+
+results/*.pt
+models/*.pt
+models/checkpoints/*
