@@ -1,0 +1,5 @@
+outs:
+- md5: 6255325d1e63443f81afc05ab7f1fca3
+  size: 370433152
+  hash: md5
+  path: reaction_embeddings_512.npy
