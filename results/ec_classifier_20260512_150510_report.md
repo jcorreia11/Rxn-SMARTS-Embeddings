@@ -44,14 +44,14 @@ This report compares reaction SMARTS featurisation strategies on the task of pre
 | Parameter | Value |
 |-----------|-------|
 | Source | RetroRules v3.0 |
-| EC label depth | 1 |
-| EC classes | EC 1 (Oxidoreductases), EC 2 (Transferases), EC 3 (Hydrolases), EC 4 (Lyases), EC 5 (Isomerases), EC 6 (Ligases), EC 7 (Translocases) |
+| EC label depth | 2 |
+| EC classes | EC 1 (Oxidoreductases), EC 1.1 (?), EC 1.10 (?), EC 1.11 (?), EC 1.12 (?), EC 1.13 (?), EC 1.14 (?), EC 1.16 (?), EC 1.17 (?), EC 1.18 (?), EC 1.2 (?), EC 1.20 (?), EC 1.21 (?), EC 1.23 (?), EC 1.3 (?), EC 1.4 (?), EC 1.5 (?), EC 1.6 (?), EC 1.7 (?), EC 1.8 (?), EC 1.97 (?), EC 2 (Transferases), EC 2.1 (?), EC 2.10 (?), EC 2.2 (?), EC 2.3 (?), EC 2.4 (?), EC 2.5 (?), EC 2.6 (?), EC 2.7 (?), EC 2.8 (?), EC 3 (Hydrolases), EC 3.1 (?), EC 3.10 (?), EC 3.11 (?), EC 3.13 (?), EC 3.2 (?), EC 3.3 (?), EC 3.4 (?), EC 3.5 (?), EC 3.6 (?), EC 3.7 (?), EC 3.8 (?), EC 3.9 (?), EC 4.1 (?), EC 4.2 (?), EC 4.3 (?), EC 4.4 (?), EC 4.5 (?), EC 4.6 (?), EC 4.7 (?), EC 4.8 (?), EC 4.98 (?), EC 4.99 (?), EC 5 (Isomerases), EC 5.1 (?), EC 5.2 (?), EC 5.3 (?), EC 5.4 (?), EC 5.5 (?), EC 5.6 (?), EC 5.99 (?), EC 6 (Ligases), EC 6.1 (?), EC 6.2 (?), EC 6.3 (?), EC 6.4 (?), EC 6.5 (?), EC 6.6 (?), EC 6.7 (?), EC 7.2 (?), EC 7.6 (?) |
 | Samples (requested) | 50,000 |
-| Samples (actual) | 49,996 |
+| Samples (actual) | 49,962 |
 | Train / test split | 80/20 stratified |
 | Cross-validation folds | 10 |
 | Random seed | 42 |
-| Total experiment time | 10m 10s |
+| Total experiment time | 25m 8s |
 
 ### Pretrained Transformer (embedding experiments)
 
@@ -65,8 +65,8 @@ This report compares reaction SMARTS featurisation strategies on the task of pre
 | Vocabulary size | 4,466 |
 | Pooling strategy | mean |
 | Weights file | `smarts_transformer_20260428_160310.pt` |
-| Embedding extraction (pretrained) | 23.1 s (49996 sequences) |
-| Embedding extraction (random-init) | 17.4 s (49996 sequences) |
+| Embedding extraction (pretrained) | 19.9 s (49962 sequences) |
+| Embedding extraction (random-init) | 16.1 s (49962 sequences) |
 
 The random-embedding baseline uses the **same architecture with randomly initialised weights** (no pretraining), isolating the contribution of the MLM pretraining objective.
 
@@ -74,17 +74,17 @@ The random-embedding baseline uses the **same architecture with randomly initial
 
 ## 3. Results
 
-Evaluated on **49,996** labelled SMARTS 
-across **7** EC classes with **10**-fold stratified cross-validation. Bold values indicate the best result per metric. Scores are mean ± std over folds (CV set); final test accuracy is on the held-out 20 % split.
+Evaluated on **49,962** labelled SMARTS 
+across **72** EC classes with **10**-fold stratified cross-validation. Bold values indicate the best result per metric. Scores are mean ± std over folds (CV set); final test accuracy is on the held-out 20 % split.
 
 | Method | Accuracy | F1 macro | F1 weighted | CV time (s) | Fit time (s) |
 |--------|----------|----------|-------------|-------------|--------------|
-| SmartsTokenizer | 0.5768 ± 0.0069 | 0.4201 ± 0.0111 | 0.6083 ± 0.0064 | 11.7 | 60.8 |
-| SentencePieceTokenizer | 0.6232 ± 0.0102 | 0.4699 ± 0.0264 | 0.6474 ± 0.0088 | 12.2 | 10.2 |
-| Pretrained+logreg | 0.6796 ± 0.0049 | 0.5294 ± 0.0316 | 0.6990 ± 0.0045 | 23.2 | 133.6 |
-| Random+logreg | 0.4911 ± 0.0065 | 0.3481 ± 0.0161 | 0.5280 ± 0.0064 | 29.0 | 195.2 |
-| Pretrained+mlp | **0.8380 ± 0.0040** | **0.6836 ± 0.0527** | **0.8368 ± 0.0046** | 22.8 | 22.1 |
-| Random+mlp | 0.6890 ± 0.0035 | 0.5020 ± 0.0649 | 0.6768 ± 0.0061 | 23.1 | 16.0 |
+| SmartsTokenizer | 0.3979 ± 0.0059 | 0.2373 ± 0.0167 | 0.4216 ± 0.0070 | 15.7 | 29.2 |
+| SentencePieceTokenizer | 0.4617 ± 0.0083 | 0.2918 ± 0.0233 | 0.4867 ± 0.0087 | 16.8 | 37.0 |
+| Pretrained+logreg | 0.6182 ± 0.0090 | 0.4371 ± 0.0235 | 0.6353 ± 0.0079 | 87.4 | 313.4 |
+| Random+logreg | 0.3374 ± 0.0052 | 0.1823 ± 0.0136 | 0.3627 ± 0.0052 | 105.4 | 627.9 |
+| Pretrained+mlp | **0.7542 ± 0.0063** | **0.5208 ± 0.0286** | **0.7515 ± 0.0058** | 100.2 | 19.3 |
+| Random+mlp | 0.5410 ± 0.0063 | 0.2567 ± 0.0215 | 0.5302 ± 0.0071 | 69.6 | 42.8 |
 
 ![EC classification comparison](results/ec_classifier_20260512_150510_report.pdf)
 
@@ -96,12 +96,11 @@ across **7** EC classes with **10**-fold stratified cross-validation. Bold value
 
 | EC Class | Name | Support | P (SmartsTokenizer) | R (SmartsTokenizer) | F1 (SmartsTokenizer) | P (SentencePieceTokenizer) | R (SentencePieceTokenizer) | F1 (SentencePieceTokenizer) | P (Pretrained+logreg) | R (Pretrained+logreg) | F1 (Pretrained+logreg) | P (Random+logreg) | R (Random+logreg) | F1 (Random+logreg) | P (Pretrained+mlp) | R (Pretrained+mlp) | F1 (Pretrained+mlp) | P (Random+mlp) | R (Random+mlp) | F1 (Random+mlp) |
 |----------|------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|---------|
-| EC 1 | Oxidoreductases | 4,314 | 0.878 | 0.635 | 0.737 | 0.877 | 0.673 | 0.762 | 0.906 | 0.732 | 0.810 | 0.827 | 0.576 | 0.679 | 0.915 | 0.919 | 0.917 | 0.781 | 0.868 | 0.822 |
-| EC 2 | Transferases | 1,578 | 0.527 | 0.538 | 0.532 | 0.546 | 0.561 | 0.553 | 0.577 | 0.631 | 0.603 | 0.383 | 0.391 | 0.387 | 0.761 | 0.793 | 0.776 | 0.579 | 0.453 | 0.508 |
-| EC 3 | Hydrolases | 854 | 0.388 | 0.506 | 0.439 | 0.408 | 0.557 | 0.471 | 0.459 | 0.640 | 0.534 | 0.275 | 0.359 | 0.312 | 0.707 | 0.672 | 0.689 | 0.545 | 0.264 | 0.355 |
-| EC 4 | Lyases | 224 | 0.188 | 0.763 | 0.301 | 0.247 | 0.830 | 0.380 | 0.315 | 0.839 | 0.459 | 0.138 | 0.656 | 0.228 | 0.770 | 0.732 | 0.751 | 0.407 | 0.255 | 0.313 |
-| EC 5 | Isomerases | 384 | 0.227 | 0.716 | 0.345 | 0.277 | 0.742 | 0.403 | 0.310 | 0.768 | 0.442 | 0.168 | 0.620 | 0.264 | 0.753 | 0.651 | 0.698 | 0.661 | 0.299 | 0.412 |
-| EC 6 ★ | Ligases | 3 | 0.028 | 0.333 | 0.051 | 0.105 | 0.667 | 0.182 | 0.077 | 0.333 | 0.125 | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 | 0.000 |
+| EC 1 | Oxidoreductases | 559 | 0.526 | 0.181 | 0.269 | 0.581 | 0.276 | 0.374 | 0.715 | 0.449 | 0.552 | 0.455 | 0.163 | 0.240 | 0.693 | 0.760 | 0.725 | 0.459 | 0.504 | 0.480 |
+| EC 2 ★ | Transferases | 35 | 0.039 | 0.229 | 0.066 | 0.076 | 0.371 | 0.127 | 0.135 | 0.429 | 0.205 | 0.041 | 0.200 | 0.068 | 0.486 | 0.486 | 0.486 | 0.312 | 0.143 | 0.196 |
+| EC 3 | Hydrolases | 64 | 0.081 | 0.188 | 0.113 | 0.140 | 0.281 | 0.186 | 0.207 | 0.516 | 0.296 | 0.087 | 0.203 | 0.122 | 0.473 | 0.406 | 0.437 | 0.357 | 0.234 | 0.283 |
+| EC 5 | Isomerases | 206 | 0.392 | 0.359 | 0.375 | 0.453 | 0.519 | 0.484 | 0.554 | 0.568 | 0.561 | 0.401 | 0.393 | 0.397 | 0.757 | 0.665 | 0.708 | 0.533 | 0.427 | 0.474 |
+| EC 6 | Ligases | 980 | 0.680 | 0.089 | 0.157 | 0.732 | 0.201 | 0.316 | 0.831 | 0.412 | 0.551 | 0.520 | 0.065 | 0.116 | 0.712 | 0.761 | 0.736 | 0.451 | 0.540 | 0.492 |
 
 > **★ Rare class** — fewer than 1 % of the per-class sample mean or < 50 examples. Low scores reflect data scarcity, not model failure. EC 7 (Translocases) is heavily under-represented in RetroRules.
 
@@ -109,7 +108,7 @@ across **7** EC classes with **10**-fold stratified cross-validation. Bold value
 
 ## 5. Summary
 
-- **Best method**: Pretrained+mlp (accuracy 0.8380 ± 0.0040, F1 macro 0.6836 ± 0.0527).
-- **Pretraining gain (logreg)**: pretrained embeddings achieve accuracy 0.6796 vs random-init 0.4911 (Δ acc = +0.1885; Δ F1 macro = +0.1813). Positive gain confirms that MLM pretraining encodes reaction-type information beyond random projection.
-- **Pretraining gain (mlp)**: pretrained embeddings achieve accuracy 0.8380 vs random-init 0.6890 (Δ acc = +0.1490; Δ F1 macro = +0.1816). Positive gain confirms that MLM pretraining encodes reaction-type information beyond random projection.
-- **Embeddings vs TF-IDF**: best pretrained embedding method (Pretrained+mlp, 0.8380) vs best TF-IDF baseline (SentencePieceTokenizer, 0.6232) (Δ acc = +0.2148).
+- **Best method**: Pretrained+mlp (accuracy 0.7542 ± 0.0063, F1 macro 0.5208 ± 0.0286).
+- **Pretraining gain (logreg)**: pretrained embeddings achieve accuracy 0.6182 vs random-init 0.3374 (Δ acc = +0.2808; Δ F1 macro = +0.2548). Positive gain confirms that MLM pretraining encodes reaction-type information beyond random projection.
+- **Pretraining gain (mlp)**: pretrained embeddings achieve accuracy 0.7542 vs random-init 0.5410 (Δ acc = +0.2132; Δ F1 macro = +0.2641). Positive gain confirms that MLM pretraining encodes reaction-type information beyond random projection.
+- **Embeddings vs TF-IDF**: best pretrained embedding method (Pretrained+mlp, 0.7542) vs best TF-IDF baseline (SentencePieceTokenizer, 0.4617) (Δ acc = +0.2925).
