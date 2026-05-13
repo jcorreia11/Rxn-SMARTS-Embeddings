@@ -46,7 +46,7 @@ OUTPUT="${OUTPUT:-results/figures/umap_embedding_space_d${EC_DEPTH}}"
 
 # Reuse cached 2-D coordinates — UMAP only depends on embeddings, not on EC labels,
 # so changing EC_DEPTH does not require re-running the reduction.
-UMAP_CACHE="results/figures/${EMBEDDINGS_STEM}_umap_coords.npy"
+UMAP_CACHE="${UMAP_CACHE:-results/figures/${EMBEDDINGS_STEM}_umap_coords.npy}"
 
 mkdir -p results/figures
 
