@@ -1,0 +1,62 @@
+{
+  "n_samples": 361751,
+  "rule_based": {
+    "vocab_size": 4465,
+    "n_chemical_tokens": 4461,
+    "special_tokens": [
+      "[PAD]",
+      "[UNK]",
+      "[BOS]",
+      "[EOS]"
+    ],
+    "mask_token_injected_at_training_only": true,
+    "vocab_size_during_training": 4466,
+    "error_rate_pct": 0.0,
+    "round_trip_fidelity_pct": 100.0,
+    "throughput_smarts_per_s": 9002.0,
+    "throughput_chars_per_s": 3856029.0,
+    "seq_len_mean": 119.76,
+    "seq_len_median": 101,
+    "seq_len_std": 80.88,
+    "seq_len_min": 3,
+    "seq_len_max": 763,
+    "fertility_mean": 0.2758,
+    "unique_tokens_used": 4461,
+    "coverage_pct": {
+      "max_len_128": 64.1,
+      "max_len_256": 93.5,
+      "max_len_512": 99.8
+    },
+    "n_truncated_at_512": 553
+  },
+  "sentencepiece": {
+    "model_type": "bpe",
+    "vocab_size": 1000,
+    "character_coverage": 1.0,
+    "normalization": "identity",
+    "error_rate_pct": 0.0,
+    "round_trip_fidelity_pct": 100.0,
+    "vocab_utilisation_pct": 98.8,
+    "throughput_smarts_per_s": 2940.0,
+    "throughput_chars_per_s": 1259283.0,
+    "seq_len_mean": 190.41,
+    "seq_len_median": 161,
+    "seq_len_std": 126.32,
+    "seq_len_min": 10,
+    "seq_len_max": 1433,
+    "fertility_mean": 0.4473,
+    "unique_tokens_used": 988,
+    "coverage_pct": {
+      "max_len_128": 37.1,
+      "max_len_256": 77.0,
+      "max_len_512": 97.4
+    }
+  },
+  "comparison": {
+    "throughput_speedup_rb_vs_sp": 3.1,
+    "fertility_ratio_rb_vs_sp": 0.617,
+    "median_len_ratio_rb_vs_sp": 0.627,
+    "coverage_gain_rb_over_sp_at_256": 16.5,
+    "coverage_gain_rb_over_sp_at_512": 2.4
+  }
+}
