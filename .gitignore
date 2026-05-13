@@ -216,5 +216,6 @@ related_papers/*
 /temp/*
 
 results/*.pt
+results/final/
 models/*.pt
 models/checkpoints/*
