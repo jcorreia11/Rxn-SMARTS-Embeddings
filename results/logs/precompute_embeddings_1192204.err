@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/projects/F202508983CPCAA0/jcorreia/work/reaction_selection_pipeline/scripts/precompute_template_embeddings.py", line 280, in <module>
+    main()
+  File "/projects/F202508983CPCAA0/jcorreia/work/reaction_selection_pipeline/scripts/precompute_template_embeddings.py", line 255, in main
+    embedder = SmartsTransformerEmbedder.from_checkpoint(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/projects/F202508983CPCAA0/jcorreia/work/reaction_selection_pipeline/src/reaction_selection_pipeline/ranking/embeddings/reaction.py", line 240, in from_checkpoint
+    SmartsEmbedder.from_checkpoint(
+  File "/projects/F202508983CPCAA0/jcorreia/work/reaction_selection_pipeline/src/reaction_selection_pipeline/ranking/embeddings/_smarts_model.py", line 215, in from_checkpoint
+    model = _Model(_Config.from_dict(cfg_raw["model_config"]))
+                                     ~~~~~~~^^^^^^^^^^^^^^^^
+KeyError: 'model_config'

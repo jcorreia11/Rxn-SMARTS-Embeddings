@@ -1,0 +1,56 @@
+=== Job started on Tue 12 May 15:56:41 WEST 2026 ===
+Running on node(s): gnx506
+=== pip config ===
+:env:.index-url='http://sn02:9191/index/'
+:env:.trusted-host='sn02'
+=== nvidia-smi ===
+Tue May 12 15:56:48 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 550.90.07              Driver Version: 550.90.07      CUDA Version: 12.4     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA A100-SXM4-40GB          On  |   00000000:30:00.0 Off |                    0 |
+| N/A   30C    P0             57W /  400W |       1MiB /  40960MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+                                                                                         
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI        PID   Type   Process name                              GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+=== torch check ===
+Installed torch: 2.6.0+cu124
+=== torch cu124 already present — skipping reinstall ===
+Python executable: /projects/F202508983CPCAA0/jcorreia/work/smartrxn_env/bin/python
+Python 3.12.3
+torch: 2.6.0+cu124 | CUDA: True
+
+Run ID:          20260512_155714
+Data:            data/processed/validated_smarts.csv
+Vocab:           data/processed/vocab.json
+Max length:      512
+d_model:         512
+nhead:           16
+Layers:          8
+FFN dim:         2048
+Dropout:         0.1
+Learning rate:   1e-4
+Batch size:      32
+Epochs:          100
+Mask prob:       0.25
+Mean span:       3.0
+Max span:        10
+Val split:       0.1
+Warmup steps:    2000
+Max grad norm:   1.0
+Num workers:     4
+Checkpoint dir:  models/checkpoints/20260512_155714
+Output:          models/smarts_transformer_20260512_155714.pt
+
+=== Training MLM transformer (Tue 12 May 15:57:14 WEST 2026) ===

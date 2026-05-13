@@ -1,0 +1,13 @@
+=== Job started on Wed 29 Apr 23:23:30 WEST 2026 ===
+Running on node(s): cnx027
+Python executable: /projects/F202508983CPCAA0/jcorreia/work/react_selection_x86/bin/python
+Python 3.12.3
+sys.path ok, site: 
+Embedder: smarts_transformer
+FP output : data/processed/template_fingerprints_smarts_256.npy
+Meta output: data/processed/template_metadata.parquet
+23:24:08  INFO     === Template fingerprint pre-computation ===
+23:24:08  INFO     Templates : /projects/F202508983CPCAA0/jcorreia/work/reaction_selection_pipeline/data/processed/retrorules-merged.csv
+23:24:08  INFO     embedder=smarts_transformer
+23:24:11  INFO     Loaded 361751 templates from /projects/F202508983CPCAA0/jcorreia/work/reaction_selection_pipeline/data/processed/retrorules-merged.csv
+23:24:11  INFO     Loading SMARTS transformer from /projects/F202508983CPCAA0/jcorreia/work/reaction_selection_pipeline/models/smarts_embedder
