@@ -1,0 +1,47 @@
+=== Job started on Wed 22 Apr 11:51:16 WEST 2026 ===
+Running on node(s): gnx504
+Python executable: /projects/F202508983CPCAA0/jcorreia/work/smartrxn_env/bin/python
+Python 3.12.3
+
+Embeddings:    data/embeddings/reaction_embeddings.npy
+SMARTS file:   data/embeddings/reaction_smarts.txt
+UMAP cache:    results/figures/reaction_embeddings_umap_coords.npy
+Output:        results/figures/umap_embedding_space.pdf
+n_neighbors:   15
+min_dist:      0.1
+metric:        cosine
+random_state:  42
+point_size:    0.8
+alpha:         0.4
+
+=== Running UMAP (Wed 22 Apr 11:51:17 WEST 2026) ===
+UMAP(angular_rp_forest=True, low_memory=False, metric='cosine', n_jobs=1, random_state=42, verbose=True)
+Wed Apr 22 11:52:35 2026 Construct fuzzy simplicial set
+Wed Apr 22 11:52:36 2026 Finding Nearest Neighbors
+Wed Apr 22 11:52:36 2026 Building RP forest with 35 trees
+Wed Apr 22 11:52:53 2026 NN descent for 18 iterations
+	 1  /  18
+	 2  /  18
+	Stopping threshold met -- exiting after 2 iterations
+Wed Apr 22 11:53:38 2026 Finished Nearest Neighbor Search
+Wed Apr 22 11:53:45 2026 Construct embedding
+	completed  0  /  200 epochs
+	completed  20  /  200 epochs
+	completed  40  /  200 epochs
+	completed  60  /  200 epochs
+	completed  80  /  200 epochs
+	completed  100  /  200 epochs
+	completed  120  /  200 epochs
+	completed  140  /  200 epochs
+	completed  160  /  200 epochs
+	completed  180  /  200 epochs
+Wed Apr 22 12:04:04 2026 Finished embedding
+
+Figure:     results/figures/umap_embedding_space.pdf
+UMAP cache: results/figures/reaction_embeddings_umap_coords.npy
+
+=== Committing results to git (Wed 22 Apr 12:04:21 WEST 2026) ===
+[dev 8d6c010] [results] UMAP embedding space (job 1163482)
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 results/figures/umap_embedding_space.pdf
+=== Job finished on Wed 22 Apr 12:04:21 WEST 2026 ===

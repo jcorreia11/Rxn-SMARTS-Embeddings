@@ -1,0 +1,76 @@
+=== Job started on Wed 29 Apr 10:57:11 WEST 2026 ===
+Running on node(s): gnx504
+=== nvidia-smi ===
+Wed Apr 29 10:57:12 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 550.90.07              Driver Version: 550.90.07      CUDA Version: 12.4     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA A100-SXM4-40GB          On  |   00000000:30:00.0 Off |                    0 |
+| N/A   29C    P0             53W /  400W |       1MiB /  40960MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+                                                                                         
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI        PID   Type   Process name                              GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+Python executable: /projects/F202508983CPCAA0/jcorreia/work/smartrxn_env/bin/python
+Python 3.12.3
+torch: 2.6.0+cu124 | CUDA: True
+
+Run ID:           20260429_105725
+Validated SMARTS: data/processed/validated_smarts.csv
+SP model:         data/processed/sp_tokenizer.model
+EC depth:         2
+N samples:        50000
+Folds:            10
+Results JSON:     results/ec_classifier_20260429_105725.json
+Environment JSON: results/ec_classifier_20260429_105725_env.json
+Report:           results/ec_classifier_20260429_105725_report.md
+Weights:          models/smarts_transformer_20260428_160310.pt
+Config:           models/smarts_transformer_20260428_160310.json
+Vocab:            data/processed/vocab.json
+Pooling:          mean
+Embed batch size: 256
+
+=== Collecting environment info (Wed 29 Apr 10:57:25 WEST 2026) ===
+Environment info saved to results/ec_classifier_20260429_105725_env.json
+
+=== Running EC classifier (Wed 29 Apr 10:57:28 WEST 2026) ===
+
+Metric                    SmartsTokenizer                 SentencePieceTokenizer          Pretrained+logreg               Random+logreg                   Pretrained+mlp                  Random+mlp                      
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Train samples             39969                           39969                           39969                           39969                           39969                           39969                           
+Test samples              9993                            9993                            9993                            9993                            9993                            9993                            
+Classes (EC depth)        72                              72                              72                              72                              72                              72                              
+CV folds                  10                              10                              10                              10                              10                              10                              
+Accuracy (mean)           0.3979                          0.4617                          0.6182                          0.333                           0.7542                          0.5356                          
+Accuracy (std)            0.0059                          0.0083                          0.009                           0.0076                          0.0063                          0.0088                          
+F1 macro (mean)           0.2373                          0.2918                          0.4371                          0.1803                          0.5208                          0.2588                          
+F1 macro (std)            0.0167                          0.0233                          0.0235                          0.0125                          0.0286                          0.016                           
+F1 weighted (mean)        0.4216                          0.4867                          0.6353                          0.3581                          0.7515                          0.5242                          
+F1 weighted (std)         0.007                           0.0087                          0.0079                          0.0081                          0.0058                          0.0099                          
+
+
+=== Generating report (Wed 29 Apr 11:48:00 WEST 2026) ===
+
+Results JSON:  results/ec_classifier_20260429_105725.json
+Environment:   results/ec_classifier_20260429_105725_env.json
+Report:        results/ec_classifier_20260429_105725_report.md
+Figure:        results/ec_classifier_20260429_105725_report.pdf
+
+=== Committing results to git (Wed 29 Apr 11:48:10 WEST 2026) ===
+[dev a2fa3b2] [results] EC classifier (run 20260429_105725)
+ 4 files changed, 524 insertions(+)
+ create mode 100644 results/ec_classifier_20260429_105725.json
+ create mode 100644 results/ec_classifier_20260429_105725_env.json
+ create mode 100644 results/ec_classifier_20260429_105725_report.md
+ create mode 100644 results/ec_classifier_20260429_105725_report.pdf
+=== Job finished on Wed 29 Apr 11:48:10 WEST 2026 ===

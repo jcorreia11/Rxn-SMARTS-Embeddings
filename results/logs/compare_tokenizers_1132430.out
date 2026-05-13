@@ -1,0 +1,74 @@
+=== Job started on Thu  9 Apr 12:43:36 WEST 2026 ===
+Running on node(s): cnx119
+Python executable: /projects/F202508983CPCAA0/jcorreia/work/smartrxn_env/bin/python
+Python 3.12.3
+sys.path ok, site: 
+sentencepiece: 0.2.1
+scikit-learn: 1.8.0
+Run ID:        20260409_124425
+Results dir:   results/tokenizer_comparison_20260409_124425
+N samples:     10000
+EC depth:      1
+SP model:      data/processed/sp_tokenizer.model
+SP vocab size: 1000
+
+=== Step 1/5: Collecting environment info (Thu  9 Apr 12:44:25 WEST 2026) ===
+Environment info saved to results/tokenizer_comparison_20260409_124425/env.json
+
+=== Step 2/5: EC classifier comparison (Thu  9 Apr 12:45:34 WEST 2026) ===
+
+Metric                    SmartsTokenizer                 SentencePieceTokenizer          
+------------------------------------------------------------------------------------------
+Train samples             7996                            7996                            
+Test samples              2000                            2000                            
+Classes (EC depth)        7                               7                               
+CV folds                  5                               5                               
+Accuracy (mean)           0.54                            0.5858                          
+Accuracy (std)            0.0066                          0.0115                          
+F1 macro (mean)           0.3688                          0.4217                          
+F1 macro (std)            0.0076                          0.0309                          
+F1 weighted (mean)        0.5734                          0.6109                          
+F1 weighted (std)         0.0053                          0.0118                          
+
+
+=== Step 3/5: Intrinsic metrics comparison (Thu  9 Apr 12:46:08 WEST 2026) ===
+
+Metric                      SmartsTokenizer           SentencePieceTokenizer    
+--------------------------------------------------------------------------------
+Vocabulary size             N/A                       1,000                     
+Samples evaluated           10,000                    10,000                    
+Error rate                  0.00%                     0.00%                     
+Throughput                  9,153.4000 SMARTS/s       2,845.2000 SMARTS/s       
+Throughput                  3,905,032.6000 chars/s    1,213,833.8000 chars/s    
+Seq length (mean)           118.9800 tokens           189.7100 tokens           
+Seq length (median)         100.0000 tokens           160.0000 tokens           
+Seq length (std)            80.8000 tokens            126.2800 tokens           
+Seq length (min)            3 tokens                  12 tokens                 
+Seq length (max)            659 tokens                1,204 tokens              
+Fertility ratio (mean)      0.2751 tokens/char        0.4476 tokens/char        
+Unique tokens used          1,882                     982                       
+Vocabulary utilisation      N/A                       98.20%                    
+Round-trip fidelity         100.00%                   100.00%                   
+
+
+=== Step 4/5: Generating figures (Thu  9 Apr 12:46:19 WEST 2026) ===
+
+=== Step 5/5: Generating report (Thu  9 Apr 12:46:27 WEST 2026) ===
+
+Figures:  results/tokenizer_comparison_20260409_124425/figures/
+Report:   results/tokenizer_comparison_20260409_124425/tokenizer_comparison_report.md
+
+=== Committing results to git (Thu  9 Apr 12:46:27 WEST 2026) ===
+[dev eba6f32] [results] Tokenizer comparison (run 20260409_124425, N=10000, EC_DEPTH=1)
+ 10 files changed, 27155 insertions(+)
+ create mode 100644 results/tokenizer_comparison_20260409_124425/ec_classifier.json
+ create mode 100644 results/tokenizer_comparison_20260409_124425/env.json
+ create mode 100644 results/tokenizer_comparison_20260409_124425/figures/ec_classifier.png
+ create mode 100644 results/tokenizer_comparison_20260409_124425/figures/ec_classifier.svg
+ create mode 100644 results/tokenizer_comparison_20260409_124425/figures/throughput_fertility.png
+ create mode 100644 results/tokenizer_comparison_20260409_124425/figures/throughput_fertility.svg
+ create mode 100644 results/tokenizer_comparison_20260409_124425/figures/token_length_distribution.png
+ create mode 100644 results/tokenizer_comparison_20260409_124425/figures/token_length_distribution.svg
+ create mode 100644 results/tokenizer_comparison_20260409_124425/tokenizer_comparison_report.md
+ create mode 100644 results/tokenizer_comparison_20260409_124425/tokenizer_metrics.json
+=== Job finished on Thu  9 Apr 12:46:27 WEST 2026 ===

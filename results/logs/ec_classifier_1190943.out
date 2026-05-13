@@ -1,0 +1,69 @@
+=== Job started on Wed 29 Apr 10:56:55 WEST 2026 ===
+Running on node(s): gnx504
+=== nvidia-smi ===
+Wed Apr 29 10:56:56 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 550.90.07              Driver Version: 550.90.07      CUDA Version: 12.4     |
+|-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA A100-SXM4-40GB          On  |   00000000:2F:00.0 Off |                    0 |
+| N/A   32C    P0             61W /  400W |       1MiB /  40960MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+                                                                                         
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI        PID   Type   Process name                              GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+Python executable: /projects/F202508983CPCAA0/jcorreia/work/smartrxn_env/bin/python
+Python 3.12.3
+torch: 2.6.0+cu124 | CUDA: True
+
+Run ID:           20260429_105659
+Validated SMARTS: data/processed/validated_smarts.csv
+SP model:         data/processed/sp_tokenizer.model
+EC depth:         1
+N samples:        50000
+Folds:            10
+Results JSON:     results/ec_classifier_20260429_105659.json
+Environment JSON: results/ec_classifier_20260429_105659_env.json
+Report:           results/ec_classifier_20260429_105659_report.md
+Weights:          models/smarts_transformer_20260428_160310.pt
+Config:           models/smarts_transformer_20260428_160310.json
+Vocab:            data/processed/vocab.json
+Pooling:          mean
+Embed batch size: 256
+
+=== Collecting environment info (Wed 29 Apr 10:56:59 WEST 2026) ===
+Environment info saved to results/ec_classifier_20260429_105659_env.json
+
+=== Running EC classifier (Wed 29 Apr 10:57:03 WEST 2026) ===
+
+Metric                    SmartsTokenizer                 SentencePieceTokenizer          Pretrained+logreg               Random+logreg                   Pretrained+mlp                  Random+mlp                      
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Train samples             39996                           39996                           39996                           39996                           39996                           39996                           
+Test samples              10000                           10000                           10000                           10000                           10000                           10000                           
+Classes (EC depth)        7                               7                               7                               7                               7                               7                               
+CV folds                  10                              10                              10                              10                              10                              10                              
+Accuracy (mean)           0.5768                          0.6232                          0.6796                          0.4883                          0.838                           0.6972                          
+Accuracy (std)            0.0069                          0.0102                          0.0049                          0.0052                          0.004                           0.0041                          
+F1 macro (mean)           0.4201                          0.4699                          0.5294                          0.3479                          0.6836                          0.4639                          
+F1 macro (std)            0.0111                          0.0264                          0.0316                          0.0123                          0.0527                          0.0111                          
+F1 weighted (mean)        0.6083                          0.6474                          0.699                           0.5267                          0.8368                          0.6882                          
+F1 weighted (std)         0.0064                          0.0088                          0.0045                          0.0049                          0.0046                          0.0049                          
+
+
+=== Generating report (Wed 29 Apr 11:48:01 WEST 2026) ===
+
+Results JSON:  results/ec_classifier_20260429_105659.json
+Environment:   results/ec_classifier_20260429_105659_env.json
+Report:        results/ec_classifier_20260429_105659_report.md
+Figure:        results/ec_classifier_20260429_105659_report.pdf
+
+=== Committing results to git (Wed 29 Apr 11:48:10 WEST 2026) ===

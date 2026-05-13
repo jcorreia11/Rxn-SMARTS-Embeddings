@@ -1,0 +1,2 @@
+/projects/F202508983CPCAA0/jcorreia/work/reaction_selection_pipeline/scripts/train_two_tower.py:780: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  "timestamp": datetime.utcnow().isoformat(),

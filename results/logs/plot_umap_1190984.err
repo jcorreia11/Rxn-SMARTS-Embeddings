@@ -1,0 +1,276 @@
+Loading embeddings from data/embeddings/reaction_embeddings_512.npy...
+Embeddings shape: (361751, 256)
+Loading SMARTS list from data/embeddings/reaction_smarts_512.txt...
+SMARTS with EC label (depth=3): 212952 / 361751
+EC labels (depth=3): 212952 / 361751 (58.9%)
+/projects/F202508983CPCAA0/jcorreia/work/SmartRxnEmbeddings/scripts/plot_umap.py:96: MatplotlibDeprecationWarning: The get_cmap function was deprecated in Matplotlib 3.7 and will be removed in 3.11. Use ``matplotlib.colormaps[name]`` or ``matplotlib.colormaps.get_cmap()`` or ``pyplot.get_cmap()`` instead.
+  cmap = cm.get_cmap(_FAMILY_CMAPS.get(top, "Greys"))
+Subclasses found (depth=3): 261
+  EC 1: 571
+  EC 1.1: 304
+  EC 1.1.1: 10215
+  EC 1.1.2: 40
+  EC 1.1.3: 936
+  EC 1.1.4: 80
+  EC 1.1.5: 77
+  EC 1.1.7: 16
+  EC 1.1.98: 118
+  EC 1.1.99: 162
+  EC 1.10.1: 8
+  EC 1.10.3: 665
+  EC 1.10.5: 30
+  EC 1.10.99: 46
+  EC 1.11: 47
+  EC 1.11.1: 1045
+  EC 1.11.2: 282
+  EC 1.12.1: 1
+  EC 1.12.2: 22
+  EC 1.12.98: 47
+  EC 1.12.99: 10
+  EC 1.13: 81
+  EC 1.13.11: 3571
+  EC 1.13.12: 590
+  EC 1.13.99: 153
+  EC 1.14: 978
+  EC 1.14.11: 2496
+  EC 1.14.12: 818
+  EC 1.14.13: 9097
+  EC 1.14.14: 3556
+  EC 1.14.15: 573
+  EC 1.14.16: 105
+  EC 1.14.17: 92
+  EC 1.14.18: 343
+  EC 1.14.19: 701
+  EC 1.14.20: 552
+  EC 1.14.21: 276
+  EC 1.14.99: 1013
+  EC 1.16.1: 23
+  EC 1.16.3: 9
+  EC 1.17: 4
+  EC 1.17.1: 260
+  EC 1.17.2: 10
+  EC 1.17.3: 327
+  EC 1.17.4: 58
+  EC 1.17.5: 69
+  EC 1.17.7: 64
+  EC 1.17.8: 29
+  EC 1.17.9: 44
+  EC 1.17.99: 61
+  EC 1.18: 10
+  EC 1.18.1: 14
+  EC 1.2: 34
+  EC 1.2.1: 3339
+  EC 1.2.2: 25
+  EC 1.2.3: 366
+  EC 1.2.4: 415
+  EC 1.2.5: 20
+  EC 1.2.7: 82
+  EC 1.2.98: 42
+  EC 1.2.99: 36
+  EC 1.20.1: 29
+  EC 1.20.4: 13
+  EC 1.21: 12
+  EC 1.21.1: 49
+  EC 1.21.3: 361
+  EC 1.21.4: 18
+  EC 1.21.98: 147
+  EC 1.21.99: 8
+  EC 1.23.1: 92
+  EC 1.23.5: 49
+  EC 1.3: 157
+  EC 1.3.1: 3308
+  EC 1.3.2: 8
+  EC 1.3.3: 713
+  EC 1.3.4: 37
+  EC 1.3.5: 307
+  EC 1.3.7: 184
+  EC 1.3.8: 254
+  EC 1.3.98: 230
+  EC 1.3.99: 133
+  EC 1.4: 30
+  EC 1.4.1: 436
+  EC 1.4.2: 3
+  EC 1.4.3: 722
+  EC 1.4.4: 24
+  EC 1.4.5: 2
+  EC 1.4.7: 1
+  EC 1.4.99: 21
+  EC 1.5: 26
+  EC 1.5.1: 922
+  EC 1.5.3: 640
+  EC 1.5.4: 18
+  EC 1.5.7: 9
+  EC 1.5.8: 3
+  EC 1.5.98: 44
+  EC 1.5.99: 52
+  EC 1.6: 8
+  EC 1.6.2: 12
+  EC 1.6.3: 22
+  EC 1.6.5: 371
+  EC 1.6.6: 35
+  EC 1.6.98: 1
+  EC 1.6.99: 16
+  EC 1.7: 29
+  EC 1.7.1: 304
+  EC 1.7.2: 47
+  EC 1.7.3: 132
+  EC 1.7.5: 2
+  EC 1.7.6: 6
+  EC 1.7.99: 2
+  EC 1.8.1: 322
+  EC 1.8.2: 4
+  EC 1.8.3: 169
+  EC 1.8.4: 168
+  EC 1.8.5: 138
+  EC 1.9.6: 2
+  EC 1.97.1: 108
+  EC 2: 56
+  EC 2.1.1: 10943
+  EC 2.1.2: 745
+  EC 2.1.3: 443
+  EC 2.1.4: 301
+  EC 2.1.5: 60
+  EC 2.10.1: 128
+  EC 2.2.1: 964
+  EC 2.3: 60
+  EC 2.3.1: 17985
+  EC 2.3.2: 457
+  EC 2.3.3: 865
+  EC 2.4: 36
+  EC 2.4.1: 27791
+  EC 2.4.2: 2589
+  EC 2.4.3: 96
+  EC 2.4.99: 461
+  EC 2.5.1: 8580
+  EC 2.6.1: 4837
+  EC 2.6.3: 16
+  EC 2.6.99: 64
+  EC 2.7.1: 4165
+  EC 2.7.11: 16
+  EC 2.7.2: 309
+  EC 2.7.3: 202
+  EC 2.7.4: 931
+  EC 2.7.6: 186
+  EC 2.7.7: 2541
+  EC 2.7.8: 2129
+  EC 2.7.9: 47
+  EC 2.8.1: 175
+  EC 2.8.2: 1087
+  EC 2.8.3: 2714
+  EC 2.8.4: 100
+  EC 2.8.5: 10
+  EC 2.8.7: 10
+  EC 3: 48
+  EC 3.1: 89
+  EC 3.1.1: 5614
+  EC 3.1.2: 1153
+  EC 3.1.27: 19
+  EC 3.1.3: 2441
+  EC 3.1.4: 997
+  EC 3.1.5: 33
+  EC 3.1.6: 263
+  EC 3.1.7: 93
+  EC 3.1.8: 162
+  EC 3.10.1: 19
+  EC 3.11.1: 26
+  EC 3.12.1: 7
+  EC 3.13.1: 252
+  EC 3.13.2: 16
+  EC 3.2: 16
+  EC 3.2.1: 6978
+  EC 3.2.2: 753
+  EC 3.3.1: 46
+  EC 3.3.2: 1016
+  EC 3.4: 150
+  EC 3.4.11: 925
+  EC 3.4.13: 928
+  EC 3.4.14: 142
+  EC 3.4.15: 74
+  EC 3.4.16: 264
+  EC 3.4.17: 421
+  EC 3.4.19: 404
+  EC 3.4.21: 413
+  EC 3.4.22: 55
+  EC 3.4.24: 71
+  EC 3.5: 61
+  EC 3.5.1: 3916
+  EC 3.5.2: 379
+  EC 3.5.3: 594
+  EC 3.5.4: 965
+  EC 3.5.5: 144
+  EC 3.5.99: 523
+  EC 3.6.1: 1467
+  EC 3.6.2: 10
+  EC 3.6.3: 44
+  EC 3.6.4: 12
+  EC 3.7.1: 1275
+  EC 3.8.1: 343
+  EC 3.8.2: 8
+  EC 3.9.1: 42
+  EC 4: 8
+  EC 4.1.1: 2354
+  EC 4.1.2: 1716
+  EC 4.1.3: 610
+  EC 4.1.99: 765
+  EC 4.2.1: 5140
+  EC 4.2.2: 210
+  EC 4.2.3: 3969
+  EC 4.2.99: 146
+  EC 4.3.1: 487
+  EC 4.3.2: 348
+  EC 4.3.3: 314
+  EC 4.3.99: 94
+  EC 4.4.1: 1195
+  EC 4.5.1: 133
+  EC 4.6.1: 138
+  EC 4.7.1: 17
+  EC 4.8.1: 106
+  EC 4.98.1: 23
+  EC 4.99.1: 416
+  EC 5: 12
+  EC 5.1: 8
+  EC 5.1.1: 28
+  EC 5.1.2: 10
+  EC 5.1.3: 103
+  EC 5.2.1: 22
+  EC 5.3: 10
+  EC 5.3.1: 482
+  EC 5.3.2: 124
+  EC 5.3.3: 765
+  EC 5.3.99: 524
+  EC 5.4.1: 35
+  EC 5.4.2: 106
+  EC 5.4.3: 107
+  EC 5.4.4: 226
+  EC 5.4.99: 975
+  EC 5.5.1: 1146
+  EC 5.6.1: 19
+  EC 5.99.1: 10
+  EC 6: 26
+  EC 6.1: 21
+  EC 6.1.1: 18
+  EC 6.1.2: 76
+  EC 6.1.3: 51
+  EC 6.2.1: 2460
+  EC 6.3: 330
+  EC 6.3.1: 533
+  EC 6.3.2: 3077
+  EC 6.3.3: 153
+  EC 6.3.4: 463
+  EC 6.3.5: 518
+  EC 6.4.1: 343
+  EC 6.5.1: 16
+  EC 6.6.1: 70
+  EC 6.7.1: 38
+  EC 7.1.1: 4
+  EC 7.2.1: 23
+  EC 7.2.4: 27
+  EC 7.3.2: 4
+  EC 7.6.2: 12
+Fitting UMAP on 361751 × 256 matrix (n_neighbors=15, min_dist=0.10, metric=cosine)...
+/projects/F202508983CPCAA0/jcorreia/work/smartrxn_env/lib/python3.12/site-packages/umap/umap_.py:1952: UserWarning: n_jobs value 1 overridden to 1 by setting random_state. Use no seed for parallelism.
+  warn(
+Epochs completed:   0%|            0/200 [00:00]Epochs completed:   0%|            1/200 [00:01]Epochs completed:   1%|            2/200 [00:02]Epochs completed:   2%| ▏          3/200 [00:02]Epochs completed:   2%| ▏          4/200 [00:03]Epochs completed:   2%| ▎          5/200 [00:04]Epochs completed:   3%| ▎          6/200 [00:05]Epochs completed:   4%| ▎          7/200 [00:07]Epochs completed:   4%| ▍          8/200 [00:08]Epochs completed:   4%| ▍          9/200 [00:09]Epochs completed:   5%| ▌          10/200 [00:10]Epochs completed:   6%| ▌          11/200 [00:11]Epochs completed:   6%| ▌          12/200 [00:12]Epochs completed:   6%| ▋          13/200 [00:13]Epochs completed:   7%| ▋          14/200 [00:14]Epochs completed:   8%| ▊          15/200 [00:16]Epochs completed:   8%| ▊          16/200 [00:17]Epochs completed:   8%| ▊          17/200 [00:18]Epochs completed:   9%| ▉          18/200 [00:19]Epochs completed:  10%| ▉          19/200 [00:20]Epochs completed:  10%| █          20/200 [00:21]Epochs completed:  10%| █          21/200 [00:22]Epochs completed:  11%| █          22/200 [00:24]Epochs completed:  12%| █▏         23/200 [00:25]Epochs completed:  12%| █▏         24/200 [00:26]Epochs completed:  12%| █▎         25/200 [00:27]Epochs completed:  13%| █▎         26/200 [00:28]Epochs completed:  14%| █▎         27/200 [00:29]Epochs completed:  14%| █▍         28/200 [00:30]Epochs completed:  14%| █▍         29/200 [00:31]Epochs completed:  15%| █▌         30/200 [00:33]Epochs completed:  16%| █▌         31/200 [00:34]Epochs completed:  16%| █▌         32/200 [00:35]Epochs completed:  16%| █▋         33/200 [00:36]Epochs completed:  17%| █▋         34/200 [00:37]Epochs completed:  18%| █▊         35/200 [00:38]Epochs completed:  18%| █▊         36/200 [00:39]Epochs completed:  18%| █▊         37/200 [00:41]Epochs completed:  19%| █▉         38/200 [00:42]Epochs completed:  20%| █▉         39/200 [00:43]Epochs completed:  20%| ██         40/200 [00:44]Epochs completed:  20%| ██         41/200 [00:45]Epochs completed:  21%| ██         42/200 [00:46]Epochs completed:  22%| ██▏        43/200 [00:47]Epochs completed:  22%| ██▏        44/200 [00:49]Epochs completed:  22%| ██▎        45/200 [00:50]Epochs completed:  23%| ██▎        46/200 [00:51]Epochs completed:  24%| ██▎        47/200 [00:52]Epochs completed:  24%| ██▍        48/200 [00:53]Epochs completed:  24%| ██▍        49/200 [00:54]Epochs completed:  25%| ██▌        50/200 [00:55]Epochs completed:  26%| ██▌        51/200 [00:56]Epochs completed:  26%| ██▌        52/200 [00:58]Epochs completed:  26%| ██▋        53/200 [00:59]Epochs completed:  27%| ██▋        54/200 [01:00]Epochs completed:  28%| ██▊        55/200 [01:01]Epochs completed:  28%| ██▊        56/200 [01:02]Epochs completed:  28%| ██▊        57/200 [01:03]Epochs completed:  29%| ██▉        58/200 [01:04]Epochs completed:  30%| ██▉        59/200 [01:06]Epochs completed:  30%| ███        60/200 [01:07]Epochs completed:  30%| ███        61/200 [01:08]Epochs completed:  31%| ███        62/200 [01:09]Epochs completed:  32%| ███▏       63/200 [01:10]Epochs completed:  32%| ███▏       64/200 [01:11]Epochs completed:  32%| ███▎       65/200 [01:12]Epochs completed:  33%| ███▎       66/200 [01:14]Epochs completed:  34%| ███▎       67/200 [01:15]Epochs completed:  34%| ███▍       68/200 [01:16]Epochs completed:  34%| ███▍       69/200 [01:17]Epochs completed:  35%| ███▌       70/200 [01:18]Epochs completed:  36%| ███▌       71/200 [01:19]Epochs completed:  36%| ███▌       72/200 [01:20]Epochs completed:  36%| ███▋       73/200 [01:21]Epochs completed:  37%| ███▋       74/200 [01:23]Epochs completed:  38%| ███▊       75/200 [01:24]Epochs completed:  38%| ███▊       76/200 [01:25]Epochs completed:  38%| ███▊       77/200 [01:26]Epochs completed:  39%| ███▉       78/200 [01:27]Epochs completed:  40%| ███▉       79/200 [01:28]Epochs completed:  40%| ████       80/200 [01:29]Epochs completed:  40%| ████       81/200 [01:31]Epochs completed:  41%| ████       82/200 [01:32]Epochs completed:  42%| ████▏      83/200 [01:33]Epochs completed:  42%| ████▏      84/200 [01:34]Epochs completed:  42%| ████▎      85/200 [01:35]Epochs completed:  43%| ████▎      86/200 [01:36]Epochs completed:  44%| ████▎      87/200 [01:37]Epochs completed:  44%| ████▍      88/200 [01:39]Epochs completed:  44%| ████▍      89/200 [01:40]Epochs completed:  45%| ████▌      90/200 [01:41]Epochs completed:  46%| ████▌      91/200 [01:42]Epochs completed:  46%| ████▌      92/200 [01:43]Epochs completed:  46%| ████▋      93/200 [01:44]Epochs completed:  47%| ████▋      94/200 [01:45]Epochs completed:  48%| ████▊      95/200 [01:46]Epochs completed:  48%| ████▊      96/200 [01:48]Epochs completed:  48%| ████▊      97/200 [01:49]Epochs completed:  49%| ████▉      98/200 [01:50]Epochs completed:  50%| ████▉      99/200 [01:51]Epochs completed:  50%| █████      100/200 [01:52]Epochs completed:  50%| █████      101/200 [01:53]Epochs completed:  51%| █████      102/200 [01:54]Epochs completed:  52%| █████▏     103/200 [01:55]Epochs completed:  52%| █████▏     104/200 [01:57]Epochs completed:  52%| █████▎     105/200 [01:58]Epochs completed:  53%| █████▎     106/200 [01:59]Epochs completed:  54%| █████▎     107/200 [02:00]Epochs completed:  54%| █████▍     108/200 [02:01]Epochs completed:  55%| █████▍     109/200 [02:02]Epochs completed:  55%| █████▌     110/200 [02:03]Epochs completed:  56%| █████▌     111/200 [02:04]Epochs completed:  56%| █████▌     112/200 [02:06]Epochs completed:  56%| █████▋     113/200 [02:07]Epochs completed:  57%| █████▋     114/200 [02:08]Epochs completed:  57%| █████▊     115/200 [02:09]Epochs completed:  58%| █████▊     116/200 [02:10]Epochs completed:  58%| █████▊     117/200 [02:11]Epochs completed:  59%| █████▉     118/200 [02:12]Epochs completed:  60%| █████▉     119/200 [02:14]Epochs completed:  60%| ██████     120/200 [02:15]Epochs completed:  60%| ██████     121/200 [02:16]Epochs completed:  61%| ██████     122/200 [02:17]Epochs completed:  62%| ██████▏    123/200 [02:18]Epochs completed:  62%| ██████▏    124/200 [02:19]Epochs completed:  62%| ██████▎    125/200 [02:20]Epochs completed:  63%| ██████▎    126/200 [02:21]Epochs completed:  64%| ██████▎    127/200 [02:23]Epochs completed:  64%| ██████▍    128/200 [02:24]Epochs completed:  64%| ██████▍    129/200 [02:25]Epochs completed:  65%| ██████▌    130/200 [02:26]Epochs completed:  66%| ██████▌    131/200 [02:27]Epochs completed:  66%| ██████▌    132/200 [02:28]Epochs completed:  66%| ██████▋    133/200 [02:29]Epochs completed:  67%| ██████▋    134/200 [02:30]Epochs completed:  68%| ██████▊    135/200 [02:32]Epochs completed:  68%| ██████▊    136/200 [02:33]Epochs completed:  68%| ██████▊    137/200 [02:34]Epochs completed:  69%| ██████▉    138/200 [02:35]Epochs completed:  70%| ██████▉    139/200 [02:36]Epochs completed:  70%| ███████    140/200 [02:37]Epochs completed:  70%| ███████    141/200 [02:38]Epochs completed:  71%| ███████    142/200 [02:39]Epochs completed:  72%| ███████▏   143/200 [02:41]Epochs completed:  72%| ███████▏   144/200 [02:42]Epochs completed:  72%| ███████▎   145/200 [02:43]Epochs completed:  73%| ███████▎   146/200 [02:44]Epochs completed:  74%| ███████▎   147/200 [02:45]Epochs completed:  74%| ███████▍   148/200 [02:46]Epochs completed:  74%| ███████▍   149/200 [02:47]Epochs completed:  75%| ███████▌   150/200 [02:48]Epochs completed:  76%| ███████▌   151/200 [02:50]Epochs completed:  76%| ███████▌   152/200 [02:51]Epochs completed:  76%| ███████▋   153/200 [02:52]Epochs completed:  77%| ███████▋   154/200 [02:53]Epochs completed:  78%| ███████▊   155/200 [02:54]Epochs completed:  78%| ███████▊   156/200 [02:55]Epochs completed:  78%| ███████▊   157/200 [02:56]Epochs completed:  79%| ███████▉   158/200 [02:57]Epochs completed:  80%| ███████▉   159/200 [02:59]Epochs completed:  80%| ████████   160/200 [03:00]Epochs completed:  80%| ████████   161/200 [03:01]Epochs completed:  81%| ████████   162/200 [03:02]Epochs completed:  82%| ████████▏  163/200 [03:03]Epochs completed:  82%| ████████▏  164/200 [03:04]Epochs completed:  82%| ████████▎  165/200 [03:05]Epochs completed:  83%| ████████▎  166/200 [03:06]Epochs completed:  84%| ████████▎  167/200 [03:08]Epochs completed:  84%| ████████▍  168/200 [03:09]Epochs completed:  84%| ████████▍  169/200 [03:10]Epochs completed:  85%| ████████▌  170/200 [03:11]Epochs completed:  86%| ████████▌  171/200 [03:12]Epochs completed:  86%| ████████▌  172/200 [03:13]Epochs completed:  86%| ████████▋  173/200 [03:14]Epochs completed:  87%| ████████▋  174/200 [03:15]Epochs completed:  88%| ████████▊  175/200 [03:17]Epochs completed:  88%| ████████▊  176/200 [03:18]Epochs completed:  88%| ████████▊  177/200 [03:19]Epochs completed:  89%| ████████▉  178/200 [03:20]Epochs completed:  90%| ████████▉  179/200 [03:21]Epochs completed:  90%| █████████  180/200 [03:22]Epochs completed:  90%| █████████  181/200 [03:23]Epochs completed:  91%| █████████  182/200 [03:25]Epochs completed:  92%| █████████▏ 183/200 [03:26]Epochs completed:  92%| █████████▏ 184/200 [03:27]Epochs completed:  92%| █████████▎ 185/200 [03:28]Epochs completed:  93%| █████████▎ 186/200 [03:29]Epochs completed:  94%| █████████▎ 187/200 [03:30]Epochs completed:  94%| █████████▍ 188/200 [03:31]Epochs completed:  94%| █████████▍ 189/200 [03:32]Epochs completed:  95%| █████████▌ 190/200 [03:34]Epochs completed:  96%| █████████▌ 191/200 [03:35]Epochs completed:  96%| █████████▌ 192/200 [03:36]Epochs completed:  96%| █████████▋ 193/200 [03:37]Epochs completed:  97%| █████████▋ 194/200 [03:38]Epochs completed:  98%| █████████▊ 195/200 [03:39]Epochs completed:  98%| █████████▊ 196/200 [03:40]Epochs completed:  98%| █████████▊ 197/200 [03:41]Epochs completed:  99%| █████████▉ 198/200 [03:43]Epochs completed: 100%| █████████▉ 199/200 [03:44]Epochs completed: 100%| ██████████ 200/200 [03:45]Epochs completed: 100%| ██████████ 200/200 [03:45]
+UMAP complete in 900.4 s
+UMAP coordinates saved to results/figures/reaction_embeddings_512_umap_coords.npy
+Figure saved to results/figures/umap_embedding_space_d3.pdf

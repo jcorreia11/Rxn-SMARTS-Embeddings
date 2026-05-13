@@ -1,0 +1,179 @@
+Loading labelled SMARTS (EC depth=1)...
+EC map built: 214007 labelled SMARTS
+After join with validated set: 214007 SMARTS with EC labels
+Class distribution:
+label
+2    92314
+1    56568
+3    33764
+4    18275
+6     8223
+5     4793
+7       70
+Sampled 49996 SMARTS (stratified)
+Labels: ['1', '2', '3', '4', '5', '6', '7']
+Train: 39996 samples | Test: 10000 samples (stratified 80/20)
+
+--- SmartsTokenizer ---
+
+SmartsTokenizer — 10-fold CV results (train=39996, test=10000):
+  accuracy : 0.5768 ± 0.0069
+  f1_macro : 0.4201 ± 0.0111
+  f1_weighted: 0.6083 ± 0.0064
+  cv_time  : 9.9 s | fit_time: 54.0 s
+
+Classification report (held-out test set):
+              precision    recall  f1-score   support
+
+           1       0.67      0.51      0.58      2643
+           2       0.88      0.63      0.74      4314
+           3       0.53      0.54      0.53      1578
+           4       0.39      0.51      0.44       854
+           5       0.19      0.76      0.30       224
+           6       0.23      0.72      0.34       384
+           7       0.03      0.33      0.05         3
+
+    accuracy                           0.58     10000
+   macro avg       0.42      0.57      0.43     10000
+weighted avg       0.69      0.58      0.61     10000
+
+Note: classes with very few samples (e.g. EC class 7, n=3) are expected to score 0 — insufficient data, not a model failure.
+
+--- SentencePieceTokenizer (data/processed/sp_tokenizer.model) ---
+
+SentencePieceTokenizer — 10-fold CV results (train=39996, test=10000):
+  accuracy : 0.6232 ± 0.0102
+  f1_macro : 0.4699 ± 0.0264
+  f1_weighted: 0.6474 ± 0.0088
+  cv_time  : 11.4 s | fit_time: 9.9 s
+
+Classification report (held-out test set):
+              precision    recall  f1-score   support
+
+           1       0.73      0.58      0.65      2643
+           2       0.88      0.67      0.76      4314
+           3       0.55      0.56      0.55      1578
+           4       0.41      0.56      0.47       854
+           5       0.25      0.83      0.38       224
+           6       0.28      0.74      0.40       384
+           7       0.11      0.67      0.18         3
+
+    accuracy                           0.63     10000
+   macro avg       0.46      0.66      0.49     10000
+weighted avg       0.71      0.63      0.65     10000
+
+Note: classes with very few samples (e.g. EC class 7, n=3) are expected to score 0 — insufficient data, not a model failure.
+
+--- Extracting pretrained embeddings (pooling=mean) ---
+Loaded pretrained weights from models/smarts_transformer_20260410_111830.pt (d_model=256, layers=6)
+SMARTSDataset: 49996 sequences | max_length=256 | avg_len=116.8 | vocab_size=4465
+/projects/F202508983CPCAA0/jcorreia/work/smartrxn_env/lib/python3.12/site-packages/torch/nn/modules/transformer.py:508: UserWarning: The PyTorch API of nested tensors is in prototype stage and will change in the near future. We recommend specifying layout=torch.jagged when constructing a nested tensor, as this layout receives active development, has better operator coverage, and works with torch.compile. (Triggered internally at /pytorch/aten/src/ATen/NestedTensorImpl.cpp:178.)
+  output = torch._nested_tensor_from_mask(
+Extracted 49996 embeddings | dim=256 | pooling=mean | device=cuda
+Embedding extraction (pretrained): 15.3 s for 49996 sequences
+
+--- Extracting random-init embeddings (baseline) ---
+Using randomly initialized model (d_model=256, layers=6) — baseline
+SMARTSDataset: 49996 sequences | max_length=256 | avg_len=116.8 | vocab_size=4465
+Extracted 49996 embeddings | dim=256 | pooling=mean | device=cuda
+Embedding extraction (random-init): 14.3 s for 49996 sequences
+
+--- Pretrained embeddings + logreg ---
+
+Pretrained+logreg — 10-fold CV results (train=39996, test=10000, head=logreg):
+  accuracy : 0.6757 ± 0.0076
+  f1_macro : 0.5249 ± 0.0238
+  f1_weighted: 0.6942 ± 0.0070
+  cv_time  : 24.3 s | fit_time: 150.9 s
+
+Classification report (held-out test set):
+              precision    recall  f1-score   support
+
+           1       0.79      0.60      0.68      2643
+           2       0.90      0.73      0.80      4314
+           3       0.56      0.62      0.59      1578
+           4       0.46      0.64      0.54       854
+           5       0.33      0.87      0.47       224
+           6       0.31      0.81      0.45       384
+           7       0.05      0.33      0.09         3
+
+    accuracy                           0.67     10000
+   macro avg       0.49      0.66      0.52     10000
+weighted avg       0.75      0.67      0.69     10000
+
+
+--- Random embeddings + logreg (baseline) ---
+
+Random+logreg — 10-fold CV results (train=39996, test=10000, head=logreg):
+  accuracy : 0.4862 ± 0.0068
+  f1_macro : 0.3445 ± 0.0194
+  f1_weighted: 0.5250 ± 0.0063
+  cv_time  : 26.5 s | fit_time: 371.4 s
+
+Classification report (held-out test set):
+              precision    recall  f1-score   support
+
+           1       0.64      0.42      0.51      2643
+           2       0.81      0.56      0.67      4314
+           3       0.37      0.37      0.37      1578
+           4       0.26      0.35      0.30       854
+           5       0.13      0.66      0.22       224
+           6       0.17      0.63      0.27       384
+           7       0.00      0.00      0.00         3
+
+    accuracy                           0.48     10000
+   macro avg       0.34      0.43      0.33     10000
+weighted avg       0.61      0.48      0.52     10000
+
+
+--- Pretrained embeddings + mlp ---
+
+Pretrained+mlp — 10-fold CV results (train=39996, test=10000, head=mlp):
+  accuracy : 0.8379 ± 0.0050
+  f1_macro : 0.6657 ± 0.0426
+  f1_weighted: 0.8367 ± 0.0054
+  cv_time  : 26.7 s | fit_time: 30.6 s
+
+Classification report (held-out test set):
+              precision    recall  f1-score   support
+
+           1       0.81      0.89      0.85      2643
+           2       0.92      0.90      0.91      4314
+           3       0.80      0.77      0.78      1578
+           4       0.67      0.67      0.67       854
+           5       0.78      0.69      0.73       224
+           6       0.79      0.67      0.73       384
+           7       0.00      0.00      0.00         3
+
+    accuracy                           0.84     10000
+   macro avg       0.68      0.66      0.67     10000
+weighted avg       0.84      0.84      0.84     10000
+
+
+--- Random embeddings + mlp (baseline) ---
+
+Random+mlp — 10-fold CV results (train=39996, test=10000, head=mlp):
+  accuracy : 0.6918 ± 0.0078
+  f1_macro : 0.4639 ± 0.0457
+  f1_weighted: 0.6785 ± 0.0083
+  cv_time  : 20.2 s | fit_time: 29.3 s
+
+Classification report (held-out test set):
+              precision    recall  f1-score   support
+
+           1       0.69      0.75      0.72      2643
+           2       0.81      0.84      0.82      4314
+           3       0.55      0.52      0.54      1578
+           4       0.48      0.42      0.44       854
+           5       0.46      0.33      0.38       224
+           6       0.58      0.42      0.49       384
+           7       0.00      0.00      0.00         3
+
+    accuracy                           0.70     10000
+   macro avg       0.51      0.47      0.48     10000
+weighted avg       0.69      0.70      0.70     10000
+
+Results written to results/ec_classifier_20260422_112754.json
+Loaded environment from results/ec_classifier_20260422_112754_env.json
+Figure saved to results/ec_classifier_20260422_112754_report.pdf
+Report written to results/ec_classifier_20260422_112754_report.md

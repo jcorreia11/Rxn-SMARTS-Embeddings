@@ -1,0 +1,80 @@
+Loading labelled SMARTS (EC depth=1)...
+EC map built: 214007 labelled SMARTS
+After join with validated set: 214007 SMARTS with EC labels
+Class distribution:
+label
+2    92314
+1    56568
+3    33764
+4    18275
+6     8223
+5     4793
+7       70
+Labels: ['1', '2', '3', '4', '5', '6', '7']
+Train: 171205 samples | Test: 42802 samples (stratified 80/20)
+
+--- SmartsTokenizer ---
+
+SmartsTokenizer — 5-fold CV results (train=171205, test=42802):
+  accuracy : 0.5979 ± 0.0009
+  f1_macro : 0.4479 ± 0.0025
+  f1_weighted: 0.6270 ± 0.0012
+  cv_time  : 36.7 s | fit_time: 51.6 s
+
+Classification report (held-out test set):
+              precision    recall  f1-score   support
+
+           1       0.68      0.52      0.59     11314
+           2       0.89      0.66      0.75     18463
+           3       0.56      0.56      0.56      6753
+           4       0.41      0.52      0.45      3655
+           5       0.21      0.86      0.34       958
+           6       0.25      0.77      0.38      1645
+           7       0.05      0.93      0.09        14
+
+    accuracy                           0.60     42802
+   macro avg       0.43      0.69      0.45     42802
+weighted avg       0.70      0.60      0.63     42802
+
+Note: classes with very few samples (e.g. EC class 7, n=14) are expected to score 0 — insufficient data, not a model failure.
+
+--- SentencePieceTokenizer (data/processed/sp_tokenizer.model) ---
+
+SentencePieceTokenizer — 5-fold CV results (train=171205, test=42802):
+  accuracy : 0.6428 ± 0.0026
+  f1_macro : 0.5083 ± 0.0038
+  f1_weighted: 0.6658 ± 0.0019
+  cv_time  : 43.8 s | fit_time: 44.4 s
+
+Classification report (held-out test set):
+              precision    recall  f1-score   support
+
+           1       0.74      0.57      0.64     11314
+           2       0.90      0.69      0.78     18463
+           3       0.56      0.58      0.57      6753
+           4       0.43      0.59      0.50      3655
+           5       0.26      0.90      0.40       958
+           6       0.30      0.80      0.43      1645
+           7       0.14      1.00      0.25        14
+
+    accuracy                           0.64     42802
+   macro avg       0.47      0.73      0.51     42802
+weighted avg       0.72      0.64      0.67     42802
+
+Note: classes with very few samples (e.g. EC class 7, n=14) are expected to score 0 — insufficient data, not a model failure.
+Results written to results/tokenizer_comparison_20260409_131636/ec_classifier.json
+Loaded 361751 valid SMARTS from data/processed/validated_smarts.csv
+
+Benchmarking SmartsTokenizer...
+Benchmarking SentencePieceTokenizer (data/processed/sp_tokenizer.model)...
+Results written to results/tokenizer_comparison_20260409_131636/tokenizer_metrics.json
+Loaded metrics for: ['SmartsTokenizer', 'SentencePieceTokenizer']
+Saved results/tokenizer_comparison_20260409_131636/figures/token_length_distribution.svg
+Saved results/tokenizer_comparison_20260409_131636/figures/token_length_distribution.png
+Saved results/tokenizer_comparison_20260409_131636/figures/throughput_fertility.svg
+Saved results/tokenizer_comparison_20260409_131636/figures/throughput_fertility.png
+Loaded classifier results for: ['SmartsTokenizer', 'SentencePieceTokenizer']
+Saved results/tokenizer_comparison_20260409_131636/figures/ec_classifier.svg
+Saved results/tokenizer_comparison_20260409_131636/figures/ec_classifier.png
+Loaded environment from results/tokenizer_comparison_20260409_131636/env.json
+Report written to results/tokenizer_comparison_20260409_131636/tokenizer_comparison_report.md

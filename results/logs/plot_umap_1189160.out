@@ -1,0 +1,27 @@
+=== Job started on Tue 28 Apr 17:49:05 WEST 2026 ===
+Running on node(s): gnx502
+Python executable: /projects/F202508983CPCAA0/jcorreia/work/smartrxn_env/bin/python
+Python 3.12.3
+
+Embeddings:    data/embeddings/reaction_embeddings.npy
+SMARTS file:   data/embeddings/reaction_smarts.txt
+EC depth:      3
+UMAP cache:    results/figures/reaction_embeddings_umap_coords.npy
+Output:        results/figures/umap_embedding_space_d3.pdf
+n_neighbors:   15
+min_dist:      0.1
+metric:        cosine
+random_state:  42
+point_size:    0.8
+alpha:         0.4
+
+=== Running UMAP (Tue 28 Apr 17:49:07 WEST 2026) ===
+
+Figure:     results/figures/umap_embedding_space_d3.pdf
+UMAP cache: results/figures/reaction_embeddings_umap_coords.npy
+
+=== Committing results to git (Tue 28 Apr 17:49:36 WEST 2026) ===
+[dev aa62e60] [results] UMAP embedding space depth=3 (job 1189160)
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 results/figures/umap_embedding_space_d3.pdf
+=== Job finished on Tue 28 Apr 17:49:37 WEST 2026 ===

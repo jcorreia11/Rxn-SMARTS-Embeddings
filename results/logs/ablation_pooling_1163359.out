@@ -1,0 +1,35 @@
+=== Job started on Wed 22 Apr 10:17:10 WEST 2026 ===
+Running on node(s): gnx506
+=== torch cu124 already present — skipping reinstall ===
+Python executable: /projects/F202508983CPCAA0/jcorreia/work/smartrxn_env/bin/python
+Python 3.12.3
+torch: 2.6.0+cu124 | CUDA: True
+
+Weights:          models/smarts_transformer_20260410_111830.pt
+Config:           models/smarts_transformer_20260410_111830.json
+Vocab:            data/processed/vocab.json
+N samples:        20000
+EC depth:         1
+CV folds:         10
+Embed batch size: 128
+Results JSON:     results/pooling_ablation_1163359.json
+Report:           results/pooling_ablation_1163359_report.md
+
+=== Collecting environment info (Wed 22 Apr 10:17:48 WEST 2026) ===
+Environment info saved to results/pooling_ablation_1163359_env.json
+
+=== Running CLS vs mean pooling ablation (Wed 22 Apr 10:17:51 WEST 2026) ===
+
+=== Generating report (Wed 22 Apr 11:05:59 WEST 2026) ===
+
+Results JSON: results/pooling_ablation_1163359.json
+Environment:  results/pooling_ablation_1163359_env.json
+Report:       results/pooling_ablation_1163359_report.md
+
+=== Committing results to git (Wed 22 Apr 11:06:10 WEST 2026) ===
+[dev ffcf912] [results] Pooling ablation (run pooling_ablation_1163359)
+ 3 files changed, 417 insertions(+)
+ create mode 100644 results/pooling_ablation_1163359.json
+ create mode 100644 results/pooling_ablation_1163359_env.json
+ create mode 100644 results/pooling_ablation_1163359_report.md
+=== Job finished on Wed 22 Apr 11:06:11 WEST 2026 ===
