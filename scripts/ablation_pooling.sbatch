@@ -2,7 +2,7 @@
 #SBATCH --job-name=ablation_pooling
 #SBATCH --account=F202508983CPCAA0G
 #SBATCH --partition=normal-a100-40
-#SBATCH --time=02:00:00
+#SBATCH --time=24:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
