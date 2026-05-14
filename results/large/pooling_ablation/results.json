@@ -1,0 +1,286 @@
+{
+  "meta": {
+    "run_id": "results",
+    "date": "2026-05-14",
+    "ablation": "cls_vs_mean_pooling",
+    "weights": "models/smarts_transformer_20260513_093030.pt",
+    "config": "models/smarts_transformer_20260513_093030.json",
+    "ec_depth": 1,
+    "n_samples_requested": 20000,
+    "n_samples_actual": 19996,
+    "train_test_split": "80/20 stratified",
+    "random_seed": 42,
+    "folds": 10,
+    "label_names": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7"
+    ],
+    "embed_time_s": 27.18,
+    "total_time_s": 3198.1,
+    "model_config": {
+      "vocab_size": 4466,
+      "d_model": 512,
+      "nhead": 16,
+      "num_encoder_layers": 8,
+      "dim_feedforward": 2048,
+      "dropout": 0.1,
+      "max_seq_len": 512,
+      "pad_id": 0
+    }
+  },
+  "results": [
+    {
+      "name": "CLS+logreg",
+      "pooling": "cls",
+      "head": "logreg",
+      "n_train": 15996,
+      "n_test": 4000,
+      "n_classes": 7,
+      "n_folds": 10,
+      "n_samples": 19996,
+      "accuracy_mean": 0.7159,
+      "accuracy_std": 0.007,
+      "f1_macro_mean": 0.6255,
+      "f1_macro_std": 0.048,
+      "f1_weighted_mean": 0.7288,
+      "f1_weighted_std": 0.0064,
+      "cv_time_s": 1321.63,
+      "fit_time_s": 159.12,
+      "per_class": {
+        "1": {
+          "precision": 0.8103,
+          "recall": 0.6868,
+          "f1": 0.7435,
+          "support": 1057
+        },
+        "2": {
+          "precision": 0.8926,
+          "recall": 0.7706,
+          "f1": 0.8271,
+          "support": 1726
+        },
+        "3": {
+          "precision": 0.5866,
+          "recall": 0.6545,
+          "f1": 0.6187,
+          "support": 631
+        },
+        "4": {
+          "precision": 0.4839,
+          "recall": 0.6579,
+          "f1": 0.5576,
+          "support": 342
+        },
+        "5": {
+          "precision": 0.528,
+          "recall": 0.7416,
+          "f1": 0.6168,
+          "support": 89
+        },
+        "6": {
+          "precision": 0.326,
+          "recall": 0.6753,
+          "f1": 0.4397,
+          "support": 154
+        },
+        "7": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 1
+        }
+      }
+    },
+    {
+      "name": "CLS+mlp",
+      "pooling": "cls",
+      "head": "mlp",
+      "n_train": 15996,
+      "n_test": 4000,
+      "n_classes": 7,
+      "n_folds": 10,
+      "n_samples": 19996,
+      "accuracy_mean": 0.8009,
+      "accuracy_std": 0.0105,
+      "f1_macro_mean": 0.6917,
+      "f1_macro_std": 0.0569,
+      "f1_weighted_mean": 0.7988,
+      "f1_weighted_std": 0.0103,
+      "cv_time_s": 229.97,
+      "fit_time_s": 23.79,
+      "per_class": {
+        "1": {
+          "precision": 0.8179,
+          "recall": 0.8543,
+          "f1": 0.8357,
+          "support": 1057
+        },
+        "2": {
+          "precision": 0.8755,
+          "recall": 0.8963,
+          "f1": 0.8858,
+          "support": 1726
+        },
+        "3": {
+          "precision": 0.6946,
+          "recall": 0.7353,
+          "f1": 0.7144,
+          "support": 631
+        },
+        "4": {
+          "precision": 0.7426,
+          "recall": 0.6579,
+          "f1": 0.6977,
+          "support": 342
+        },
+        "5": {
+          "precision": 0.7959,
+          "recall": 0.4382,
+          "f1": 0.5652,
+          "support": 89
+        },
+        "6": {
+          "precision": 0.7156,
+          "recall": 0.5065,
+          "f1": 0.5932,
+          "support": 154
+        },
+        "7": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 1
+        }
+      }
+    },
+    {
+      "name": "Mean+logreg",
+      "pooling": "mean",
+      "head": "logreg",
+      "n_train": 15996,
+      "n_test": 4000,
+      "n_classes": 7,
+      "n_folds": 10,
+      "n_samples": 19996,
+      "accuracy_mean": 0.7818,
+      "accuracy_std": 0.0097,
+      "f1_macro_mean": 0.6806,
+      "f1_macro_std": 0.0558,
+      "f1_weighted_mean": 0.7905,
+      "f1_weighted_std": 0.008,
+      "cv_time_s": 1182.97,
+      "fit_time_s": 106.63,
+      "per_class": {
+        "1": {
+          "precision": 0.8553,
+          "recall": 0.7606,
+          "f1": 0.8052,
+          "support": 1057
+        },
+        "2": {
+          "precision": 0.914,
+          "recall": 0.8372,
+          "f1": 0.8739,
+          "support": 1726
+        },
+        "3": {
+          "precision": 0.7009,
+          "recall": 0.7242,
+          "f1": 0.7124,
+          "support": 631
+        },
+        "4": {
+          "precision": 0.5685,
+          "recall": 0.7281,
+          "f1": 0.6385,
+          "support": 342
+        },
+        "5": {
+          "precision": 0.5492,
+          "recall": 0.7528,
+          "f1": 0.6351,
+          "support": 89
+        },
+        "6": {
+          "precision": 0.4361,
+          "recall": 0.7532,
+          "f1": 0.5524,
+          "support": 154
+        },
+        "7": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 1
+        }
+      }
+    },
+    {
+      "name": "Mean+mlp",
+      "pooling": "mean",
+      "head": "mlp",
+      "n_train": 15996,
+      "n_test": 4000,
+      "n_classes": 7,
+      "n_folds": 10,
+      "n_samples": 19996,
+      "accuracy_mean": 0.8561,
+      "accuracy_std": 0.0094,
+      "f1_macro_mean": 0.7343,
+      "f1_macro_std": 0.0611,
+      "f1_weighted_mean": 0.8548,
+      "f1_weighted_std": 0.0096,
+      "cv_time_s": 104.65,
+      "fit_time_s": 13.58,
+      "per_class": {
+        "1": {
+          "precision": 0.8564,
+          "recall": 0.9026,
+          "f1": 0.8789,
+          "support": 1057
+        },
+        "2": {
+          "precision": 0.9047,
+          "recall": 0.9293,
+          "f1": 0.9168,
+          "support": 1726
+        },
+        "3": {
+          "precision": 0.7945,
+          "recall": 0.7781,
+          "f1": 0.7862,
+          "support": 631
+        },
+        "4": {
+          "precision": 0.8046,
+          "recall": 0.7105,
+          "f1": 0.7547,
+          "support": 342
+        },
+        "5": {
+          "precision": 0.8101,
+          "recall": 0.7191,
+          "f1": 0.7619,
+          "support": 89
+        },
+        "6": {
+          "precision": 0.7699,
+          "recall": 0.5649,
+          "f1": 0.6517,
+          "support": 154
+        },
+        "7": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 1
+        }
+      }
+    }
+  ]
+}
