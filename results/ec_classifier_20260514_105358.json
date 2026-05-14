@@ -1,0 +1,362 @@
+{
+  "meta": {
+    "run_id": "ec_classifier_20260514_105358",
+    "date": "2026-05-14",
+    "ec_depth": 1,
+    "n_samples_requested": 50000,
+    "n_samples_actual": 49996,
+    "train_test_split": "80/20 stratified",
+    "random_seed": 42,
+    "folds": 10,
+    "label_names": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7"
+    ],
+    "total_time_s": 1250.59,
+    "model_config": {
+      "vocab_size": 4466,
+      "d_model": 512,
+      "nhead": 16,
+      "num_encoder_layers": 8,
+      "dim_feedforward": 2048,
+      "dropout": 0.1,
+      "max_seq_len": 512,
+      "pad_id": 0
+    },
+    "embedding_weights": "models/smarts_transformer_20260513_093030.pt",
+    "embedding_pooling": "mean",
+    "embed_time_pretrained_s": 33.63,
+    "embed_time_random_s": 33.23
+  },
+  "results": [
+    {
+      "name": "SmartsTokenizer",
+      "n_train": 39996,
+      "n_test": 10000,
+      "n_classes": 7,
+      "n_folds": 10,
+      "accuracy_mean": 0.5768,
+      "accuracy_std": 0.0069,
+      "f1_macro_mean": 0.4201,
+      "f1_macro_std": 0.0111,
+      "f1_weighted_mean": 0.6083,
+      "f1_weighted_std": 0.0064,
+      "cv_time_s": 24.14,
+      "fit_time_s": 52.57,
+      "per_class": {
+        "1": {
+          "precision": 0.8776,
+          "recall": 0.6349,
+          "f1": 0.7368,
+          "support": 4314
+        },
+        "2": {
+          "precision": 0.527,
+          "recall": 0.538,
+          "f1": 0.5325,
+          "support": 1578
+        },
+        "3": {
+          "precision": 0.3881,
+          "recall": 0.5059,
+          "f1": 0.4392,
+          "support": 854
+        },
+        "4": {
+          "precision": 0.1877,
+          "recall": 0.7634,
+          "f1": 0.3013,
+          "support": 224
+        },
+        "5": {
+          "precision": 0.2271,
+          "recall": 0.7161,
+          "f1": 0.3448,
+          "support": 384
+        },
+        "6": {
+          "precision": 0.0278,
+          "recall": 0.3333,
+          "f1": 0.0513,
+          "support": 3
+        }
+      },
+      "n_samples": 49996
+    },
+    {
+      "name": "SentencePieceTokenizer",
+      "n_train": 39996,
+      "n_test": 10000,
+      "n_classes": 7,
+      "n_folds": 10,
+      "accuracy_mean": 0.6232,
+      "accuracy_std": 0.0102,
+      "f1_macro_mean": 0.4699,
+      "f1_macro_std": 0.0264,
+      "f1_weighted_mean": 0.6474,
+      "f1_weighted_std": 0.0088,
+      "cv_time_s": 29.62,
+      "fit_time_s": 10.4,
+      "per_class": {
+        "1": {
+          "precision": 0.8768,
+          "recall": 0.6734,
+          "f1": 0.7618,
+          "support": 4314
+        },
+        "2": {
+          "precision": 0.546,
+          "recall": 0.5608,
+          "f1": 0.5533,
+          "support": 1578
+        },
+        "3": {
+          "precision": 0.4082,
+          "recall": 0.5574,
+          "f1": 0.4713,
+          "support": 854
+        },
+        "4": {
+          "precision": 0.2467,
+          "recall": 0.8304,
+          "f1": 0.3804,
+          "support": 224
+        },
+        "5": {
+          "precision": 0.2767,
+          "recall": 0.7422,
+          "f1": 0.4031,
+          "support": 384
+        },
+        "6": {
+          "precision": 0.1053,
+          "recall": 0.6667,
+          "f1": 0.1818,
+          "support": 3
+        }
+      },
+      "n_samples": 49996
+    },
+    {
+      "name": "Pretrained+logreg",
+      "n_train": 39996,
+      "n_test": 10000,
+      "n_classes": 7,
+      "n_folds": 10,
+      "accuracy_mean": 0.7923,
+      "accuracy_std": 0.0066,
+      "f1_macro_mean": 0.661,
+      "f1_macro_std": 0.047,
+      "f1_weighted_mean": 0.8013,
+      "f1_weighted_std": 0.0062,
+      "cv_time_s": 79.57,
+      "fit_time_s": 245.8,
+      "per_class": {
+        "1": {
+          "precision": 0.9373,
+          "recall": 0.8215,
+          "f1": 0.8756,
+          "support": 4314
+        },
+        "2": {
+          "precision": 0.6954,
+          "recall": 0.7554,
+          "f1": 0.7242,
+          "support": 1578
+        },
+        "3": {
+          "precision": 0.578,
+          "recall": 0.7857,
+          "f1": 0.666,
+          "support": 854
+        },
+        "4": {
+          "precision": 0.5026,
+          "recall": 0.8527,
+          "f1": 0.6325,
+          "support": 224
+        },
+        "5": {
+          "precision": 0.4479,
+          "recall": 0.8177,
+          "f1": 0.5788,
+          "support": 384
+        },
+        "6": {
+          "precision": 0.25,
+          "recall": 0.3333,
+          "f1": 0.2857,
+          "support": 3
+        }
+      },
+      "n_samples": 49996
+    },
+    {
+      "name": "Random+logreg",
+      "n_train": 39996,
+      "n_test": 10000,
+      "n_classes": 7,
+      "n_folds": 10,
+      "accuracy_mean": 0.5266,
+      "accuracy_std": 0.0076,
+      "f1_macro_mean": 0.3865,
+      "f1_macro_std": 0.0258,
+      "f1_weighted_mean": 0.5601,
+      "f1_weighted_std": 0.0069,
+      "cv_time_s": 68.96,
+      "fit_time_s": 455.83,
+      "per_class": {
+        "1": {
+          "precision": 0.8263,
+          "recall": 0.6011,
+          "f1": 0.6959,
+          "support": 4314
+        },
+        "2": {
+          "precision": 0.4313,
+          "recall": 0.4417,
+          "f1": 0.4364,
+          "support": 1578
+        },
+        "3": {
+          "precision": 0.2972,
+          "recall": 0.4239,
+          "f1": 0.3494,
+          "support": 854
+        },
+        "4": {
+          "precision": 0.1704,
+          "recall": 0.683,
+          "f1": 0.2727,
+          "support": 224
+        },
+        "5": {
+          "precision": 0.1955,
+          "recall": 0.6354,
+          "f1": 0.299,
+          "support": 384
+        },
+        "6": {
+          "precision": 0.0714,
+          "recall": 0.3333,
+          "f1": 0.1176,
+          "support": 3
+        }
+      },
+      "n_samples": 49996
+    },
+    {
+      "name": "Pretrained+mlp",
+      "n_train": 39996,
+      "n_test": 10000,
+      "n_classes": 7,
+      "n_folds": 10,
+      "accuracy_mean": 0.8911,
+      "accuracy_std": 0.0059,
+      "f1_macro_mean": 0.7714,
+      "f1_macro_std": 0.0612,
+      "f1_weighted_mean": 0.8903,
+      "f1_weighted_std": 0.0061,
+      "cv_time_s": 87.86,
+      "fit_time_s": 10.82,
+      "per_class": {
+        "1": {
+          "precision": 0.9395,
+          "recall": 0.9367,
+          "f1": 0.9381,
+          "support": 4314
+        },
+        "2": {
+          "precision": 0.8445,
+          "recall": 0.8295,
+          "f1": 0.837,
+          "support": 1578
+        },
+        "3": {
+          "precision": 0.7989,
+          "recall": 0.8138,
+          "f1": 0.8063,
+          "support": 854
+        },
+        "4": {
+          "precision": 0.8788,
+          "recall": 0.7768,
+          "f1": 0.8246,
+          "support": 224
+        },
+        "5": {
+          "precision": 0.8114,
+          "recall": 0.7396,
+          "f1": 0.7738,
+          "support": 384
+        },
+        "6": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 3
+        }
+      },
+      "n_samples": 49996
+    },
+    {
+      "name": "Random+mlp",
+      "n_train": 39996,
+      "n_test": 10000,
+      "n_classes": 7,
+      "n_folds": 10,
+      "accuracy_mean": 0.7053,
+      "accuracy_std": 0.0044,
+      "f1_macro_mean": 0.4872,
+      "f1_macro_std": 0.0467,
+      "f1_weighted_mean": 0.6951,
+      "f1_weighted_std": 0.0059,
+      "cv_time_s": 60.74,
+      "fit_time_s": 29.67,
+      "per_class": {
+        "1": {
+          "precision": 0.7879,
+          "recall": 0.8992,
+          "f1": 0.8399,
+          "support": 4314
+        },
+        "2": {
+          "precision": 0.6127,
+          "recall": 0.4892,
+          "f1": 0.544,
+          "support": 1578
+        },
+        "3": {
+          "precision": 0.54,
+          "recall": 0.411,
+          "f1": 0.4668,
+          "support": 854
+        },
+        "4": {
+          "precision": 0.4695,
+          "recall": 0.3438,
+          "f1": 0.3969,
+          "support": 224
+        },
+        "5": {
+          "precision": 0.5758,
+          "recall": 0.3958,
+          "f1": 0.4691,
+          "support": 384
+        },
+        "6": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 3
+        }
+      },
+      "n_samples": 49996
+    }
+  ]
+}
