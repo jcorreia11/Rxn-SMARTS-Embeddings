@@ -474,48 +474,156 @@ Training and validation loss curves are shown in Figure~\ref{fig:training}.
 
 ### 2.6 Embedding Extraction and Pooling
 
-[Describe how fixed-size embeddings are obtained from the variable-length encoder output:
-- CLS pooling: representation of the [BOS]/[CLS] token
-- Mean pooling: average of all non-padding token representations
-- Ablation: both strategies evaluated on EC depth=1 classification; mean pooling selected
-  (report ablation result here or in Results)
-- Extraction: all 361,751 SMARTS embedded in a single pass; embeddings stored as .npy]
+The encoder maps a variable-length token sequence to a sequence of $d$-dimensional
+hidden states.  To obtain a fixed-size reaction embedding, these per-token vectors must
+be pooled.  We compared two strategies.  **CLS pooling** takes the hidden state at
+position 0, which corresponds to the `[BOS]` token prepended to every sequence; this
+mirrors the CLS convention in BERT~\cite{Devlin2019}.  **Mean pooling** averages the
+hidden states of all non-padding positions:
+
+$$
+\mathbf{e} = \frac{\sum_{t=1}^{L} m_t \, \mathbf{h}_t}{\sum_{t=1}^{L} m_t},
+$$
+
+\noindent where $\mathbf{h}_t \in \mathbb{R}^{256}$ is the hidden state at position $t$,
+$m_t \in \{0,1\}$ is the attention mask, and $L$ is the padded sequence length.  Unlike
+BERT, our model was pretrained with a span-masked language modelling objective without
+any pooling loss; consequently, the `[BOS]` token is not explicitly trained to
+accumulate sequence-level information, making mean pooling the more natural aggregate.
+
+To validate this hypothesis, we conducted a controlled ablation before committing to a
+pooling strategy.  A stratified sample of 19,996 reaction SMARTS with EC depth=1 labels
+(7 classes, drawn from RetroRules v3.0) was split 80/20 into train and test sets.
+Both CLS and mean embeddings were extracted from the same pretrained model in a single
+forward pass.  Each embedding set was evaluated with two classifiers — an $\ell_2$-regularised
+logistic regression and a two-hidden-layer MLP (256–128 units, ReLU, early stopping)
+— under 10-fold stratified cross-validation, with the full training set used for the
+final held-out evaluation.  Embeddings were standardised to zero mean and unit variance
+before classification.  Mean pooling was selected based on this ablation; results are
+reported in Section~3.3.
+
+**Embedding extraction.** All 361,751 validated reaction SMARTS were embedded using the
+final trained model (run \texttt{20260428\_160310}, max\_seq\_len = 512) with mean
+pooling.  Inference was performed on a single GPU in evaluation mode (no gradient
+computation), processing sequences in batches of 256.  Each SMARTS was padded or
+truncated to 512 tokens.  The resulting embedding matrix has shape
+$361{,}751 \times 256$ (float32, 370.4 MB) and is stored as a NumPy \texttt{.npy}
+archive alongside the aligned list of SMARTS strings, version-controlled with DVC.
 
 ### 2.7 Downstream Evaluation
 
 #### 2.7.1 EC Number Classification
 
-[Task: predict enzyme class (EC number) at three levels of granularity (depth=1, 2, 3)
-from the reaction SMARTS embedding.
-- Dataset: **49,962** labeled SMARTS (depth=2); similar sizes for depth=1 and depth=3
-- Classifiers: logistic regression and 2-layer MLP
-- Cross-validation: **10-fold** stratified; final test on held-out **20%**
-- Baselines: TF-IDF with (a) rule-based SMARTS tokenizer, (b) SentencePiece tokenizer;
-  random-init transformer (same architecture, no pretraining) as control
-- Metric: accuracy, F1 macro, F1 weighted]
+Enzyme Commission (EC) numbers encode reaction chemistry in a four-level hierarchy: the
+first digit identifies the reaction class (e.g., EC 1: Oxidoreductases), the second the
+sub-class, and the third the sub-sub-class.  We evaluate embeddings as features for
+predicting EC numbers at three levels of granularity — depth=1 (7 classes), depth=2
+(72 classes), and depth=3 (237 classes) — to assess how well pretraining captures
+biochemical specificity at increasing resolution.
+
+**Dataset.** EC annotations were drawn from both RetroRules v3.0 source files
+(Section~2.1).  For each template, the first EC number in the \texttt{ECS} field was
+taken, truncated to $k$ components to form depth-$k$ labels.  Templates lacking a
+valid EC annotation and classes with too few representatives for reliable stratified
+splitting were excluded.  Joining with the validated SMARTS corpus (Section~2.1) yielded
+approximately 50,000 labelled templates at each depth: 49,996 (depth=1), 49,962
+(depth=2), and 49,884 (depth=3).
+
+**Experimental protocol.** Each labelled set was partitioned into an 80\% training set
+and a 20\% held-out test set using stratified random sampling (seed=42).  Performance
+was estimated by 10-fold stratified cross-validation on the training partition, with
+mean accuracy and F1-macro reported across folds; final per-class metrics were obtained
+from the held-out test set.  Embedding features were standardised to zero mean and unit
+variance before training any linear classifier.
+
+**Methods and baselines.** Six conditions were evaluated at each EC depth:
+
+\begin{enumerate}
+\item \textbf{TF-IDF + LR (SMARTS tokenizer)} — a TF-IDF matrix (unigrams, sublinear TF,
+  no lowercasing, L2-normalised) built from rule-based tokenization (Section~2.2.1),
+  with a logistic regression head ($\ell_2$, $C=1.0$, balanced class weights).
+\item \textbf{TF-IDF + LR (SentencePiece)} — same pipeline with SentencePiece tokens
+  (Section~2.2.2) as the featuriser.
+\item \textbf{Random-init + LR} — 256-dimensional embeddings from a randomly
+  initialised transformer of the same architecture (Section~2.3), with no pretrained
+  weights.  This control isolates the contribution of pretraining.
+\item \textbf{Random-init + MLP} — same random embeddings, with a two-hidden-layer MLP
+  classifier (256–128 units, ReLU, early stopping).
+\item \textbf{Pretrained + LR} — mean-pooled embeddings from the pretrained model
+  (Section~2.6), with a logistic regression head.
+\item \textbf{Pretrained + MLP} — same pretrained embeddings with the MLP classifier.
+\end{enumerate}
+
+All embedding-based classifiers used the same MLP configuration: hidden layers of 256
+and 128 units, ReLU activations, \texttt{max\_iter}=300, and early stopping with a
+10\% held-out validation fraction.  Performance is reported as accuracy, F1-macro, and
+F1-weighted across the 10-fold CV (mean $\pm$ standard deviation), with results
+discussed in Section~3.4.
 
 #### 2.7.2 Embedding–Structural Similarity Correlation
 
-[Task: assess whether cosine similarity in embedding space correlates with structural
-chemical similarity.
-- Structural similarity: Tanimoto coefficient over RDKit reaction fingerprints (4,096 bits)
-- Sample: **3,000** reactions → **~4.5M** pairwise comparisons
-- Metric: Pearson r, Spearman ρ (report p-values)
-- Visualization: hexbin density plot, linear fit]
+A well-structured embedding space should place chemically similar reactions closer
+together.  To test this geometrically, we measure how well pairwise cosine similarity
+in embedding space correlates with structural similarity computed independently from
+reaction graph topology.
+
+**Structural similarity.** Each reaction SMARTS was parsed into an RDKit reaction
+object and fingerprinted using \texttt{rdChemReactions.CreateStructuralFingerprintForReaction}
+(4,096-bit vector).  Structural similarity between two reactions was quantified by the
+Tanimoto coefficient between their fingerprint vectors
+(\texttt{DataStructs.TanimotoSimilarity}).
+
+**Embedding similarity.** Embeddings were L2-normalised and pairwise cosine
+similarities were computed as the upper-triangle entries of the resulting Gram matrix.
+
+**Sampling.** Computing all $\binom{361{,}751}{2} \approx 65 \times 10^9$ pairs is
+intractable.  We instead drew a random sample of 3,000 reactions (seed=42), yielding
+$\binom{3000}{2} = 4{,}498{,}500$ unique pairs.  All sampled SMARTS were parsed
+successfully, so no pairs were excluded.
+
+**Statistics and visualisation.** Pearson $r$ and Spearman $\rho$ were computed
+between the two similarity distributions using \texttt{scipy.stats}.  At this sample
+size, $p$-values are effectively zero by construction and are reported as $p < 10^{-300}$.
+Results are visualised as a hexbin density scatter plot (gridsize=50) with an ordinary
+least-squares regression overlay (Figure~\ref{fig:sim_corr}), and are reported in
+Section~3.5.
 
 #### 2.7.3 UMAP Visualization
 
-[Task: qualitative assessment of embedding space organization.
-- UMAP parameters: n_neighbors=15, min_dist=0.1, metric=cosine
-- Colored by EC class at depth=1, depth=2, depth=3
-- Include figures for all three depths]
+To qualitatively assess whether the embedding space exhibits a coherent biochemical
+organisation, we projected all 361,751 reaction embeddings to two dimensions using
+UMAP~\cite{McInnes2018}.  The reduction was performed with the following
+hyperparameters: \texttt{n\_neighbors=15}, \texttt{min\_dist=0.1},
+\texttt{metric=cosine}, \texttt{random\_state=42}.  UMAP was run in
+\texttt{low\_memory=False} mode to maximise speed, and optimization was carried out
+for 200 epochs.
+
+The 2-D coordinates were computed once and cached as a NumPy array to avoid repeating
+the expensive reduction.  Three figures were then generated from the same coordinates,
+colouring each point by its EC label at depth=1, depth=2, and depth=3 respectively.
+EC annotations cover 212,952 of the 361,751 embedded templates (58.9\%); templates
+without an EC annotation are rendered in light grey in the background.  For depth=1,
+each of the seven EC classes is assigned a distinct, colour-blind-friendly hue.  For
+depth=2 and depth=3, sub-classes are shaded using sequential colormaps anchored to
+their parent EC class colour (e.g., all EC 1.x sub-classes in shades of blue), so
+both fine-grained and coarse structure remain legible in the same figure.  At depth=2
+and depth=3, the legend is capped at the 20 most frequent sub-classes to preserve
+readability.  Figures are shown in Figure~\ref{fig:umap}.
 
 #### 2.7.4 Nearest-Neighbor Retrieval
 
-[Task: qualitative check that nearest neighbors in embedding space are chemically similar.
-- TOP_K=10, metric=cosine, random query reactions
-- Describe a few illustrative examples (pick from nn_1191305 report)
-- Discuss: do retrieved reactions share EC class? Reaction center? Substrate type?]
+As a qualitative probe of retrieval coherence, we retrieved the top-$K$ nearest
+neighbors in embedding space for randomly selected query reactions.  Similarity was
+measured by cosine distance: embeddings were L2-normalised and neighbor scores were
+computed as dot products against the query vector, with the query itself excluded.
+Retrieval was performed exhaustively over all 361,751 embeddings ($K=10$, seed=42).
+
+Each retrieved neighbor was annotated with its EC label (depth=1) from RetroRules v3.0
+where available, and its SMARTS string was inspected manually.  The qualitative
+evaluation considers three aspects: (i) EC class agreement between the query and its
+neighbors, (ii) shared reaction-centre motifs visible in the SMARTS, and (iii)
+substrate-type consistency.  Results and illustrative examples are discussed in
+Section~3.6.
 
 ---
 
@@ -527,94 +635,182 @@ limitations.]
 
 ### 3.1 Dataset and Tokenization
 
-**Dataset overview.** The final corpus comprises **361,751** validated reaction SMARTS
-(see Table 1 for the full provenance). Dataset statistics figures (character-length
-histogram, EC class distribution, train/validation split) are shown in
-Figure~\ref{fig:dataset_stats}.
+**Dataset.** The final corpus was assembled from two RetroRules v3.0 release files:
+302,879 templates from the MetaNetX source and 125,842 from the Rhea source,
+giving 428,721 records in total.  After deduplication on the TEMPLATE field,
+66,970 duplicates were removed, leaving **361,751 unique reaction SMARTS**.
+All templates carried the \texttt{VALID=TRUE} flag in the source files; no additional
+filtering was required.  Of the 361,751 templates, 212,952 (58.9\%) are annotated
+with at least one EC number and are used in the supervised downstream experiments.
+Dataset statistics — sequence-length distribution, EC class distribution, and the
+90/10 pretraining split — are shown in Figure~\ref{fig:dataset_stats}.
 
-**Tokenizer comparison.**\label{sec:tokenizer_comparison}
-Both tokenizers were evaluated on all 361,751 validated templates. Intrinsic metrics
-were computed directly from the tokenized corpus; as an extrinsic probe, TF-IDF
-vectors (unigrams, sublinear term frequency, L2-normalised) derived from each
-tokenizer were used to train an \(\ell_2\)-regularised logistic regression classifier
-predicting the top-level EC class (depth=1, 7 classes) on the 214,007 EC-annotated
-templates, using 5-fold stratified cross-validation.
-
-Table~\ref{tab:tokenizer} summarises the intrinsic properties of both tokenizers on
-the full corpus. The rule-based SMARTS tokenizer produces substantially more compact
-sequences than SentencePiece BPE: the median token-length is 1.6-fold shorter (101
-vs.\ 161 tokens) and the fertility is 0.38 lower (0.28 vs.\ 0.45 tokens per
-character). The practical implication for training is direct: at MAX\_LENGTH=256, the
-rule-based tokenizer retains **93.5%** of templates without truncation compared to
-only **77.0%** under SentencePiece; at MAX\_LENGTH=512 the figures are **99.8%** and
-**97.4%**, respectively, with only 553 rule-based-tokenized templates (0.2%) requiring
-truncation. The rule-based tokenizer is also 3.1-fold faster (9,002 vs.\ 2,940
-SMARTS/s). Both tokenizers achieve 100% round-trip fidelity and a 0% error rate on
-the full corpus. Length distributions for both tokenizers are shown in
+**Tokenizer comparison — intrinsic metrics.** Both tokenizers were applied to all
+361,751 templates and their properties are summarised in
+Table~\ref{tab:tokenizer}.  The rule-based SMARTS tokenizer produces markedly more
+compact sequences: median length 101 tokens versus 161 for SentencePiece BPE
+(0.63× ratio), and a fertility of 0.28 tokens per character versus 0.45.  The
+practical consequence for training is substantial: at \texttt{MAX\_LENGTH=512} the
+rule-based tokenizer retains 99.8\% of templates intact, truncating only 553
+sequences (0.2\%), whereas SentencePiece requires truncation for 2.6\% of the
+corpus.  The advantage is even larger at \texttt{MAX\_LENGTH=256}, where coverage
+drops to 77.0\% for SentencePiece but remains 93.5\% for the rule-based tokenizer
+— a gap of 16.5 percentage points.  Throughput is 3.1$\times$ higher for the
+rule-based tokenizer (9,002 vs.\ 2,940 SMARTS/s).  Both tokenizers achieve 100\%
+round-trip fidelity and zero tokenization errors on the full corpus.
+Token-length distributions for both tokenizers are shown in
 Figure~\ref{fig:length_dist}.
 
-**Table~\ref{tab:tokenizer}. Tokenizer comparison on the full RetroRules v3.0 corpus
-(N = 361,751).**
+\begin{table}[h]
+\centering
+\caption{Intrinsic tokenizer properties on the full RetroRules v3.0 corpus
+($N = 361{,}751$). Coverage: fraction of templates not requiring truncation at the
+given \texttt{MAX\_LENGTH}.}
+\label{tab:tokenizer}
+\begin{tabular}{lrr}
+\hline
+\textbf{Metric} & \textbf{Rule-based} & \textbf{SentencePiece (BPE)} \\
+\hline
+Vocabulary size             & 4,465   & 1,000  \\
+Median sequence length (tokens)  & 101    & 161    \\
+Mean sequence length (tokens)    & 119.8  & 190.4  \\
+Max sequence length (tokens)     & 763    & 1,433  \\
+Fertility (tokens / character)   & 0.276  & 0.447  \\
+Coverage @ \texttt{MAX\_LENGTH=256} & 93.5\% & 77.0\% \\
+Coverage @ \texttt{MAX\_LENGTH=512} & 99.8\% & 97.4\% \\
+Round-trip fidelity              & 100\%  & 100\%  \\
+Throughput (SMARTS/s)            & 9,002  & 2,940  \\
+\hline
+\end{tabular}
+\end{table}
 
-| Metric | Rule-based SMARTS tokenizer | SentencePiece (BPE) |
-|---|---|---|
-| Vocabulary size | 4,465 | 1,000 |
-| Sequence length — median (tokens) | 101 | 161 |
-| Sequence length — mean (tokens) | 120 | 190 |
-| Sequence length — max (tokens) | 763 | 1,433 |
-| Fertility (tokens / character) | 0.28 | 0.45 |
-| Coverage at MAX\_LENGTH=256 | 93.5% | 77.0% |
-| Coverage at MAX\_LENGTH=512 | 99.8% | 97.4% |
-| Round-trip fidelity | 100% | 100% |
-| Error rate | 0.0% | 0.0% |
-| Throughput (SMARTS/s) | 9,002 | 2,940 |
+**Tokenizer comparison — extrinsic probe.** To assess whether each tokenizer
+preserves biochemically discriminative information, TF-IDF vectors were constructed
+from each tokenized corpus and used to train an $\ell_2$-regularised logistic
+regression classifier for EC class prediction (depth=1, 7 classes, 214,007 labelled
+templates, 5-fold stratified CV; Table~\ref{tab:tokenizer_ec}).  SentencePiece
+achieves higher accuracy ($0.643 \pm 0.003$ vs.\ $0.598 \pm 0.001$) and F1-macro
+($0.508 \pm 0.004$ vs.\ $0.448 \pm 0.003$).  This reversal relative to the
+intrinsic metrics is interpretable: BPE merges frequently co-occurring character
+sequences — recurring atom-map patterns such as \texttt{[C;H} or \texttt{;H0:]} —
+into shared subword units, creating a TF-IDF feature space that implicitly captures
+recurring reaction-centre motifs correlated with enzyme class.  The rule-based
+tokenizer segments these patterns into their atomic grammatical constituents, yielding
+a sparser but more granular vocabulary.
 
-The downstream TF-IDF experiment reveals a different ordering: SentencePiece achieves
-higher EC depth=1 accuracy (0.643 ± 0.003 vs.\ 0.598 ± 0.001) and macro-F1 (0.508
-vs.\ 0.448) under 5-fold cross-validation (Table~\ref{tab:tokenizer_ec}). This
-reversal is chemically interpretable: BPE merges frequently co-occurring character
-sequences (e.g., recurring atom-map patterns such as `[C;H` or `;H0:`) into shared
-subword units, which enriches the TF-IDF feature space with recurring SMARTS
-subsequences that correlate with enzyme class. The rule-based tokenizer, by contrast,
-segments these patterns into their atomic grammatical components, producing sparser
-but more granular features.
+\begin{table}[h]
+\centering
+\caption{TF-IDF + logistic regression EC depth=1 classification (214,007 templates,
+7 classes, 5-fold stratified CV, 80/20 train/test split). Mean $\pm$ std across folds.
+Bold: best per metric.}
+\label{tab:tokenizer_ec}
+\begin{tabular}{lcc}
+\hline
+\textbf{Metric} & \textbf{Rule-based} & \textbf{SentencePiece (BPE)} \\
+\hline
+Accuracy   & $0.598 \pm 0.001$ & $\mathbf{0.643 \pm 0.003}$ \\
+F1-macro   & $0.448 \pm 0.003$ & $\mathbf{0.508 \pm 0.004}$ \\
+F1-weighted & $0.627 \pm 0.001$ & $\mathbf{0.666 \pm 0.002}$ \\
+\hline
+\end{tabular}
+\end{table}
 
-**Table~\ref{tab:tokenizer_ec}. TF-IDF + logistic regression EC depth=1 classification
-(214,007 templates, 7 classes, 5-fold stratified CV).**
-
-| Metric | Rule-based SMARTS tokenizer | SentencePiece (BPE) |
-|---|---|---|
-| Accuracy | 0.598 ± 0.001 | **0.643 ± 0.003** |
-| F1 macro | 0.448 ± 0.003 | **0.508 ± 0.004** |
-| F1 weighted | 0.627 ± 0.001 | **0.666 ± 0.002** |
-
-Despite the TF-IDF disadvantage, the rule-based tokenizer was selected for transformer
-pretraining for the reasons stated in Section~2.2.3: compact sequences reduce truncation
-and training cost, and a vocabulary of chemically defined units is a prerequisite for
-interpretable attention analysis. Crucially, the TF-IDF comparison measures the
-information content of the \emph{token identity} alone, divorced from any contextual
-representation. The pretrained transformer embeddings, which encode contextual
-chemistry, supersede TF-IDF on all downstream tasks regardless of tokenizer; those
-results are reported in Section~\ref{sec:ec_classification}.
+The TF-IDF comparison evaluates token identity in isolation, without any contextual
+representation.  As shown in Section~3.4, pretrained transformer embeddings built on
+the rule-based tokenizer substantially outperform both TF-IDF baselines on all EC
+depths, confirming that the tokenizer choice is superseded by the quality of the
+learned contextual representation.
 
 ### 3.2 MLM Pretraining
 
-[Report:
-- Training and validation loss curves — did the model converge?
-- Final validation loss: [value]
-- Overall masked-token accuracy: [value]
-- Content-token accuracy (chemically informative tokens only): [value]
-- Discuss: what does the content-token accuracy tell us about what the model learned?
-- Include training loss figure]
+**Convergence.** Training proceeded for 100 epochs (508,800 gradient steps) on a
+single NVIDIA A100-SXM4-40GB GPU and completed in 6.19 hours.  The model converged
+rapidly in the early phase: validation loss fell from 1.882 at epoch 1 to 0.314 by
+epoch 10, while masked-token top-1 accuracy on the validation set rose from 54.4\%
+to 91.1\% over the same interval.  Improvement continued at a progressively slower
+rate thereafter, reaching a validation loss of 0.145 and top-1 accuracy of 95.8\% at
+epoch 50.  The full convergence trajectory at selected epochs is shown in
+Table~\ref{tab:convergence}, and training and validation loss curves are shown in
+Figure~\ref{fig:training}.
+
+\begin{table}[h]
+\centering
+\caption{MLM pretraining convergence trajectory at selected epochs. Content top-1
+accuracy excludes structural tokens (\texttt{(}, \texttt{)}, \texttt{.}, \texttt{>>})
+and special tokens from the accuracy computation.}
+\label{tab:convergence}
+\begin{tabular}{rcccc}
+\hline
+\textbf{Epoch} & \textbf{Train loss} & \textbf{Val loss} & \textbf{Val top-1} & \textbf{Content top-1} \\
+\hline
+  1  & 3.104 & 1.882 & 54.4\% & 54.2\% \\
+  5  & 0.654 & 0.483 & 86.8\% & 85.9\% \\
+ 10  & 0.430 & 0.314 & 91.1\% & 90.3\% \\
+ 25  & 0.271 & 0.195 & 94.4\% & 93.8\% \\
+ 50  & 0.201 & 0.144 & 95.8\% & 95.3\% \\
+ 75  & 0.176 & 0.125 & 96.3\% & 95.9\% \\
+100  & 0.168 & 0.121 & 96.4\% & 96.0\% \\
+\hline
+\end{tabular}
+\end{table}
+
+**Final performance and plateau.** At epoch 100 the model achieves a validation loss
+of 0.121 and a masked-token top-1 accuracy of 96.43\%, with a top-5 accuracy of
+99.52\%.  The training loss (0.168) exceeds the validation loss at convergence, as is
+typical in span-masked pretraining: dropout remains active during training, and the
+stochastic masking schedule presents a fresh prediction challenge at each step,
+whereas validation is performed in deterministic evaluation mode.  Over the final ten
+epochs, validation loss decreased by only 0.0008 (0.7\% relative), indicating that
+the model had reached a plateau and that continued training beyond 100 epochs would
+yield negligible gains.
+
+**Content-token accuracy.** The content-token top-1 accuracy — computed exclusively
+on chemically informative tokens (atom symbols, bond types, ring-closure digits, and
+SMARTS primitives) after excluding structural punctuation (\texttt{(}, \texttt{)},
+\texttt{.}, \texttt{>>}) and special tokens — reaches 96.01\% at epoch 100
+(top-5: 99.43\%).  The small gap between overall accuracy (96.43\%) and content
+accuracy (96.01\%) indicates that structurally uninformative tokens do not contribute
+disproportionately to the overall score; the model genuinely predicts masked
+atoms, bond types, and SMARTS constraint tokens with high fidelity.  This implies
+that the encoder has learned a representation of SMARTS syntax that captures
+chemical grammar well beyond surface-level token frequency, forming a strong basis
+for the downstream embedding tasks evaluated in Sections~3.3--3.5.
 
 ### 3.3 Pooling Ablation
 
-[Report the CLS vs. mean pooling comparison:
-- Task: EC depth=1 classification, N=20,000, 10-fold CV
-- Results: [from pooling_ablation_1163359 report — insert accuracy/F1 for both]
-- Winner: mean pooling → used for all subsequent experiments
-- Brief discussion: why might mean pooling outperform CLS for SMARTS?
-  (CLS may not aggregate long-range information as well in a domain with long sequences)]
+Table~\ref{tab:pooling} reports EC depth-1 classification accuracy and macro-F1 for all four
+pooling–classifier combinations across three model sizes on the 19,996-sample subset with
+10-fold stratified cross-validation (Section~\ref{sec:pooling-ablation}).
+Mean pooling outperforms CLS pooling for every combination of model size and classifier head,
+yielding accuracy gains of +5.4 to +5.9 percentage points (pp) for the MLP head,
+equivalent to relative improvements of +6.9% to +8.0%.
+The logreg head shows the same direction of effect, confirming that the advantage is
+attributable to the pooling strategy rather than to a particular classifier architecture.
+
+**Table~\ref{tab:pooling}. EC depth=1 pooling ablation (mean ± std over 10 folds, $N=19{,}996$).**
+
+| Pooling | Head | Small (256) Acc | Small F1-mac | Medium (512) Acc | Medium F1-mac | Large (512) Acc | Large F1-mac |
+|:--|:--|--:|--:|--:|--:|--:|--:|
+| CLS | LogReg | 0.5924 ± 0.0099 | 0.4741 ± 0.0484 | 0.6035 ± 0.0097 | 0.5091 ± 0.0586 | 0.7159 ± 0.0070 | 0.6255 ± 0.0480 |
+| CLS | MLP | 0.7367 ± 0.0124 | 0.5837 ± 0.0538 | 0.7416 ± 0.0060 | 0.5820 ± 0.0437 | 0.8009 ± 0.0105 | 0.6917 ± 0.0569 |
+| Mean | LogReg | 0.6709 ± 0.0111 | 0.5557 ± 0.0519 | 0.6746 ± 0.0152 | 0.5693 ± 0.0520 | 0.7818 ± 0.0097 | 0.6806 ± 0.0558 |
+| **Mean** | **MLP** | **0.7959 ± 0.0102** | **0.6464 ± 0.0490** | **0.7959 ± 0.0123** | **0.6599 ± 0.0652** | **0.8561 ± 0.0094** | **0.7343 ± 0.0611** |
+
+The superiority of mean pooling is mechanistically consistent with the pretraining objective.
+Span-masked language modelling does not impose any sequence-level aggregation task on the BOS
+position, so the \texttt{[CLS]}-equivalent token develops under local contextual pressure rather
+than as a global reaction summary.
+Mean pooling, by contrast, averages all non-padding hidden states and thereby integrates the
+full-sequence context acquired during pretraining.
+A similar phenomenon is well established for general-domain BERT variants~\citep{reimers2019}
+and is amplified here because individual atom-map tokens and SMARTS primitives carry distinct,
+complementary semantic roles that together encode reaction type.
+
+Larger model capacity interacts positively with mean pooling: the large model achieves
+0.8561 ± 0.0094 with Mean + MLP, a +5.5 pp gain over its own CLS + MLP baseline and
++6.0 pp over the medium model under the same condition.
+Based on these findings, mean pooling is adopted as the extraction strategy for all
+subsequent experiments (Sections~\ref{sec:ec-classifier}–\ref{sec:nn-retrieval}).
 
 ### 3.4 EC Number Classification
 
