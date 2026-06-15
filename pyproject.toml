@@ -5,30 +5,36 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10, <3.13"
 dependencies = [
+    "torch>=2.0.0",
+]
+
+[project.optional-dependencies]
+full = [
     "matplotlib>=3.10.8",
     "pillow>=12.2.0",
     "pandas>=2.3.3",
     "rdkit>=2025.9.6",
     "scikit-learn>=1.6.1",
     "sentencepiece>=0.2.0",
-    "torch>=2.0.0",
-    "torchaudio>=2.4.0",
-    "torchvision>=0.19.0",
     "umap-learn>=0.5.0",
     "ipykernel>=7.2.0",
 ]
 
+[project.scripts]
+smarts-embed = "smart_rxn_embeddings.predict:main"
+
 [dependency-groups]
-dev = [
+data = [
     "dvc>=3.67.1",
+]
+dev = [
+    { include-group = "data" },
     "pytest>=8.4.2",
     "pytest-cov>=6.0.0",
 ]
 
 [tool.uv.sources]
 torch = { index = "pytorch-cu124" }
-torchvision = { index = "pytorch-cu124" }
-torchaudio = { index = "pytorch-cu124" }
 
 [[tool.uv.index]]
 name = "pytorch-cu124"
