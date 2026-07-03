@@ -539,24 +539,26 @@ All p-values $< 10^{-300}$ ($n = 4{,}498{,}500$ pairs, same reaction sample for 
 
 | Model | max\_len | Pearson $r$ | Spearman $\rho$ | Cosine mean ± std |
 |:--|--:|--:|--:|--:|
-| Small (6L, $d$=256) | 256 | 0.606 | 0.586 | 0.741 ± 0.096 |
-| Medium (6L, $d$=256) | 512 | 0.591 | 0.575 | 0.757 ± 0.093 |
-| Large (8L, $d$=512) | 512 | 0.574 | 0.563 | 0.688 ± 0.103 |
-| Random init (medium arch.) | 512 | [PENDING] | [PENDING] | — |
+| Small — pretrained | 256 | 0.606 | 0.586 | 0.741 ± 0.096 |
+| Medium — pretrained | 512 | 0.591 | 0.575 | 0.757 ± 0.093 |
+| Large — pretrained | 512 | 0.574 | 0.563 | 0.688 ± 0.103 |
+| Small — random init | 256 | 0.479 | 0.512 | 0.925 ± 0.050 |
+| Medium — random init | 512 | 0.550 | 0.568 | 0.897 ± 0.066 |
+| Large — random init | 512 | 0.449 | 0.495 | 0.931 ± 0.047 |
 
 **Chemical signal in the embeddings.**
-All pretrained models show a moderate-to-strong positive correlation ($r \in [0.574, 0.606]$, $p < 10^{-300}$), confirming that span-masked pretraining drives the encoder to place structurally similar reactions close together in embedding space — a property not enforced by the training objective, which operates on masked token prediction.
+All pretrained models show a moderate-to-strong positive correlation ($r \in [0.574, 0.606]$, $p < 10^{-300}$), consistently above their random-init counterparts ($r \in [0.449, 0.550]$).
+The pretraining gain is largest for the small and large models ($\Delta r \approx +0.13$ and $+0.13$) and smaller for medium ($\Delta r = +0.04$).
+
+**Tokenisation encodes partial structural information.**
+Random-init correlations are far from zero, confirming that SMARTS tokenisation itself carries structural signal: reactions with similar structural fingerprints tend to share SMARTS substructures and therefore similar token distributions, producing similar mean-pooled embeddings even from untrained weights.
+Pretraining learns to go beyond this syntactic baseline, structuring the representation space by chemical function rather than token overlap alone.
+The substantially higher cosine means for random-init models (0.897–0.931 vs.\ 0.688–0.757 pretrained) reflect that random projections collapse embeddings closer together; the pretrained encoder spreads reactions further apart in directions that align with structural similarity.
 
 **Capacity and the correlation ceiling.**
-$r$ decreases monotonically from small to large ($0.606 \to 0.591 \to 0.574$) even as model capacity grows and EC classification performance improves.
-This apparent paradox is resolved by noting that structural fingerprints encode atom-neighbourhood environments present in reactant and product templates, providing a fixed, bounded view of chemical similarity.
-Larger, deeper models develop representations that increasingly diverge from this structural proxy — capturing functional and mechanistic aspects of reactivity that structural overlap does not detect.
-A similar pattern is observed in natural language: larger language models encode semantic similarity that diverges from lexical overlap measures.
-
-**Random-init baseline.**
-To confirm that the observed correlation originates from learned weights rather than the transformer inductive bias, an identical analysis was run on models with the same architecture but randomly initialised weights.
-The results ($r = \mathbf{[PENDING]}$ for the medium architecture) will be inserted here once the baseline job completes.
-A near-zero baseline would establish a direct causal link between pretraining and the structural signal reported above.
+Pretrained correlations decrease monotonically with model size ($0.606 \to 0.591 \to 0.574$), whereas the random-init baseline does not follow the same trend ($0.479 \to 0.550 \to 0.449$), indicating that the capacity-dependent decrease is a property of the learned representations rather than the architecture per se.
+The pretrained–random gap is largest for small and large ($\Delta r \approx +0.13$) and smallest for medium ($\Delta r = +0.04$), suggesting that the medium random-init model captures an unusually high fraction of the structural signal from syntax alone under this architecture and sequence length combination.
+Overall, the monotone decrease in pretrained $r$ with capacity is consistent with larger models encoding functional and mechanistic aspects of reactivity that structural fingerprints do not capture, a pattern also observed when comparing large language model representations to lexical similarity measures.
 
 ### 3.6 UMAP Visualization
 
