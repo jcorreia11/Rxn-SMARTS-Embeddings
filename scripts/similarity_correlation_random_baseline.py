@@ -44,7 +44,7 @@ from similarity_correlation import sample_and_compute, compute_stats, plot_corre
 # ---------------------------------------------------------------------------
 
 
-def build_random_embedder(config_path: str, vocab_path: str, device: str | None):
+def build_random_embedder(config_path: str, vocab_path: str, device: str | None, seed: int = 42):
     """Return a SmartsEmbedder with random (untrained) weights."""
     import json as _json
     from smart_rxn_embeddings.models.embed import SmartsEmbedder
@@ -55,6 +55,7 @@ def build_random_embedder(config_path: str, vocab_path: str, device: str | None)
 
     cfg = _json.loads(Path(config_path).read_text())
     model_config = TransformerConfig.from_dict(cfg["model_config"])
+    torch.manual_seed(seed)  # fix init seed for reproducibility
     model = SmartsMLMModel(model_config)  # random weights — no checkpoint loaded
     model.eval()
     logger.info(
@@ -145,18 +146,31 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
-    smarts_list = Path(args.smarts).read_text().splitlines()
-    logger.info("Loaded %d SMARTS from %s", len(smarts_list), args.smarts)
+    all_smarts = Path(args.smarts).read_text().splitlines()
+    n_total = len(all_smarts)
+    logger.info("Loaded %d SMARTS from %s", n_total, args.smarts)
 
-    embedder = build_random_embedder(args.config, args.vocab, args.device)
+    # Pre-sample the same indices that sample_and_compute would select so we
+    # only embed 3,000 reactions instead of all 361k (mirrors the sort in
+    # sample_and_compute exactly, keeping Tanimoto pairs identical to pretrained runs).
+    n_reactions = min(args.n_reactions, n_total)
+    rng = np.random.default_rng(args.seed)
+    idx = rng.choice(n_total, size=n_reactions, replace=False)
+    idx.sort()
+    sub_smarts = [all_smarts[i] for i in idx]
+    logger.info("Pre-sampled %d reactions (seed=%d)", n_reactions, args.seed)
 
-    logger.info("Extracting random-init embeddings (mean pooling) ...")
+    embedder = build_random_embedder(args.config, args.vocab, args.device, seed=args.seed)
+
+    logger.info("Extracting random-init embeddings for sampled reactions ...")
     t0_total = time.perf_counter()
-    embeddings = embedder.embed(smarts_list, batch_size=args.batch_size)
+    embeddings = embedder.embed(sub_smarts, batch_size=args.batch_size)
     logger.info("  Embeddings shape: %s", embeddings.shape)
 
+    # Pass n_reactions == len(sub_smarts) so sample_and_compute uses all rows
+    # in their existing order (same SMARTS order → same Tanimoto pairs as pretrained runs).
     cosine, tanimoto, n_reactions, n_pairs = sample_and_compute(
-        embeddings, smarts_list, args.n_reactions, args.seed
+        embeddings, sub_smarts, len(sub_smarts), args.seed
     )
 
     stats = compute_stats(cosine, tanimoto)
@@ -192,7 +206,7 @@ def main() -> None:
                 "config_path": args.config,
                 "smarts_path": args.smarts,
                 "model": "random_init",
-                "n_reactions_total": len(smarts_list),
+                "n_reactions_total": n_total,
                 "n_reactions_sampled": n_reactions,
                 "n_pairs": n_pairs,
                 "seed": args.seed,

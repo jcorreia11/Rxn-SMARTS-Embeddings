@@ -2,7 +2,7 @@
 #SBATCH --job-name=sim_corr_random
 #SBATCH --account=f202508983cpcaa0x
 #SBATCH --partition=normal-x86
-#SBATCH --time=01:30:00
+#SBATCH --time=00:30:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
@@ -30,6 +30,14 @@ source ../smartrxn_env/bin/activate
 echo "Python executable: $(which python)"
 python -V
 
+# ---- pull model config JSONs (DVC-tracked, small files) ----
+echo ""
+echo "=== Pulling model config JSONs via DVC ($(date)) ==="
+dvc pull \
+    models/smarts_transformer_20260410_111830.json \
+    models/smarts_transformer_20260428_160310.json \
+    models/smarts_transformer_20260513_093030.json
+
 # ---- shared config ----
 N_REACTIONS=3000
 SEED=42
@@ -48,9 +56,9 @@ RUN_ID="sim_corr_random_${SLURM_JOB_ID}"
 echo ""
 echo "=== small model ($(date)) ==="
 python scripts/similarity_correlation_random_baseline.py \
-    --config   "results/final/1-train-mlm/small/smarts_transformer_20260410_111830.json" \
+    --config   "models/smarts_transformer_20260410_111830.json" \
     --vocab    "${VOCAB}" \
-    --smarts   "data/embeddings/reaction_smarts.txt" \
+    --smarts   "data/embeddings/small/smarts.txt" \
     --n-reactions "${N_REACTIONS}" \
     --seed        "${SEED}" \
     --output   "${OUT_BASE}/small_random/figure" \
@@ -65,9 +73,9 @@ python scripts/similarity_correlation_random_baseline.py \
 echo ""
 echo "=== medium model ($(date)) ==="
 python scripts/similarity_correlation_random_baseline.py \
-    --config   "results/final/1-train-mlm/medium/smarts_transformer_20260428_160310.json" \
+    --config   "models/smarts_transformer_20260428_160310.json" \
     --vocab    "${VOCAB}" \
-    --smarts   "data/embeddings/reaction_smarts_512.txt" \
+    --smarts   "data/embeddings/medium/smarts.txt" \
     --n-reactions "${N_REACTIONS}" \
     --seed        "${SEED}" \
     --output   "${OUT_BASE}/medium_random/figure" \
@@ -82,7 +90,7 @@ python scripts/similarity_correlation_random_baseline.py \
 echo ""
 echo "=== large model ($(date)) ==="
 python scripts/similarity_correlation_random_baseline.py \
-    --config   "results/final/1-train-mlm/large/smarts_transformer_20260513_093030.json" \
+    --config   "models/smarts_transformer_20260513_093030.json" \
     --vocab    "${VOCAB}" \
     --smarts   "data/embeddings/large/smarts.txt" \
     --n-reactions "${N_REACTIONS}" \

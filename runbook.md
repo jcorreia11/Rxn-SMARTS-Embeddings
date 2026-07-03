@@ -108,6 +108,7 @@ Phase 2 ── Extract Embeddings ─────── small ║ medium ║ lar
 Phase 3a ── Pooling Ablation ──────── small ║ medium ║ large  (parallel, ~47 min each)
 Phase 3b ── EC Classifier ─────────── 9 jobs total (3 models × 3 depths), all parallel
 Phase 3c ── Similarity Correlation ── small ║ medium ║ large  (parallel, ~1 min each)
+Phase 3c-random ── Random-init Baseline ── all sizes in one job (~5 min total)
 Phase 3d ── Nearest Neighbors ──────── small ║ medium ║ large  (parallel, <1 min each)
 Phase 3e ── UMAP depth=1 ──────────── small ║ medium ║ large  (parallel, ~13 min each)
                 │
@@ -377,6 +378,37 @@ similarity_correlation.sbatch
 
 ---
 
+## Phase 3c-random — Similarity Correlation Baseline (CPU, ~5 min total)
+
+Random-init correlation for all three model sizes in a single job.
+Produces `results/final/3c-similarity-correlation/{small,medium,large}_random/results.json`.
+
+The script pre-samples the same 3,000 indices (seed=42, same sort order) as the
+pretrained runs so the Tanimoto pairs are identical — only the cosine similarities differ.
+Model config JSONs are DVC-tracked; the job pulls them automatically.
+
+```bash
+sbatch scripts/similarity_correlation_random_baseline.sbatch
+```
+
+> **Pretrained run commands for reference** (already done — outputs in `results/final/3c-similarity-correlation/`):
+> ```bash
+> # small
+> sbatch --export=ALL,\
+> EMBEDDINGS=data/embeddings/small/embeddings.npy,\
+> SMARTS_FILE=data/embeddings/small/smarts.txt,\
+> N_REACTIONS=3000,SEED=42,FORMAT=pdf,\
+> OUTPUT_FIG=results/small/similarity_correlation/figure,\
+> OUTPUT_JSON=results/small/similarity_correlation/results.json,\
+> OUTPUT_ENV=results/small/similarity_correlation/env.json,\
+> OUTPUT_REPORT=results/small/similarity_correlation/report.md \
+> scripts/similarity_correlation.sbatch
+>
+> # medium / large — same pattern, change paths accordingly
+> ```
+
+---
+
 ## Phase 3d — Nearest Neighbors (CPU, <1 min each)
 
 All three can run in parallel. Run from `scripts/`.
@@ -520,7 +552,8 @@ plot_umap.sbatch
 | 3a — Pooling ablation | 1 GPU job | ~47 min |
 | 3b — EC classifier (all depths) | 3 CPU jobs in parallel | ~50 min (bottleneck: depth=1) |
 | 3c — Similarity correlation | 1 CPU job | ~1 min |
-| 3d — Nearest neighbors | 1 CPU job | <1 min |
+| 3c-random — Random-init baseline | 1 CPU job (all 3 sizes) | ~5 min |
+| 3d — Nearest neighbors | 1 CPU job | ~1 min |
 | 3e — UMAP depth=1 | 1 CPU job | ~13 min |
 | 3f — UMAP depth=2,3 | 2 CPU jobs in parallel | ~30 sec |
 
