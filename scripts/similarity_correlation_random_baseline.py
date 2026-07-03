@@ -109,7 +109,13 @@ def parse_args() -> argparse.Namespace:
         "--seed",
         type=int,
         default=42,
-        help="Random seed — must match the pretrained run to compare the same pairs",
+        help="Reaction sampling seed — must match the pretrained run to compare the same pairs (default: 42)",
+    )
+    p.add_argument(
+        "--model-seed",
+        type=int,
+        default=42,
+        help="Torch seed for random weight initialisation (default: 42)",
     )
     p.add_argument(
         "--batch-size",
@@ -160,7 +166,7 @@ def main() -> None:
     sub_smarts = [all_smarts[i] for i in idx]
     logger.info("Pre-sampled %d reactions (seed=%d)", n_reactions, args.seed)
 
-    embedder = build_random_embedder(args.config, args.vocab, args.device, seed=args.seed)
+    embedder = build_random_embedder(args.config, args.vocab, args.device, seed=args.model_seed)
 
     logger.info("Extracting random-init embeddings for sampled reactions ...")
     t0_total = time.perf_counter()
@@ -210,6 +216,7 @@ def main() -> None:
                 "n_reactions_sampled": n_reactions,
                 "n_pairs": n_pairs,
                 "seed": args.seed,
+                "model_seed": args.model_seed,
                 "fingerprint": "RDKit structural reaction fingerprint (4096 bits)",
                 "total_time_s": round(total_time_s, 2),
             },
