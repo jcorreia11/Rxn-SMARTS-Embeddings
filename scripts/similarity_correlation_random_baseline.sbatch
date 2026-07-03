@@ -2,7 +2,7 @@
 #SBATCH --job-name=sim_corr_random
 #SBATCH --account=f202508983cpcaa0x
 #SBATCH --partition=normal-x86
-#SBATCH --time=00:30:00
+#SBATCH --time=01:30:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
