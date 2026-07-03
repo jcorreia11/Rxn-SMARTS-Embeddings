@@ -219,3 +219,5 @@ results/*.pt
 results/final/
 models/*.pt
 models/checkpoints/*
+
+latex/*
