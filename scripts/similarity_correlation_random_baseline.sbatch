@@ -39,14 +39,16 @@ dvc pull \
     models/smarts_transformer_20260513_093030.json
 
 # ---- shared config ----
-N_REACTIONS=3000
-SEED=42
-FORMAT="pdf"
-DPI=300
-GRIDSIZE=50
+N_REACTIONS="${N_REACTIONS:-3000}"
+SEED="${SEED:-42}"
+MODEL_SEED="${MODEL_SEED:-42}"
+FORMAT="${FORMAT:-pdf}"
+DPI="${DPI:-300}"
+GRIDSIZE="${GRIDSIZE:-50}"
 
 VOCAB="data/processed/vocab.json"
 OUT_BASE="results/final/3c-similarity-correlation"
+SUFFIX="${SUFFIX:-_random_s${MODEL_SEED}}"
 
 RUN_ID="sim_corr_random_${SLURM_JOB_ID}"
 
@@ -54,61 +56,64 @@ RUN_ID="sim_corr_random_${SLURM_JOB_ID}"
 # small  (6L, d=256, max_len=256)
 # ============================================================
 echo ""
-echo "=== small model ($(date)) ==="
+echo "=== small model (model-seed=${MODEL_SEED}, $(date)) ==="
 python scripts/similarity_correlation_random_baseline.py \
-    --config   "models/smarts_transformer_20260410_111830.json" \
-    --vocab    "${VOCAB}" \
-    --smarts   "data/embeddings/small/smarts.txt" \
+    --config      "models/smarts_transformer_20260410_111830.json" \
+    --vocab       "${VOCAB}" \
+    --smarts      "data/embeddings/small/smarts.txt" \
     --n-reactions "${N_REACTIONS}" \
     --seed        "${SEED}" \
-    --output   "${OUT_BASE}/small_random/figure" \
-    --format   "${FORMAT}" \
-    --dpi      "${DPI}" \
-    --gridsize "${GRIDSIZE}" \
-    --save-json "${OUT_BASE}/small_random/results.json"
+    --model-seed  "${MODEL_SEED}" \
+    --output      "${OUT_BASE}/small${SUFFIX}/figure" \
+    --format      "${FORMAT}" \
+    --dpi         "${DPI}" \
+    --gridsize    "${GRIDSIZE}" \
+    --save-json   "${OUT_BASE}/small${SUFFIX}/results.json"
 
 # ============================================================
 # medium  (6L, d=256, max_len=512)
 # ============================================================
 echo ""
-echo "=== medium model ($(date)) ==="
+echo "=== medium model (model-seed=${MODEL_SEED}, $(date)) ==="
 python scripts/similarity_correlation_random_baseline.py \
-    --config   "models/smarts_transformer_20260428_160310.json" \
-    --vocab    "${VOCAB}" \
-    --smarts   "data/embeddings/medium/smarts.txt" \
+    --config      "models/smarts_transformer_20260428_160310.json" \
+    --vocab       "${VOCAB}" \
+    --smarts      "data/embeddings/medium/smarts.txt" \
     --n-reactions "${N_REACTIONS}" \
     --seed        "${SEED}" \
-    --output   "${OUT_BASE}/medium_random/figure" \
-    --format   "${FORMAT}" \
-    --dpi      "${DPI}" \
-    --gridsize "${GRIDSIZE}" \
-    --save-json "${OUT_BASE}/medium_random/results.json"
+    --model-seed  "${MODEL_SEED}" \
+    --output      "${OUT_BASE}/medium${SUFFIX}/figure" \
+    --format      "${FORMAT}" \
+    --dpi         "${DPI}" \
+    --gridsize    "${GRIDSIZE}" \
+    --save-json   "${OUT_BASE}/medium${SUFFIX}/results.json"
 
 # ============================================================
 # large  (8L, d=512, max_len=512)
 # ============================================================
 echo ""
-echo "=== large model ($(date)) ==="
+echo "=== large model (model-seed=${MODEL_SEED}, $(date)) ==="
 python scripts/similarity_correlation_random_baseline.py \
-    --config   "models/smarts_transformer_20260513_093030.json" \
-    --vocab    "${VOCAB}" \
-    --smarts   "data/embeddings/large/smarts.txt" \
+    --config      "models/smarts_transformer_20260513_093030.json" \
+    --vocab       "${VOCAB}" \
+    --smarts      "data/embeddings/large/smarts.txt" \
     --n-reactions "${N_REACTIONS}" \
     --seed        "${SEED}" \
-    --output   "${OUT_BASE}/large_random/figure" \
-    --format   "${FORMAT}" \
-    --dpi      "${DPI}" \
-    --gridsize "${GRIDSIZE}" \
-    --save-json "${OUT_BASE}/large_random/results.json"
+    --model-seed  "${MODEL_SEED}" \
+    --output      "${OUT_BASE}/large${SUFFIX}/figure" \
+    --format      "${FORMAT}" \
+    --dpi         "${DPI}" \
+    --gridsize    "${GRIDSIZE}" \
+    --save-json   "${OUT_BASE}/large${SUFFIX}/results.json"
 
 # ---- commit results to git ----
 echo ""
 echo "=== Committing results ($(date)) ==="
 git add \
-    "${OUT_BASE}/small_random/"  \
-    "${OUT_BASE}/medium_random/" \
-    "${OUT_BASE}/large_random/"
-git commit -m "[results] Similarity correlation — random-init baseline (${RUN_ID}, N=${N_REACTIONS})"
+    "${OUT_BASE}/small${SUFFIX}/"  \
+    "${OUT_BASE}/medium${SUFFIX}/" \
+    "${OUT_BASE}/large${SUFFIX}/"
+git commit -m "[results] Similarity correlation — random-init baseline (${RUN_ID}, model-seed=${MODEL_SEED}, N=${N_REACTIONS})"
 
 echo "=== Job finished on $(date) ==="
 
