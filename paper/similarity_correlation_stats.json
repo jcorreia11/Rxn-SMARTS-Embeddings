@@ -1,0 +1,42 @@
+{
+  "source_json": "results/final/3c-similarity-correlation/medium/results.json",
+  "sampling": {
+    "n_reactions_total": 361751,
+    "n_reactions_sampled": 3000,
+    "seed": 42,
+    "n_pairs_possible": 4498500,
+    "n_pairs_retained": 4498500,
+    "pct_pairs_retained": 100.0
+  },
+  "fingerprint": {
+    "type": "RDKit structural reaction fingerprint",
+    "rdkit_function": "rdChemReactions.CreateStructuralFingerprintForReaction",
+    "n_bits": 4096,
+    "similarity_metric": "Tanimoto coefficient (DataStructs.TanimotoSimilarity)"
+  },
+  "embedding_similarity": {
+    "metric": "cosine similarity",
+    "normalisation": "L2 (unit norm)",
+    "computation": "upper-triangle pairwise cosine of sampled embedding rows"
+  },
+  "statistics": {
+    "pearson_r": 0.59149,
+    "pearson_p": 0.0,
+    "spearman_r": 0.574505,
+    "spearman_p": 0.0,
+    "n_pairs": 4498500,
+    "cosine_mean": 0.75689,
+    "cosine_std": 0.093356,
+    "tanimoto_mean": 0.33845,
+    "tanimoto_std": 0.15987
+  },
+  "visualisation": {
+    "type": "hexbin density scatter plot",
+    "gridsize": 50,
+    "overlay": "OLS linear regression",
+    "output_figures": [
+      "results/final/3c-similarity-correlation/medium/sim_corr.pdf"
+    ]
+  },
+  "total_time_s": 49.08
+}
