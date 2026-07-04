@@ -93,6 +93,19 @@ def parse_args() -> argparse.Namespace:
         "--num-workers", type=int, default=4,
         help="DataLoader worker processes (default: 4)",
     )
+    train.add_argument(
+        "--split-strategy", default="group", choices=["group", "random"],
+        help=(
+            "'group' (default) keeps RetroRules radius-siblings (same "
+            "reaction_group) on one side of the train/val split, avoiding "
+            "near-duplicate leakage into validation. 'random' reproduces "
+            "the old plain random_split, kept only for comparison."
+        ),
+    )
+    train.add_argument(
+        "--split-seed", type=int, default=42,
+        help="Random seed for the group-aware train/val split (default: 42)",
+    )
 
     return p.parse_args()
 
@@ -107,6 +120,18 @@ def main() -> None:
     valid_mask = df["valid"].astype(str).str.upper() == "TRUE"
     smarts_list = df.loc[valid_mask, "smarts"].tolist()
     logger.info("Loaded %d valid SMARTS from %s", len(smarts_list), args.data)
+
+    groups = None
+    if args.split_strategy == "group":
+        if "reaction_group" in df.columns:
+            groups = df.loc[valid_mask, "reaction_group"].to_numpy()
+        else:
+            logger.warning(
+                "%s has no 'reaction_group' column (re-run `dvc repro` to "
+                "regenerate it) — falling back to plain random_split for "
+                "the train/val split.",
+                args.data,
+            )
 
     dataset = SMARTSDataset(smarts_list, token_to_id, max_length=args.max_length)
     collator = MLMCollator(
@@ -149,7 +174,10 @@ def main() -> None:
         num_workers=args.num_workers,
     )
 
-    trainer = Trainer(model, dataset, collator, training_config, device=args.device)
+    trainer = Trainer(
+        model, dataset, collator, training_config,
+        device=args.device, groups=groups, split_seed=args.split_seed,
+    )
     losses = trainer.train()
     logger.info(
         "Done. Losses: %s",

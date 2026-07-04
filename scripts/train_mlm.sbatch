@@ -66,6 +66,11 @@ VAL_SPLIT="${VAL_SPLIT:-0.1}"
 WARMUP_STEPS="${WARMUP_STEPS:-500}"
 MAX_GRAD_NORM="${MAX_GRAD_NORM:-1.0}"
 NUM_WORKERS="${NUM_WORKERS:-4}"
+# 'group' (default) keeps RetroRules radius-siblings (same reaction_group)
+# out of both sides of the train/val split. 'random' reproduces the old
+# plain random_split, kept only for comparison.
+SPLIT_STRATEGY="${SPLIT_STRATEGY:-group}"
+SPLIT_SEED="${SPLIT_SEED:-42}"
 
 RUN_ID=$(date +%Y%m%d_%H%M%S)
 CHECKPOINT_DIR="models/checkpoints/${RUN_ID}"
@@ -92,6 +97,8 @@ echo "Val split:       ${VAL_SPLIT}"
 echo "Warmup steps:    ${WARMUP_STEPS}"
 echo "Max grad norm:   ${MAX_GRAD_NORM}"
 echo "Num workers:     ${NUM_WORKERS}"
+echo "Split strategy:  ${SPLIT_STRATEGY}"
+echo "Split seed:      ${SPLIT_SEED}"
 echo "Checkpoint dir:  ${CHECKPOINT_DIR}"
 echo "Output:          ${OUTPUT}"
 
@@ -117,6 +124,8 @@ python scripts/train_mlm.py \
     --warmup-steps  "${WARMUP_STEPS}" \
     --max-grad-norm "${MAX_GRAD_NORM}" \
     --num-workers   "${NUM_WORKERS}" \
+    --split-strategy "${SPLIT_STRATEGY}" \
+    --split-seed    "${SPLIT_SEED}" \
     --checkpoint-dir "${CHECKPOINT_DIR}" \
     --output        "${OUTPUT}"
 

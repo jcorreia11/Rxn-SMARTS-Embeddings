@@ -10,7 +10,9 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 from torch import Tensor
-from torch.utils.data import DataLoader, Dataset, random_split
+from torch.utils.data import DataLoader, Dataset, Subset, random_split
+
+from smart_rxn_embeddings.evaluation.splitting import group_holdout_split
 
 logger = logging.getLogger(__name__)
 
@@ -215,6 +217,13 @@ class Trainer:
     collator: :class:`MLMCollator` instance (handles masking).
     config:   :class:`TrainingConfig` with all hyper-parameters.
     device:   ``"cuda"`` / ``"cpu"`` — auto-detected when ``None``.
+    groups:   Optional per-row reaction-group ids (same order as *dataset*),
+              e.g. RetroRules ``reaction_group``. When given, the train/val
+              split keeps every group on one side (see
+              ``evaluation.splitting.group_holdout_split``), preventing
+              near-duplicate radius-siblings from leaking into validation.
+              When ``None`` (default), falls back to plain ``random_split``.
+    split_seed: Random seed for the group-aware split (ignored otherwise).
     """
 
     def __init__(
@@ -224,6 +233,8 @@ class Trainer:
         collator: MLMCollator,
         config: TrainingConfig,
         device: str | None = None,
+        groups=None,
+        split_seed: int = 42,
     ) -> None:
         self.model = model
         self.collator = collator
@@ -235,14 +246,25 @@ class Trainer:
         if self.device.type == "cuda":
             self.model = torch.compile(self.model)
 
+        self.split_strategy = "group" if groups is not None else "random"
+
         if config.val_split > 0.0:
-            n_val = max(1, int(len(dataset) * config.val_split))
-            n_train = len(dataset) - n_val
-            self.train_dataset, self.val_dataset = random_split(
-                dataset, [n_train, n_val]
-            )
+            if groups is not None:
+                train_idx, val_idx = group_holdout_split(
+                    len(dataset), groups, test_size=config.val_split, seed=split_seed
+                )
+                self.train_dataset = Subset(dataset, train_idx)
+                self.val_dataset = Subset(dataset, val_idx)
+                n_train, n_val = len(train_idx), len(val_idx)
+            else:
+                n_val = max(1, int(len(dataset) * config.val_split))
+                n_train = len(dataset) - n_val
+                self.train_dataset, self.val_dataset = random_split(
+                    dataset, [n_train, n_val]
+                )
             logger.info(
-                "Train/val split: %d train | %d val (%.0f%%)",
+                "Train/val split (%s): %d train | %d val (%.0f%%)",
+                self.split_strategy,
                 n_train,
                 n_val,
                 config.val_split * 100,
@@ -511,6 +533,7 @@ class Trainer:
         payload = {
             "model_config": self.model.config.to_dict(),
             "training_config": {k: v for k, v in self.config.__dict__.items()},
+            "split_strategy": self.split_strategy,
             "mask_id": self.collator.mask_id,
             "extended_vocab_size": self.collator.extended_vocab_size,
             "history": {
