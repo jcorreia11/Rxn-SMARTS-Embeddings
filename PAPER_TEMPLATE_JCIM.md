@@ -3,7 +3,7 @@
 > **How to use this template**
 > Text in `[square brackets]` = instructions to the author (delete before submitting).
 > Text in `**bold**` = already-known values you can paste in directly.
-> `[PENDING]` = results not yet available (requires MAX_LENGTH=512 retraining).
+> `[PENDING]` = results not yet available (see "Results Pending" section near the end of this file for the current list).
 > JCIM word limits: Abstract ≤ 250 words; full article typically 6,000–10,000 words.
 
 ---
@@ -45,8 +45,10 @@ modeling (MLM) objective with contiguous span masking. The model is trained on
 labeled supervision.
 
 [SENTENCES 3–5 — Briefly describe: rule-based SMARTS tokenizer, transformer architecture
-(6 layers, d_model=256, ~5M parameters), SpanBERT-style span masking (mean span=3,
-mask_prob=0.25), mean pooling to obtain fixed-size reaction embeddings.]
+(three configurations — Small/Medium: 6 layers, d_model=256, ~7.2M parameters, differing
+only in max sequence length 256 vs. 512; Large: 8 layers, d_model=512, ~30.3M parameters),
+SpanBERT-style span masking (mean span=3, mask_prob=0.25), mean pooling to obtain
+fixed-size reaction embeddings.]
 
 We evaluate the resulting embeddings on three downstream tasks. For enzyme class (EC)
 prediction across **[PENDING — update after MAX_LENGTH=512 run]** EC classes, pretrained
@@ -142,15 +144,15 @@ Reaction templates were retrieved from RetroRules [CITE], a database of enzymati
 | Combined | Combined | 428,721 | 100.0% | Before filtering |
 | Deduplicated | Unique SMARTS strings | 361,751 | 84.4% | Pretraining corpus |
 | Validated | RDKit-valid reactions | 361,751 | 84.4% | Final corpus |
-| Annotated | ≥1 EC number | 212,952 | 58.9%^a | Downstream evaluation |
-| Unannotated | No EC number | 148,799 | 41.1%^a | Pretraining only |
+| Annotated | ≥1 EC number | 214,007 | 59.1%^a | Downstream evaluation |
+| Unannotated | No EC number | 147,744 | 40.9%^a | Pretraining only |
 | Random split — Training | Training | 325,576 | 90.0%^a | Model fitting |
 | Random split — Validation | Validation | 36,175 | 10.0%^a | MLM monitoring |
 | **Final** | **Validated unique SMARTS** | **361,751** | **84.4%** | **All experiments** |
 
 ^a Percentage relative to the validated corpus.
 
-**EC number annotations.** Each template may be associated with one or more Enzyme Commission (EC) numbers. Among the validated templates, 212,952 (58.9%) have at least one EC annotation, while 148,799 (41.1%) are unannotated and thus used exclusively for self-supervised pretraining. For downstream classification, EC labels are considered at three hierarchical levels (depths 1 to 3). At depth 1, 7 enzyme classes are represented, depth 2 and 3 contain 72 and 249 distinct classes, respectively. Detailed EC class distributions and depth-specific label coverage are provided in Supporting Information Tables S1 and S2.
+**EC number annotations.** Each template may be associated with one or more Enzyme Commission (EC) numbers. Among the validated templates, 214,007 (59.1%) have at least one EC annotation, while 147,744 (40.9%) are unannotated and thus used exclusively for self-supervised pretraining. This count is obtained by resolving each template's annotation across *all* of its occurrences in the raw MetaNetX/Rhea source files before deduplication — a small number of templates (1,055) appear more than once across the two raw sources with the annotation present on only one of the duplicate rows, so annotating from any matching raw occurrence (rather than deduplicating first and only then checking the surviving row) recovers these labels. For downstream classification, EC labels are considered at three hierarchical levels (depths 1 to 3). At depth 1, 7 enzyme classes are represented, depth 2 and 3 contain 72 and 249 distinct classes, respectively. Detailed EC class distributions and depth-specific label coverage are provided in Supporting Information Tables S1 and S2.
 
 **Train/validation split.** The 361,751 templates were split randomly into a training set (90%, 325,576 sequences) and a hold-out validation set (10%, 36,175 sequences) for monitoring model training loss and masked-token accuracy. No label information was used at any stage of pretraining, with the split being purely used for convergence diagnostics.
 
@@ -172,9 +174,17 @@ SentencePiece [CITE] was used as an unsupervised tokenizer to provide a data-dri
 
 We used an encoder-only transformer [CITE Vaswani et al., 2017] following the pretraining architecture of BERT [CITE Devlin et al., 2019], adapted to the SMARTS domain. The model consists of a sequence encoder used for both pretraining and inference and a masked language modeling (MLM) head used only during pretraining.
 
-**Sequence encoder.** Token indices produced by the rule-based SMARTS tokenizer are mapped to continuous representations by summing token and learned positional embeddings, both of dimension 256. Learned positional embeddings were used instead of fixed sinusoidal encodings to better handle the right-skewed SMARTS length distribution and position-dependent chemical patterns.
+**Sequence encoder.** Token indices produced by the rule-based SMARTS tokenizer are mapped to continuous representations by summing token and learned positional embeddings. Learned positional embeddings were used instead of fixed sinusoidal encodings to better handle the right-skewed SMARTS length distribution and position-dependent chemical patterns. Each transformer encoder layer applies multi-head self-attention followed by a position-wise feed-forward network (FFN) with ReLU activation, residual connections and post-layer normalization. Dropout with probability 0.1 is applied to embeddings and within each layer.
 
-The resulting representations are processed by 6 transformer encoder layers. Each layer applies multi-head self-attention with 8 heads (head dimension of 32), followed by a position-wise feed-forward network (FFN) with inner dimension 1,024, ReLU activation, residual connections and post-layer normalization. Dropout with probability 0.1 is applied to embeddings and within each layer. The maximum sequence length is 512 tokens.
+**Three model configurations.** We pretrained three variants, isolating sequence length from model capacity (Table 2a). The **Small** and **Medium** configurations share an identical architecture (6 layers, 8 attention heads of dimension 32, $d_\text{model}=256$, FFN inner dimension 1,024; 7.16M and 7.23M parameters respectively — the small difference is the larger positional-embedding table) and differ only in maximum sequence length (256 vs. 512 tokens). This pair isolates the effect of input truncation: Section 3.1 shows the rule-based tokenizer already covers 93.5% of templates intact at 256 tokens, so Small–Medium directly tests whether the chemical information in the remaining long tail of longer, typically multi-step templates measurably affects downstream embedding quality, independent of any change in model capacity. The **Large** configuration instead scales capacity at the same 512-token length (8 layers, 16 heads, $d_\text{model}=512$, FFN inner dimension 2,048; 30.32M parameters), testing whether additional representational capacity yields further gains on top of the full-length context. Unless otherwise noted, Section 3.2 reports the detailed pretraining convergence trajectory for the Medium configuration as the primary narrative, with final-epoch metrics for all three configurations given in Table~\ref{tab:convergence-capacity}; Sections 3.3–3.5 report all three configurations side by side.
+
+**Table 2a. Architecture and parameter budget of the three pretrained configurations.**
+
+| Configuration | $d_\text{model}$ | Layers | Heads | FFN dim | Max seq. len | Parameters | Rationale |
+|:--|--:|--:|--:|--:|--:|--:|:--|
+| Small | 256 | 6 | 8 | 1,024 | 256 | 7,161,458 | Baseline |
+| Medium | 256 | 6 | 8 | 1,024 | 512 | 7,226,994 | Isolates sequence-length truncation (vs. Small) |
+| Large | 512 | 8 | 16 | 2,048 | 512 | 30,322,546 | Isolates model capacity (vs. Medium) |
 
 **MLM head.** During pretraining, encoder outputs are passed through a masked language modeling head that predicts the original token identity at each masked position. The head first transforms each hidden state with a linear layer, applies a GELU nonlinearity and layer normalization, and then projects the result to the full tokenizer vocabulary. This prediction head is used only for self-supervised pretraining and is discarded during downstream evaluation. The overall model structure is summarized in Figure 2. A component-wise parameter breakdown is also provided in Supporting Information Table S3.
 
@@ -197,30 +207,22 @@ This yields an expected span length of ≈ 2.95 tokens and ∼8–9 spans per me
 
 ### 2.5 Training
 
-The model was trained on the 325,576-template training split for 100 epochs using the MLM objective described in Section 2.4. A held-out validation set of 36,175 templates (10%) was used exclusively for monitoring convergence and did not influence model parameters or hyperparameter selection.
+Each of the three configurations (Section 2.3) was trained independently on the same 325,576-template training split for 100 epochs using the MLM objective described in Section 2.4. A held-out validation set of 36,175 templates (10%) was used exclusively for monitoring convergence and did not influence model parameters or hyperparameter selection. Optimisation, precision, and hardware settings (below) were held identical across configurations; only batch size — reduced for the Large configuration to fit GPU memory — and the resulting steps/epoch differ.
 
 **Optimisation.** Parameters were updated using AdamW [CITE Loshchilov & Hutter, 2019] with $\beta_1 = 0.9$, $\beta_2 = 0.999$, $\varepsilon = 10^{-8}$, and weight decay = 0.01. The learning rate followed a linear warmup from 0 to $10^{-4}$ over the first 2,000 steps, followed by cosine annealing to 0 over the remaining training steps. Gradient norms were clipped to 1.0.
 
 **Implementation.** Training was performed in PyTorch [CITE] on a single NVIDIA A100-SXM4-40GB GPU (40 GB) with CUDA 12.4. Mixed-precision training used the `bfloat16` datatype via `torch.autocast`, and the model was compiled with `torch.compile`. Data loading used 4 persistent workers with pinned memory.
 
-**Hyperparameters.** All training hyperparameters are summarised in Table 2.
+**Hyperparameters.** Hyperparameters shared across all three configurations, and the per-configuration settings that differ, are summarised in Table 2.
 
-**Table 2. Pretraining hyperparameters.**
+**Table 2. Pretraining hyperparameters.** Shared across configurations unless noted: AdamW ($\beta_1=0.9$, $\beta_2=0.999$, $\varepsilon=10^{-8}$, wd=0.01), peak LR $10^{-4}$ with linear warmup (2,000 steps) → cosine decay, 100 epochs, gradient clipping (max norm 1.0), bfloat16 precision, training/validation set sizes of 325,576 / 36,175, NVIDIA A100-SXM4-40GB.
 
-| Hyperparameter | Value |
-|---|---|
-| Optimizer | AdamW ($\beta_1=0.9$, $\beta_2=0.999$, $\varepsilon=10^{-8}$, wd=0.01) |
-| Peak learning rate | $10^{-4}$ |
-| LR schedule | Linear warmup (2,000 steps) → cosine decay |
-| Epochs | 100 (5,088 steps/epoch; 508,800 total) |
-| Batch size | 64 sequences |
-| Max sequence length | 512 tokens |
-| Gradient clipping | max norm 1.0 |
-| Precision | bfloat16 |
-| Training set size | 325,576 |
-| Validation set size | 36,175 (10%) |
-| Hardware | NVIDIA A100-SXM4-40GB |
-| Training time | 6.19 h |
+| Per-configuration setting | Small | Medium | Large |
+|:--|--:|--:|--:|
+| Max sequence length | 256 tokens | 512 tokens | 512 tokens |
+| Batch size | 64 | 64 | 32 |
+| Steps/epoch (total) | 5,088 (508,800) | 5,088 (508,800) | ≈10,175 (≈1,017,500) |
+| Training time | 3.39 h | 6.19 h | 19.45 h |
 
 ### 2.6 Embedding Extraction
 
@@ -232,7 +234,7 @@ All 361,751 validated reaction SMARTS were embedded using the final trained mode
 
 Enzyme Commission (EC) numbers classify enzyme-catalysed reactions hierarchically. The first three levels denote the class, subclass, and sub-subclass, whereas the fourth specifies the enzyme entry, typically distinguished by substrate specificity or catalytic transformation. We evaluate embeddings as features for predicting EC numbers at the first three levels of granularity to assess how well pretraining captures biochemical specificity at increasing resolution.
 
-**Dataset.** EC labels were retrieved from the EC-annotated subset of the dataset described in Section 2.1. For each template, the first EC number was taken and truncated to $k$ components to form depth-$k$ labels. Classes with fewer than 10 representatives were excluded to ensure all folds in stratified cross-validation contained at least one example per class. This yielded approximately 50,000 labelled templates at each depth: 49,996 (depth = 1), 49,962 (depth = 2), and 49,884 (depth = 3).
+**Dataset.** EC labels were retrieved from the EC-annotated subset of the dataset described in Section 2.1 (214,007 templates). For each template, the first EC number was taken and truncated to $k$ components to form depth-$k$ labels. Classes with fewer than 10 representatives were excluded to ensure all folds in stratified cross-validation contained at least one example per class; this rare-class filter removes a small and depth-increasing fraction of the pool — 0 templates at depth 1, 25 at depth 2, and 121 at depth 3 — leaving 214,007 / 213,982 / 213,886 labelled templates available at depths 1/2/3, respectively. For computational tractability, each depth's available pool was then down-sampled to 50,000 templates using stratified sampling proportional to class frequency, yielding 49,996 (depth = 1), 49,962 (depth = 2), and 49,884 (depth = 3) templates actually used; the small shortfall from exactly 50,000 is a rounding effect of per-class proportional sampling. We emphasise that this subsampling — not the rare-class filter — is the dominant reason the evaluated set is a fraction of the annotated pool.
 
 **Experimental protocol.** Each labelled set was partitioned into an 80% training set and a 20% held-out test set using stratified random sampling. Performance was estimated by 10-fold stratified cross-validation on the training partition, with mean accuracy and F1-macro reported across folds. Final per-class metrics were obtained from the held-out test set. Embedding features were standardised to zero mean and unit variance before training any linear classifier.
 
@@ -283,7 +285,7 @@ for 200 epochs.
 The 2-D coordinates were computed once and cached as a NumPy array to avoid repeating
 the expensive reduction.  Three figures were then generated from the same coordinates,
 colouring each point by its EC label at depth=1, depth=2, and depth=3 respectively.
-EC annotations cover 212,952 of the 361,751 embedded templates (58.9\%); templates
+EC annotations cover 214,007 of the 361,751 embedded templates (59.1\%); templates
 without an EC annotation are rendered in light grey in the background.  For depth=1,
 each of the seven EC classes is assigned a distinct, colour-blind-friendly hue.  For
 depth=2 and depth=3, sub-classes are shaded using sequential colormaps anchored to
@@ -322,8 +324,9 @@ limitations.]
 giving 428,721 records in total.  After deduplication on the TEMPLATE field,
 66,970 duplicates were removed, leaving **361,751 unique reaction SMARTS**.
 All templates carried the \texttt{VALID=TRUE} flag in the source files; no additional
-filtering was required.  Of the 361,751 templates, 212,952 (58.9\%) are annotated
-with at least one EC number and are used in the supervised downstream experiments.
+filtering was required.  Of the 361,751 templates, 214,007 (59.1\%) are annotated
+with at least one EC number (resolved across all raw MetaNetX/Rhea occurrences of
+each template, see Section 2.1) and are used in the supervised downstream experiments.
 Dataset statistics — sequence-length distribution, EC class distribution, and the
 90/10 pretraining split — are shown in Figure~\ref{fig:dataset_stats}.
 
@@ -405,6 +408,8 @@ learned contextual representation.
 
 ### 3.2 MLM Pretraining
 
+This section reports the detailed pretraining trajectory for the **Medium** configuration (Section 2.3) as the primary convergence narrative; final-epoch metrics for all three configurations are compared in Table~\ref{tab:convergence-capacity} below.
+
 **Convergence.** Training proceeded for 100 epochs (508,800 gradient steps) on a
 single NVIDIA A100-SXM4-40GB GPU and completed in 6.19 hours.  The model converged
 rapidly in the early phase: validation loss fell from 1.882 at epoch 1 to 0.314 by
@@ -458,6 +463,16 @@ that the encoder has learned a representation of SMARTS syntax that captures
 chemical grammar well beyond surface-level token frequency, forming a strong basis
 for the downstream embedding tasks evaluated in Sections~3.3--3.5.
 
+**Capacity and pretraining quality.** Table~\ref{tab:convergence-capacity} compares final-epoch (epoch 100) pretraining metrics across all three configurations. Small and Medium — identical capacity, differing only in maximum sequence length — converge to near-identical masked-token accuracy (96.35% vs. 96.43% top-1), foreshadowing Section 3.4's finding that the extra context also has little effect on downstream EC classification. Large converges to a substantially lower validation loss and higher accuracy (98.81% top-1, 99.89% top-5) than either smaller configuration, though this is expected in part because the MLM task itself becomes easier for a higher-capacity model with the same masking budget; it is the downstream evaluations (Sections 3.3-3.5) that establish this improved pretraining also translates into better embeddings.
+
+**Table~\ref{tab:convergence-capacity}. Final-epoch (100) MLM metrics by configuration.**
+
+| Configuration | Val. loss | Top-1 | Top-5 | Content top-1 | Content top-5 | Training time |
+|:--|--:|--:|--:|--:|--:|--:|
+| Small | 0.122 | 96.35% | 99.54% | 95.95% | 99.46% | 3.39 h |
+| Medium | 0.121 | 96.43% | 99.52% | 96.01% | 99.43% | 6.19 h |
+| Large | 0.039 | 98.81% | 99.89% | [PENDING — not available in this draft] | [PENDING] | 19.45 h |
+
 ### 3.3 Pooling Ablation
 
 Table~\ref{tab:pooling} reports EC depth-1 classification accuracy and macro-F1 for all four
@@ -496,23 +511,22 @@ subsequent experiments (Sections~\ref{sec:ec-classifier}–\ref{sec:nn-retrieval
 
 ### 3.4 EC Number Classification
 
-Table~\ref{tab:ec-classification} reports mean accuracy and macro-averaged F1 over 10-fold cross-validation for all six methods at EC depths 1 (7 classes, $n$=49,996), 2 (72 classes, $n$=49,962), and 3 (237 classes, $n$=49,884).
-Classes with fewer than 10 representatives were excluded from each depth prior to stratified splitting.
+Table~\ref{tab:ec-classification} reports mean accuracy and macro-averaged F1 over 10-fold cross-validation for all six methods at EC depths 1 (7 classes, $n$=49,996), 2 (72 classes, $n$=49,962), and 3 (237 classes, $n$=49,884), for the **Medium** configuration (Section 2.3). Classes with fewer than 10 representatives were excluded from each depth prior to stratified splitting (Section 2.7.1).
 
-**Table X. EC classification results (mean ± std, 10-fold CV). Best result per column in bold.**
+**Table X. EC classification results, Medium configuration (mean ± std, 10-fold CV). Best result per column in bold.**
 
 | Method | D=1 Acc. | D=2 Acc. | D=3 Acc. | D=1 F1-mac | D=2 F1-mac | D=3 F1-mac |
 |:--|--:|--:|--:|--:|--:|--:|
 | TF-IDF (SMARTS tokenizer) | 0.577 ± 0.007 | 0.398 ± 0.006 | 0.249 ± 0.008 | 0.420 ± 0.011 | 0.237 ± 0.017 | 0.148 ± 0.011 |
 | TF-IDF (SentencePiece) | 0.623 ± 0.010 | 0.462 ± 0.008 | 0.317 ± 0.006 | 0.470 ± 0.026 | 0.292 ± 0.023 | 0.188 ± 0.011 |
-| Random init + LR | 0.488 ± 0.005 | 0.337 ± 0.005 | 0.252 ± 0.008 | 0.348 ± 0.012 | 0.182 ± 0.014 | 0.138 ± 0.011 |
-| Random init + MLP | 0.697 ± 0.004 | 0.541 ± 0.006 | 0.486 ± 0.007 | 0.464 ± 0.011 | 0.257 ± 0.022 | 0.198 ± 0.019 |
+| Random init + LR | 0.499 ± 0.007 | 0.343 ± 0.006 | 0.247 ± 0.007 | 0.352 ± 0.017 | 0.192 ± 0.015 | 0.136 ± 0.013 |
+| Random init + MLP | 0.694 ± 0.005 | 0.542 ± 0.005 | 0.476 ± 0.011 | 0.475 ± 0.044 | 0.268 ± 0.028 | 0.190 ± 0.015 |
 | Pretrained + LR | 0.680 ± 0.005 | 0.618 ± 0.009 | 0.563 ± 0.007 | 0.529 ± 0.032 | 0.437 ± 0.024 | 0.394 ± 0.021 |
 | **Pretrained + MLP** | **0.838 ± 0.004** | **0.754 ± 0.006** | **0.699 ± 0.007** | **0.684 ± 0.053** | **0.521 ± 0.029** | **0.428 ± 0.020** |
 
 **Pretraining gain.**
 Comparing Pretrained+MLP against the architecturally identical Random+MLP isolates the contribution of span-masked pretraining from model capacity alone.
-The accuracy gain is +14.1 p.p. at depth=1, widening to +21.3 p.p. at depths 2 and 3, confirming that the pretrained representations encode chemically meaningful information rather than acting as random projectors.
+The accuracy gain is +14.4 p.p. at depth=1, widening to +21.3 p.p. at depth=2 and +22.2 p.p. at depth=3, confirming that the pretrained representations encode chemically meaningful information rather than acting as random projectors.
 The disproportionate gain at finer EC granularities suggests that pretraining is especially valuable when discriminating among closely related enzymatic sub-functions.
 
 **Contextual embeddings vs. bag-of-tokens.**
@@ -522,12 +536,27 @@ This increasing margin demonstrates that continuous, context-sensitive represent
 **Linear separability of the embedding space.**
 The MLP head consistently outperforms logistic regression on pretrained embeddings by 15.8 p.p. at depth=1 and 13.5–13.6 p.p. at depths 2–3.
 This indicates that the learned representation organises EC classes in a non-linearly separable manifold, and that a linear probe underestimates embedding quality — a property shared with contextual language model representations in other domains.
+UMAP projections of the full embedding space (Figures~S1–S3 of the Supporting Information) provide qualitative confirmation: EC classes form spatially enriched fibriform regions rather than clean convex blobs, visually explaining why a linear decision boundary is insufficient and why finer EC granularities produce greater class overlap.
 
 **Degradation with label granularity and class imbalance.**
 Accuracy declines monotonically from 83.8% (7 classes) to 75.4% (72 classes) to 69.9% (237 classes), consistent with the combinatorial explosion of fine-grained labels and growing example scarcity.
 The divergence between accuracy and macro-F1 is more pronounced, falling from 68.4% to 52.1% to 42.8%, reflecting poor recall on rare sub-subclasses.
 At depth=1, per-class analysis of Pretrained+MLP reveals high fidelity for well-populated classes — Transferases (F1=0.917) and Hydrolases (F1=0.776) — while Translocases (EC 7), represented by only three test examples after stratified splitting, achieves F1=0.0 across all methods.
-This failure is a data artefact rather than a model limitation: the RetroRules corpus contains only 70 Translocase templates out of 212,952 annotated rules, making reliable classification of this class intractable without additional data.
+This failure is a data artefact rather than a model limitation: the RetroRules corpus contains only 70 Translocase templates out of 214,007 annotated rules, making reliable classification of this class intractable without additional data.
+
+**Sequence length vs. model capacity.**
+Table~\ref{tab:ec-classification} reports the Medium configuration; repeating the strongest condition (Pretrained+MLP) for all three configurations (Table~\ref{tab:ec-capacity}) separates the two axes of Section 2.3's ablation.
+Small$\to$Medium — identical architecture, max sequence length 256 vs. 512 — changes accuracy by only $-0.2$ to $+0.5$ p.p. across depths, indicating that the small fraction of templates truncated at 256 tokens (Table~\ref{tab:tokenizer}) carries little information relevant to enzyme-class prediction.
+Medium$\to$Large — same 512-token length, capacity scaled from 7.2M to 30.3M parameters — instead yields consistent, depth-widening gains of $+5.3$, $+7.2$, and $+8.1$ p.p. at depths 1, 2, and 3.
+Model capacity, not context length, is therefore the binding constraint on EC classification accuracy in this setting, and the advantage of additional capacity grows with label granularity — mirroring the same Small/Medium-flat, Large-improved pattern already observed for pretraining convergence itself (Section 3.2, Table~\ref{tab:convergence-capacity}).
+
+**Table~\ref{tab:ec-capacity}. Pretrained+MLP accuracy / F1-macro across configurations and EC depth (10-fold CV means).**
+
+| Configuration | D=1 Acc. | D=2 Acc. | D=3 Acc. | D=1 F1-mac | D=2 F1-mac | D=3 F1-mac |
+|:--|--:|--:|--:|--:|--:|--:|
+| Small | 0.838 | 0.749 | 0.701 | 0.666 | 0.510 | 0.443 |
+| Medium | 0.838 | 0.754 | 0.699 | 0.684 | 0.521 | 0.428 |
+| **Large** | **0.891** | **0.826** | **0.780** | **0.771** | **0.618** | **0.546** |
 
 ### 3.5 Embedding–Structural Similarity Correlation
 
@@ -535,30 +564,34 @@ To assess whether the learned representations encode chemical structure beyond S
 The Tanimoto distribution is identical across model sizes (mean=0.338, std=0.160) since it depends only on the reaction SMARTS.
 
 **Table~\ref{tab:sim-corr}. Embedding–structural similarity correlation by model size.**
-All p-values $< 10^{-300}$ ($n = 4{,}498{,}500$ pairs, same reaction sample for all rows).
+All p-values $< 10^{-300}$ ($n = 4{,}498{,}500$ pairs, seed=42 reaction sample).
+Pretrained correlations are deterministic given fixed weights and a fixed reaction sample; a single run is reported.
+Random-init values are mean $\pm$ std over five independent weight initialisations (model seeds 42, 1, 2, 3, 4; same reaction sample as pretrained), quantifying sensitivity to weight initialisation.
 
-| Model | max\_len | Pearson $r$ | Spearman $\rho$ | Cosine mean ± std |
+| Model | max\_len | Pearson $r$ | Spearman $\rho$ | Cosine mean |
 |:--|--:|--:|--:|--:|
 | Small — pretrained | 256 | 0.606 | 0.586 | 0.741 ± 0.096 |
 | Medium — pretrained | 512 | 0.591 | 0.575 | 0.757 ± 0.093 |
 | Large — pretrained | 512 | 0.574 | 0.563 | 0.688 ± 0.103 |
-| Small — random init | 256 | 0.479 | 0.512 | 0.925 ± 0.050 |
-| Medium — random init | 512 | 0.550 | 0.568 | 0.897 ± 0.066 |
-| Large — random init | 512 | 0.449 | 0.495 | 0.931 ± 0.047 |
+| Small — random init | 256 | 0.505 ± 0.026 | 0.540 ± 0.022 | 0.911 ± 0.017 |
+| Medium — random init | 512 | 0.472 ± 0.081 | 0.516 ± 0.055 | 0.901 ± 0.017 |
+| Large — random init | 512 | 0.440 ± 0.049 | 0.497 ± 0.031 | 0.917 ± 0.013 |
 
 **Chemical signal in the embeddings.**
-All pretrained models show a moderate-to-strong positive correlation ($r \in [0.574, 0.606]$, $p < 10^{-300}$), consistently above their random-init counterparts ($r \in [0.449, 0.550]$).
-The pretraining gain is largest for the small and large models ($\Delta r \approx +0.13$ and $+0.13$) and smaller for medium ($\Delta r = +0.04$).
+Pretrained model correlations are fully deterministic — given fixed trained weights and a fixed reaction sample, the cosine–Tanimoto correlation is a single reproducible value.
+The random-init baseline, by contrast, is inherently stochastic: the same architecture initialised with different random weights produces different embeddings, and we therefore report mean $\pm$ std over five initialisations to quantify sensitivity to weight initialisation.
+All pretrained models outperform their random-init counterparts (pretrained $r \in [0.574, 0.606]$ vs.\ random-init $r \in [0.440, 0.505]$), with pretraining gains of $\Delta r = +0.101$, $+0.120$, and $+0.134$ for small, medium, and large.
+The gain is well-separated from the random-init distribution for small (3.9$\sigma$) and large (2.7$\sigma$); for the medium model the gain is +0.120 but the random-init variance is high (std=0.081), yielding a separation of 1.5$\sigma$, suggesting the medium architecture is more sensitive to weight initialisation in this metric.
 
 **Tokenisation encodes partial structural information.**
-Random-init correlations are far from zero, confirming that SMARTS tokenisation itself carries structural signal: reactions with similar structural fingerprints tend to share SMARTS substructures and therefore similar token distributions, producing similar mean-pooled embeddings even from untrained weights.
-Pretraining learns to go beyond this syntactic baseline, structuring the representation space by chemical function rather than token overlap alone.
-The substantially higher cosine means for random-init models (0.897–0.931 vs.\ 0.688–0.757 pretrained) reflect that random projections collapse embeddings closer together; the pretrained encoder spreads reactions further apart in directions that align with structural similarity.
+Random-init correlations are well above zero ($r \approx 0.43$–$0.50$), confirming that SMARTS tokenisation itself carries structural signal: reactions with similar structural fingerprints tend to share substructure tokens, producing similar mean-pooled embeddings even from untrained weights.
+Pretraining goes beyond this syntactic baseline by structuring the representation space according to chemical function.
+The substantially higher cosine means for random-init models ($\approx 0.89$–$0.92$ vs.\ $0.69$–$0.76$ pretrained) reflect that random projections collapse embeddings closer together; pretraining spreads reactions apart in directions that align with structural similarity.
 
 **Capacity and the correlation ceiling.**
-Pretrained correlations decrease monotonically with model size ($0.606 \to 0.591 \to 0.574$), whereas the random-init baseline does not follow the same trend ($0.479 \to 0.550 \to 0.449$), indicating that the capacity-dependent decrease is a property of the learned representations rather than the architecture per se.
-The pretrained–random gap is largest for small and large ($\Delta r \approx +0.13$) and smallest for medium ($\Delta r = +0.04$), suggesting that the medium random-init model captures an unusually high fraction of the structural signal from syntax alone under this architecture and sequence length combination.
-Overall, the monotone decrease in pretrained $r$ with capacity is consistent with larger models encoding functional and mechanistic aspects of reactivity that structural fingerprints do not capture, a pattern also observed when comparing large language model representations to lexical similarity measures.
+Both pretrained and random-init mean correlations decrease monotonically with model size ($0.606 \to 0.591 \to 0.574$ and $0.505 \to 0.472 \to 0.440$), indicating this trend is partly architectural.
+Yet the pretraining gain itself grows with capacity ($+0.101 \to +0.120 \to +0.134$), suggesting that larger models extract progressively more chemical information from pretraining beyond what random projections provide.
+The decrease in pretrained $r$ despite an increasing pretraining gain is consistent with larger models encoding functional and mechanistic aspects of reactivity that structural fingerprints do not capture — a pattern also observed when comparing large language model representations to lexical similarity measures.
 
 ### 3.6 UMAP Visualization
 
@@ -583,45 +616,18 @@ Overall, the monotone decrease in pretrained $r$ with capacity is consistent wit
 
 ## 4. Conclusions
 
-[~300–500 words. No new results here. Structure: (1) summary of what was done and found,
-(2) significance, (3) limitations, (4) future work.]
+We present a self-supervised framework for learning reaction SMARTS representations via masked language modelling on 361,751 enzymatic templates from RetroRules v3.0.
+After 100 pretraining epochs (masked-token top-1 96.4%, top-5 99.5%), mean-pooled embeddings with a shallow MLP achieve 83.8%, 75.4%, and 69.9% accuracy at EC depths 1, 2, and 3 (7, 72, and 237 classes) for our Medium configuration, outperforming the strongest TF-IDF baseline by 21.5–38.2 p.p. and a randomly initialized encoder by 14.4–22.2 p.p.
+The widening advantage at finer granularities confirms that pretraining encodes sub-structural reaction-centre motifs beyond token co-occurrence.
+Scaling model capacity at fixed sequence length (Large, 30.3M parameters) improves accuracy further to 89.1%, 82.6%, and 78.0% at the same three depths, with the largest gains at the finest granularity — whereas lengthening the input alone at fixed capacity (Small$\to$Medium) changes accuracy by less than 0.5 p.p., indicating that model capacity, not context length, is the binding constraint in this setting.
 
-### Summary
+Embedding-space cosine similarities correlate with Tanimoto structural fingerprints (Pearson r = 0.591, Spearman ρ = 0.575 over 4,498,500 pairs), substantially above randomly initialized models (r ∈ [0.440, 0.505]).
+Nearest-neighbour retrieval recovers the correct EC class in 6 of 10 neighbours for both labelled queries and groups chemically related reactions across EC boundaries — acyltransferases with lipases, and terpenoid enzymes irrespective of top-level class.
+UMAP projections confirm coherent EC-class organisation at all three label depths.
 
-[We have presented a self-supervised approach to learning reaction SMARTS embeddings via
-MLM pretraining on RetroRules v3.0. Recap key numbers:
-- Best EC depth=1: [PENDING]%, depth=2: 75.4%, depth=3: 69.9% (Pretrained+MLP)
-- Pretraining gain: ~+21–31 p.p. over random init; ~+29–38 p.p. over TF-IDF
-- Embedding–Tanimoto correlation: r = 0.591 on 4.5M pairs
-The results demonstrate that MLM pretraining on SMARTS encodes chemically meaningful
-information that generalizes to labeled downstream tasks without any task-specific supervision.]
+Limitations include restriction to enzymatic templates (non-enzymatic generalization untested), a moderate Tanimoto correlation (r ≈ 0.59), growing macro-F1 deficits at fine granularity driven by class imbalance (depth 3: 69.9% accuracy vs. 42.8% macro-F1 for the Medium configuration), and unexplored capacity scaling beyond the 30.3M-parameter Large configuration evaluated here.
 
-### Significance
-
-[What does this enable?
-- Foundation model for reaction templates: the pretrained encoder can be fine-tuned for
-  retrosynthesis scoring, enzyme engineering, metabolic pathway design
-- Unsupervised reaction retrieval: similarity search in embedding space without labels
-- Scalable to larger databases (e.g., BRENDA, Rhea) with zero labeling effort]
-
-### Limitations
-
-[Be honest:
-1. MAX_LENGTH=256 truncates ~25% of sequences (being addressed with MAX_LENGTH=512 rerun)
-2. Model capacity: ~5M parameters is modest; scaling to d_model=512 may improve results
-3. RetroRules is enzymatic — generalization to non-enzymatic reaction templates is untested
-4. Similarity correlation is moderate (r=0.591); the model does not perfectly recover
-   structural similarity, especially in long or complex templates
-5. Class imbalance at depth=3 limits evaluation robustness for rare EC classes]
-
-### Future Work
-
-[Concrete next steps:
-1. Retrain with MAX_LENGTH=512 (in progress) and report updated benchmark numbers
-2. Scale to d_model=512 to test model capacity effect
-3. Fine-tune on specific downstream tasks (retrosynthesis ranking, reaction classification)
-4. Extend to non-enzymatic reaction databases (USPTO, ORD)
-5. Explore contrastive learning objectives to improve structural similarity alignment]
+Future extensions include fine-tuning on downstream tasks (retrosynthesis scoring, reaction-condition prediction, enzyme engineering), pretraining on non-enzymatic corpora (USPTO, ORD), contrastive objectives for tighter Tanimoto alignment, and scaling to larger databases such as BRENDA and expanded Rhea — steps toward a general-purpose foundation model for biochemical reaction templates.
 
 ---
 
@@ -631,9 +637,9 @@ information that generalizes to labeled downstream tasks without any task-specif
 
 The SI contains the following materials:
 
-- **Table S1.** EC class distribution at depth=1 (templates with EC annotation, N=212,952).
+- **Table S1.** EC class distribution at depth=1 (templates with EC annotation, N=214,007).
 - **Table S2.** EC annotation coverage and class granularity at depths 1–3.
-- **Table S3.** Model architecture and parameter budget (encoder + MLM head).
+- **Table S3.** Component-wise parameter breakdown (encoder + MLM head) for each of the three configurations (Small/Medium/Large; see Table 2a).
 - **Section: EC Annotation Coverage.** [PENDING — extended depth=2 and depth=3 distributions]
 - **Section: Extended Model Evaluation.** [PENDING — full per-class F1 tables, pooling ablation results, training curves]
 - **Section: Additional Qualitative Examples.** [PENDING — nearest-neighbor retrieval examples]
@@ -714,10 +720,15 @@ funding sources, any data providers (RetroRules team).]
 
 ## Results Pending (before submission)
 
-| Experiment | Status | Expected impact |
+[The Small/Medium/Large sweep (MAX_LENGTH=256/512 ablation and the 512-token
+capacity-scaling model) referenced throughout Sections 2–3 is complete; the items
+below are what remains open as of this draft.]
+
+| Item | Status | Expected impact |
 |---|---|---|
-| Retrain MAX_LENGTH=512 | **TODO** | Updates all benchmark numbers; required for publication |
-| EC depth=1 with MAX_LENGTH=512 | **TODO** | Expected >83.8% (current 256 result) |
-| EC depth=2 with MAX_LENGTH=512 | **TODO** | Expected >75.4% |
-| EC depth=3 with MAX_LENGTH=512 | **TODO** | Expected >69.9% |
-| Larger model (d_model=512) | Optional | Scaling result; strengthens paper if positive |
+| **Group-aware train/test/CV splitting** — RetroRules templates at different context radii are near-duplicate siblings with identical EC labels (361,751 templates → ~45,600 groups, ~98% with a sibling). All Results numbers currently in this draft (pooling ablation, EC classification, nearest-neighbor retrieval) were produced with plain (stratified) random splitting, which lets siblings leak across train/test. The pipeline and evaluation scripts now support group-aware splitting (`--split-strategy group`, default); a matched random-vs-group comparison run is needed to quantify the inflation before any of these numbers are reported as final. | **TODO — blocking** | May change every accuracy/F1 number in Sections 3.3–3.4 and the qualitative framing of 3.7 |
+| Content-token top-1/top-5 accuracy for the Large configuration | TODO | Fills the two `[PENDING]` cells in Table~\ref{tab:convergence-capacity} |
+| Section 3.6 (UMAP) qualitative write-up | TODO | Currently bracketed instructions only |
+| Section 3.7 (Nearest-neighbor retrieval) qualitative write-up | TODO | Currently bracketed instructions only; should also report whether retrieved neighbors are RetroRules radius-siblings of the query (trivial) or genuine cross-family matches — `nearest_neighbors.py --exclude-same-group` supports this distinction |
+| `[CITE]` placeholders throughout Methods/Introduction/References | TODO | Required before submission |
+| Data/Software Availability — repository URL, DVC remote/DOI, model run ID | TODO | Required by JCIM |
