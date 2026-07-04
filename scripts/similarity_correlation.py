@@ -34,9 +34,46 @@ import time
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Reaction groups (RetroRules radius-siblings)
+# ---------------------------------------------------------------------------
+
+
+def load_reaction_groups(validated_file: str, smarts_list: list[str]) -> list[str]:
+    """Return one reaction_group id per entry in *smarts_list*, aligned by position.
+
+    Falls back to each SMARTS as its own singleton group when the validated
+    file is missing the ``reaction_group`` column (or a SMARTS has no match),
+    so a sibling-pair breakdown can still be computed (as "no siblings found")
+    rather than crashing.
+    """
+    if not Path(validated_file).exists():
+        logger.warning(
+            "Validated file not found at %s — cannot attach reaction groups; "
+            "sibling-pair breakdown will show 0%% within-group pairs",
+            validated_file,
+        )
+        return list(smarts_list)
+
+    header = pd.read_csv(validated_file, nrows=0).columns
+    if "reaction_group" not in header:
+        logger.warning(
+            "%s has no 'reaction_group' column (re-run `dvc repro` to "
+            "regenerate it) — sibling-pair breakdown will show 0%% within-"
+            "group pairs",
+            validated_file,
+        )
+        return list(smarts_list)
+
+    df = pd.read_csv(validated_file, usecols=["smarts", "reaction_group"])
+    group_map = dict(zip(df["smarts"], df["reaction_group"]))
+    return [group_map.get(s, s) for s in smarts_list]
 
 
 # ---------------------------------------------------------------------------
@@ -79,6 +116,18 @@ def pairwise_cosine(emb: np.ndarray) -> np.ndarray:
     return sim_matrix[i, j]
 
 
+def pairwise_same_group(groups: list[str]) -> np.ndarray:
+    """Return a boolean upper-triangle array, True where a pair shares a
+    ``reaction_group`` (RetroRules radius-siblings), aligned with
+    ``itertools.combinations(range(n), 2)`` / ``np.triu_indices(n, k=1)``
+    ordering (both row-major, so index-compatible with the cosine/Tanimoto
+    arrays computed the same way).
+    """
+    g = np.asarray(groups)
+    i, j = np.triu_indices(len(g), k=1)
+    return g[i] == g[j]
+
+
 # ---------------------------------------------------------------------------
 # Sampling and computation
 # ---------------------------------------------------------------------------
@@ -89,11 +138,16 @@ def sample_and_compute(
     smarts_list: list[str],
     n_reactions: int,
     seed: int,
-) -> tuple[np.ndarray, np.ndarray, int, int]:
-    """Return (cosine_sims, tanimoto_sims, n_sampled, n_pairs).
+    groups: list[str] | None = None,
+) -> tuple[np.ndarray, np.ndarray, int, int, np.ndarray | None]:
+    """Return (cosine_sims, tanimoto_sims, n_sampled, n_pairs, same_group_mask).
 
     Randomly samples *n_reactions* from the full set, computes all pairwise
     similarities, and drops pairs where fingerprint parsing failed.
+    ``same_group_mask`` (aligned with the returned similarity arrays) is
+    ``None`` unless *groups* is provided; it flags pairs that are RetroRules
+    radius-siblings of the same underlying reaction, useful for checking that
+    the correlation isn't dominated by trivial near-duplicate pairs.
     """
     rng = np.random.default_rng(seed)
     n_total = len(smarts_list)
@@ -150,7 +204,17 @@ def sample_and_compute(
     n_pairs = int(keep_arr.sum())
     logger.info("Retained %d pairs (%.1f%% of %d total)", n_pairs, 100 * n_pairs / len(keep_arr), len(keep_arr))
 
-    return cosine_arr, tanimoto_arr, n_reactions, n_pairs
+    same_group_arr = None
+    if groups is not None:
+        sampled_groups = [groups[i] for i in idx]
+        same_group_arr = pairwise_same_group(sampled_groups)[keep_arr]
+        n_within = int(same_group_arr.sum())
+        logger.info(
+            "%d / %d pairs (%.2f%%) are RetroRules radius-siblings (same reaction_group)",
+            n_within, n_pairs, 100 * n_within / n_pairs if n_pairs else 0.0,
+        )
+
+    return cosine_arr, tanimoto_arr, n_reactions, n_pairs, same_group_arr
 
 
 # ---------------------------------------------------------------------------
@@ -158,13 +222,17 @@ def sample_and_compute(
 # ---------------------------------------------------------------------------
 
 
-def compute_stats(cosine: np.ndarray, tanimoto: np.ndarray) -> dict:
+def compute_stats(
+    cosine: np.ndarray,
+    tanimoto: np.ndarray,
+    same_group: np.ndarray | None = None,
+) -> dict:
     from scipy.stats import pearsonr, spearmanr
 
     pearson_r, pearson_p = pearsonr(tanimoto, cosine)
     spearman_r, spearman_p = spearmanr(tanimoto, cosine)
 
-    return {
+    stats = {
         "pearson_r": round(float(pearson_r), 6),
         "pearson_p": float(pearson_p),
         "spearman_r": round(float(spearman_r), 6),
@@ -175,6 +243,25 @@ def compute_stats(cosine: np.ndarray, tanimoto: np.ndarray) -> dict:
         "tanimoto_mean": round(float(tanimoto.mean()), 6),
         "tanimoto_std": round(float(tanimoto.std()), 6),
     }
+
+    if same_group is not None:
+        cross_group = ~same_group
+        n_within = int(same_group.sum())
+        stats["frac_within_group_pairs"] = round(n_within / len(same_group), 6) if len(same_group) else 0.0
+        stats["n_within_group_pairs"] = n_within
+        stats["n_cross_group_pairs"] = int(cross_group.sum())
+        # Robustness check: is the correlation just an artifact of trivial
+        # near-duplicate (radius-sibling) pairs? Recompute on cross-group
+        # pairs only. Requires >=2 cross-group pairs with variance.
+        if cross_group.sum() >= 2:
+            cg_pearson_r, cg_pearson_p = pearsonr(tanimoto[cross_group], cosine[cross_group])
+            cg_spearman_r, cg_spearman_p = spearmanr(tanimoto[cross_group], cosine[cross_group])
+            stats["cross_group_pearson_r"] = round(float(cg_pearson_r), 6)
+            stats["cross_group_pearson_p"] = float(cg_pearson_p)
+            stats["cross_group_spearman_r"] = round(float(cg_spearman_r), 6)
+            stats["cross_group_spearman_p"] = float(cg_spearman_p)
+
+    return stats
 
 
 # ---------------------------------------------------------------------------
@@ -273,6 +360,15 @@ def parse_args() -> argparse.Namespace:
         help="Path to aligned SMARTS .txt (one per line)",
     )
     p.add_argument(
+        "--validated",
+        default="data/processed/validated_smarts.csv",
+        help=(
+            "Validated SMARTS CSV with a 'reaction_group' column, used to "
+            "report the fraction of sampled pairs that are RetroRules "
+            "radius-siblings (default: data/processed/validated_smarts.csv)"
+        ),
+    )
+    p.add_argument(
         "--n-reactions",
         type=int,
         default=1000,
@@ -323,13 +419,15 @@ def main() -> None:
         f"Mismatch: {len(smarts_list)} SMARTS vs {embeddings.shape[0]} embeddings"
     )
 
+    groups = load_reaction_groups(args.validated, smarts_list)
+
     t0_total = time.perf_counter()
-    cosine, tanimoto, n_reactions, n_pairs = sample_and_compute(
-        embeddings, smarts_list, args.n_reactions, args.seed
+    cosine, tanimoto, n_reactions, n_pairs, same_group = sample_and_compute(
+        embeddings, smarts_list, args.n_reactions, args.seed, groups=groups
     )
 
     logger.info("Computing correlation statistics ...")
-    stats = compute_stats(cosine, tanimoto)
+    stats = compute_stats(cosine, tanimoto, same_group=same_group)
     total_time_s = time.perf_counter() - t0_total
 
     logger.info(
@@ -345,6 +443,15 @@ def main() -> None:
         stats["cosine_mean"], stats["cosine_std"],
         stats["tanimoto_mean"], stats["tanimoto_std"],
     )
+    if "cross_group_pearson_r" in stats:
+        logger.info(
+            "  Within-group (sibling) pairs: %d / %d (%.2f%%)\n"
+            "  Cross-group-only  Pearson  r = %.4f\n"
+            "  Cross-group-only  Spearman ρ = %.4f",
+            stats["n_within_group_pairs"], stats["n_pairs"],
+            100 * stats["frac_within_group_pairs"],
+            stats["cross_group_pearson_r"], stats["cross_group_spearman_r"],
+        )
 
     plot_correlation(
         cosine, tanimoto, stats,
@@ -361,6 +468,7 @@ def main() -> None:
             "meta": {
                 "embeddings_path": args.embeddings,
                 "smarts_path": args.smarts,
+                "validated_path": args.validated,
                 "n_reactions_total": embeddings.shape[0],
                 "n_reactions_sampled": n_reactions,
                 "n_pairs": n_pairs,

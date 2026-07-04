@@ -85,6 +85,36 @@ def load_ec_labels(raw_files: list[str], smarts_set: set[str]) -> dict[str, str]
     return dict(zip(raw["TEMPLATE"], raw["ECS"].fillna("")))
 
 
+def load_reaction_groups(validated_file: str, smarts_set: set[str]) -> dict[str, str]:
+    """Return {smarts: reaction_group} for SMARTS present in *smarts_set*.
+
+    RetroRules generates several templates per underlying reaction at
+    different context radii (see load_data.py); templates sharing a group
+    are near-duplicate siblings, which makes them a trivial (uninteresting)
+    "success" for nearest-neighbor retrieval. Returns {} if the validated
+    file or its reaction_group column is unavailable, so callers degrade to
+    "no sibling info" rather than crashing.
+    """
+    if not Path(validated_file).exists():
+        logger.warning(
+            "Validated file not found, skipping reaction-group tagging: %s", validated_file
+        )
+        return {}
+
+    header = pd.read_csv(validated_file, nrows=0).columns
+    if "reaction_group" not in header:
+        logger.warning(
+            "%s has no 'reaction_group' column (re-run `dvc repro`) — "
+            "skipping sibling tagging",
+            validated_file,
+        )
+        return {}
+
+    df = pd.read_csv(validated_file, usecols=["smarts", "reaction_group"])
+    df = df[df["smarts"].isin(smarts_set)]
+    return dict(zip(df["smarts"], df["reaction_group"]))
+
+
 def top_ec_class(ecs: str) -> str:
     """Extract the top-level EC class digit from an ECS string."""
     if not ecs or not ecs.strip():
@@ -112,14 +142,19 @@ def find_neighbors(
     embeddings: np.ndarray,
     k: int,
     metric: str,
+    exclude_indices: set[int] | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Return (indices, scores) of the k nearest neighbors, excluding the query itself."""
+    """Return (indices, scores) of the k nearest neighbors, excluding the
+    query itself and, when given, ``exclude_indices`` (e.g. same-group
+    RetroRules radius-siblings, which are a trivial "success" for retrieval)."""
     query_vec = embeddings[query_idx]
+    exclude = np.fromiter(exclude_indices or (), dtype=np.int64)
 
     if metric == "cosine":
         scores = cosine_similarity(query_vec, embeddings)
         # Higher cosine similarity = closer; exclude query itself
         scores[query_idx] = -np.inf
+        scores[exclude] = -np.inf
         top_idx = np.argsort(scores)[::-1][:k]
         return top_idx, scores[top_idx]
 
@@ -127,6 +162,7 @@ def find_neighbors(
     diffs = embeddings - query_vec
     distances = np.linalg.norm(diffs, axis=1)
     distances[query_idx] = np.inf
+    distances[exclude] = np.inf
     top_idx = np.argsort(distances)[:k]
     return top_idx, distances[top_idx]
 
@@ -147,11 +183,13 @@ def print_results(
     neighbor_scores: np.ndarray,
     ec_map: dict[str, str],
     metric: str,
+    group_map: dict[str, str] | None = None,
 ) -> None:
     query_smarts = smarts_list[query_idx]
     query_ecs = ec_map.get(query_smarts, "")
     query_cls = top_ec_class(query_ecs)
     query_name = _EC_NAMES.get(query_cls, "Unknown")
+    query_group = (group_map or {}).get(query_smarts)
 
     print("\n" + "=" * 72)
     print("QUERY REACTION")
@@ -167,13 +205,21 @@ def print_results(
 
     all_cls = [query_cls] + [top_ec_class(ec_map.get(smarts_list[i], "")) for i in neighbor_indices]
     n_same_class = sum(1 for c in all_cls[1:] if c == query_cls and query_cls != "?")
+    n_same_group = 0
 
     for rank, (idx, score) in enumerate(zip(neighbor_indices, neighbor_scores), start=1):
         s = smarts_list[idx]
         ecs = ec_map.get(s, "")
         cls = top_ec_class(ecs)
         name = _EC_NAMES.get(cls, "Unknown")
-        match = " <-- same EC class" if cls == query_cls and query_cls != "?" else ""
+        same_group = query_group is not None and (group_map or {}).get(s) == query_group
+        n_same_group += same_group
+        tags = []
+        if cls == query_cls and query_cls != "?":
+            tags.append("same EC class")
+        if same_group:
+            tags.append("RetroRules radius-sibling")
+        match = f" <-- {', '.join(tags)}" if tags else ""
         print(f"  #{rank}  [{score:+.4f}]  EC {cls} ({name}){match}")
         print(f"       Index : {idx}")
         print(f"       SMARTS: {format_smarts(s)}")
@@ -188,6 +234,12 @@ def print_results(
         )
     else:
         print("  Query has no EC label — cannot assess class agreement.")
+    if group_map:
+        print(
+            f"  {n_same_group} / {len(neighbor_indices)} neighbors are RetroRules "
+            "radius-siblings of the query (trivial near-duplicates, not "
+            "evidence of learned chemistry)"
+        )
     print("=" * 72 + "\n")
 
 
@@ -206,16 +258,19 @@ def build_json_output(
     args: argparse.Namespace,
     search_time_s: float,
     load_time_s: float,
+    group_map: dict[str, str] | None = None,
 ) -> dict:
     query_smarts = smarts_list[query_idx]
     query_ecs = ec_map.get(query_smarts, "")
     query_cls = top_ec_class(query_ecs)
+    query_group = (group_map or {}).get(query_smarts)
 
     neighbors = []
     for rank, (idx, score) in enumerate(zip(neighbor_indices, neighbor_scores), start=1):
         s = smarts_list[int(idx)]
         ecs = ec_map.get(s, "")
         cls = top_ec_class(ecs)
+        same_group = query_group is not None and (group_map or {}).get(s) == query_group
         neighbors.append(
             {
                 "rank": rank,
@@ -226,10 +281,12 @@ def build_json_output(
                 "ec_name": _EC_NAMES.get(cls, "Unknown"),
                 "score": float(score),
                 "same_ec_class": cls == query_cls and query_cls != "?",
+                "same_group_as_query": same_group,
             }
         )
 
     n_same = sum(1 for n in neighbors if n["same_ec_class"])
+    n_same_group = sum(1 for n in neighbors if n["same_group_as_query"])
 
     return {
         "meta": {
@@ -242,6 +299,7 @@ def build_json_output(
             "random_seed": args.seed,
             "load_time_s": round(load_time_s, 3),
             "search_time_s": round(search_time_s, 3),
+            "exclude_same_group": bool(getattr(args, "exclude_same_group", False)),
         },
         "query": {
             "index": query_idx,
@@ -249,11 +307,14 @@ def build_json_output(
             "ecs": query_ecs,
             "ec_class": query_cls,
             "ec_name": _EC_NAMES.get(query_cls, "Unknown"),
+            "reaction_group": query_group,
         },
         "neighbors": neighbors,
         "summary": {
             "n_same_ec_class": n_same,
             "fraction_same_ec_class": n_same / len(neighbors) if neighbors else 0.0,
+            "n_same_group_as_query": n_same_group,
+            "fraction_same_group_as_query": n_same_group / len(neighbors) if neighbors else 0.0,
         },
     }
 
@@ -325,6 +386,24 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Save results to this JSON file (for report generation). Omit to skip.",
     )
+    p.add_argument(
+        "--validated",
+        default="data/processed/validated_smarts.csv",
+        help=(
+            "Validated SMARTS CSV with a 'reaction_group' column, used to "
+            "tag/exclude RetroRules radius-siblings of the query "
+            "(default: data/processed/validated_smarts.csv)"
+        ),
+    )
+    p.add_argument(
+        "--exclude-same-group",
+        action="store_true",
+        help=(
+            "Exclude RetroRules radius-siblings of the query from the "
+            "candidate pool, so retrieved neighbors reflect genuine "
+            "cross-family similarity rather than trivial near-duplicates."
+        ),
+    )
     return p.parse_args()
 
 
@@ -367,6 +446,29 @@ def main() -> None:
     ec_map = load_ec_labels(args.raw, set(smarts_list))
     logger.info("  %d / %d SMARTS have EC labels", len(ec_map), len(smarts_list))
 
+    # Reaction groups (RetroRules radius-siblings)
+    logger.info("Loading reaction groups ...")
+    group_map = load_reaction_groups(args.validated, set(smarts_list))
+    logger.info("  %d / %d SMARTS have a reaction group", len(group_map), len(smarts_list))
+
+    exclude_indices = None
+    if args.exclude_same_group:
+        query_reaction_group = group_map.get(smarts_list[query_idx])
+        if query_reaction_group is None:
+            logger.warning(
+                "Query has no reaction group — --exclude-same-group has no effect"
+            )
+        else:
+            exclude_indices = {
+                i for i, s in enumerate(smarts_list)
+                if group_map.get(s) == query_reaction_group
+            }
+            exclude_indices.discard(query_idx)
+            logger.info(
+                "Excluding %d same-group siblings from the candidate pool",
+                len(exclude_indices),
+            )
+
     # Search
     logger.info(
         "Finding top-%d neighbors for query index %d (metric=%s) ...",
@@ -376,7 +478,8 @@ def main() -> None:
     )
     t_search = time.perf_counter()
     neighbor_indices, neighbor_scores = find_neighbors(
-        query_idx, embeddings, k=args.top_k, metric=args.metric
+        query_idx, embeddings, k=args.top_k, metric=args.metric,
+        exclude_indices=exclude_indices,
     )
     search_time_s = time.perf_counter() - t_search
     logger.info("  Search completed in %.3f s", search_time_s)
@@ -388,6 +491,7 @@ def main() -> None:
         neighbor_scores=neighbor_scores,
         ec_map=ec_map,
         metric=args.metric,
+        group_map=group_map,
     )
 
     if args.output:
@@ -401,6 +505,7 @@ def main() -> None:
             neighbor_scores=neighbor_scores,
             ec_map=ec_map,
             args=args,
+            group_map=group_map,
             search_time_s=search_time_s,
             load_time_s=load_time_s,
         )
