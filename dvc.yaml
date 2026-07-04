@@ -7,12 +7,14 @@ stages:
       - data/raw/retrorules-v3.0-rhea.csv
     outs:
       - data/processed/clean_smarts.txt
+      - data/processed/reaction_groups.csv
 
   validate_smarts:
     cmd: python src/smart_rxn_embeddings/preprocessing/validate_smarts.py
     deps:
       - src/smart_rxn_embeddings/preprocessing/validate_smarts.py
       - data/processed/clean_smarts.txt
+      - data/processed/reaction_groups.csv
     outs:
       - data/processed/validated_smarts.csv
 

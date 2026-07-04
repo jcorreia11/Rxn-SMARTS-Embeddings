@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 INPUT_FILE = "data/processed/clean_smarts.txt"
 OUTPUT_FILE = "data/processed/validated_smarts.csv"
+GROUPS_FILE = "data/processed/reaction_groups.csv"
 
 
 def _extract(smarts: str) -> dict:
@@ -69,12 +70,35 @@ def validate(smarts_list: list[str]) -> pd.DataFrame:
     return pd.DataFrame(records)
 
 
-def main(input_file: str, output_file: str) -> None:
+def attach_reaction_groups(df: pd.DataFrame, groups_file: str) -> pd.DataFrame:
+    """Left-join the ``reaction_group`` column produced by ``load_data.py``.
+
+    Falls back to each row's own SMARTS as a singleton group when the
+    mapping file is missing, or for any row without a match, so the column
+    is always present and never null.
+    """
+    if Path(groups_file).exists():
+        groups = pd.read_csv(groups_file)
+        df = df.merge(groups, on="smarts", how="left")
+    else:
+        logger.warning(
+            "Reaction-groups file not found at %s — using SMARTS as group for all rows",
+            groups_file,
+        )
+        df = df.copy()
+        df["reaction_group"] = pd.NA
+
+    df["reaction_group"] = df["reaction_group"].fillna(df["smarts"])
+    return df
+
+
+def main(input_file: str, output_file: str, groups_file: str = GROUPS_FILE) -> None:
     smarts_list = Path(input_file).read_text().splitlines()
     smarts_list = [s.strip() for s in smarts_list if s.strip()]
     logger.info("Loaded %d SMARTS from %s", len(smarts_list), input_file)
 
     df = validate(smarts_list)
+    df = attach_reaction_groups(df, groups_file)
 
     Path(output_file).parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(output_file, index=False)
@@ -87,6 +111,7 @@ if __name__ == "__main__":  # pragma: no cover
     parser = argparse.ArgumentParser(description="Validate SMARTS with RDKit.")
     parser.add_argument("--input", default=INPUT_FILE)
     parser.add_argument("--output", default=OUTPUT_FILE)
+    parser.add_argument("--groups", default=GROUPS_FILE)
     args = parser.parse_args()
 
-    main(args.input, args.output)
+    main(args.input, args.output, args.groups)
