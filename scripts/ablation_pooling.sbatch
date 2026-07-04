@@ -46,6 +46,10 @@ N_SAMPLES="${N_SAMPLES:-10000}"
 EC_DEPTH="${EC_DEPTH:-1}"
 FOLDS="${FOLDS:-5}"
 EMBED_BATCH_SIZE="${EMBED_BATCH_SIZE:-64}"
+# 'group' (default) keeps RetroRules radius-siblings together, avoiding
+# train/test leakage. 'random' reproduces the old leaky split — only for
+# before/after comparison via generate_split_comparison_report.py.
+SPLIT_STRATEGY="${SPLIT_STRATEGY:-group}"
 
 RUN_ID="pooling_ablation_${SLURM_JOB_ID}"
 OUTPUT_JSON="${OUTPUT_JSON:-results/${RUN_ID}.json}"
@@ -62,6 +66,7 @@ echo "N samples:        ${N_SAMPLES}"
 echo "EC depth:         ${EC_DEPTH}"
 echo "CV folds:         ${FOLDS}"
 echo "Embed batch size: ${EMBED_BATCH_SIZE}"
+echo "Split strategy:   ${SPLIT_STRATEGY}"
 echo "Results JSON:     ${OUTPUT_JSON}"
 echo "Report:           ${OUTPUT_REPORT}"
 
@@ -81,6 +86,7 @@ python scripts/ablation_pooling.py \
     --ec-depth          "${EC_DEPTH}" \
     --folds             "${FOLDS}" \
     --embed-batch-size  "${EMBED_BATCH_SIZE}" \
+    --split-strategy    "${SPLIT_STRATEGY}" \
     --output            "${OUTPUT_JSON}"
 
 # ---- generate report ----

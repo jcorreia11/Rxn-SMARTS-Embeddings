@@ -37,6 +37,10 @@ SP_MODEL="${SP_MODEL:-data/processed/sp_tokenizer.model}"
 EC_DEPTH="${EC_DEPTH:-1}"
 N_SAMPLES="${N_SAMPLES:-10000}"
 FOLDS="${FOLDS:-5}"
+# 'group' (default) keeps RetroRules radius-siblings together, avoiding
+# train/test leakage. 'random' reproduces the old leaky split — only for
+# before/after comparison via generate_split_comparison_report.py.
+SPLIT_STRATEGY="${SPLIT_STRATEGY:-group}"
 
 # Embedding experiment — set these to enable pretrained/random embedding runs.
 # Leave WEIGHTS empty to skip embedding experiments and run TF-IDF only.
@@ -59,6 +63,7 @@ echo "SP model:         ${SP_MODEL}"
 echo "EC depth:         ${EC_DEPTH}"
 echo "N samples:        ${N_SAMPLES}"
 echo "Folds:            ${FOLDS}"
+echo "Split strategy:   ${SPLIT_STRATEGY}"
 echo "Results JSON:     ${OUTPUT}"
 echo "Environment JSON: ${ENV_JSON}"
 echo "Report:           ${REPORT}"
@@ -84,6 +89,7 @@ ARGS=(
     --ec-depth        "${EC_DEPTH}"
     --n-samples       "${N_SAMPLES}"
     --folds           "${FOLDS}"
+    --split-strategy  "${SPLIT_STRATEGY}"
     --output          "${OUTPUT}"
 )
 

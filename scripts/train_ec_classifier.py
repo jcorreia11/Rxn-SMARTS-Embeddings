@@ -36,15 +36,16 @@ import warnings
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
-from sklearn.model_selection import StratifiedKFold, cross_validate, train_test_split
+from sklearn.model_selection import StratifiedGroupKFold, cross_validate, train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
+from smart_rxn_embeddings.evaluation.ec_labels import load_labelled_smarts
+from smart_rxn_embeddings.evaluation.splitting import stratified_group_holdout_split
 from smart_rxn_embeddings.tokenization.smarts_tokenizer import SmartsTokenizer
 from smart_rxn_embeddings.tokenization.sentencepiece_tokenizer import (
     SentencePieceTokenizer,
@@ -66,78 +67,9 @@ RANDOM_SEED = 42
 
 
 # ---------------------------------------------------------------------------
-# Data loading
+# Data loading — see smart_rxn_embeddings.evaluation.ec_labels for
+# load_labelled_smarts() / primary_ec(), shared with ablation_pooling.py.
 # ---------------------------------------------------------------------------
-
-
-def _primary_ec(ecs_field: str, depth: int) -> str | None:
-    """Return the first EC number truncated to *depth* levels, or None."""
-    if not isinstance(ecs_field, str) or not ecs_field.strip():
-        return None
-    first = ecs_field.split(";")[0].strip()
-    if not first:
-        return None
-    parts = first.split(".")
-    return ".".join(parts[:depth])
-
-
-def load_labelled_smarts(
-    raw_files: list[str],
-    validated_file: str,
-    ec_depth: int,
-    n_samples: int | None,
-    random_seed: int,
-) -> pd.DataFrame:
-    """Return a DataFrame with columns [smarts, label]."""
-    # --- EC labels from raw files ---
-    frames = []
-    for p in raw_files:
-        df = pd.read_csv(p, usecols=["TEMPLATE", "ECS", "VALID"])
-        frames.append(df)
-    raw = pd.concat(frames, ignore_index=True)
-    raw = raw[raw["VALID"].astype(str).str.upper() == "TRUE"]
-    raw["label"] = raw["ECS"].apply(lambda x: _primary_ec(x, ec_depth))
-    raw = raw.dropna(subset=["label"])
-    raw = raw.rename(columns={"TEMPLATE": "smarts"})
-    raw = raw.drop_duplicates(subset="smarts")
-    ec_map = raw.set_index("smarts")["label"].to_dict()
-    logger.info("EC map built: %d labelled SMARTS", len(ec_map))
-
-    # --- Intersection with validated SMARTS ---
-    val = pd.read_csv(validated_file)
-    val = val[val["valid"].astype(str).str.upper() == "TRUE"]
-    val = val.dropna(subset=["smarts"])
-    val["label"] = val["smarts"].map(ec_map)
-    val = val.dropna(subset=["label"])
-    logger.info("After join with validated set: %d SMARTS with EC labels", len(val))
-
-    # --- Drop classes too rare to survive stratified splitting ---
-    min_count = max(10, int(n_samples / len(val) * 10) + 2) if n_samples else 10
-    class_counts = val["label"].value_counts()
-    valid_classes = class_counts[class_counts >= min_count].index
-    dropped = sorted(set(class_counts.index) - set(valid_classes))
-    if dropped:
-        logger.info("Dropping %d rare classes (<%d samples): %s", len(dropped), min_count, dropped)
-        val = val[val["label"].isin(valid_classes)].reset_index(drop=True)
-
-    # --- Class balance summary ---
-    counts = val["label"].value_counts()
-    logger.info("Class distribution:\n%s", counts.to_string())
-
-    # --- Optional sample (stratified) ---
-    if n_samples and n_samples < len(val):
-        total = len(val)
-        sampled = [
-            group.sample(
-                min(len(group), max(1, int(n_samples * len(group) / total))),
-                random_state=random_seed,
-            )
-            for _, group in val.groupby("label")
-        ]
-        val = pd.concat(sampled).sample(frac=1, random_state=random_seed).reset_index(drop=True)
-        logger.info("Sampled %d SMARTS (stratified)", len(val))
-
-    return val[["smarts", "label"]].reset_index(drop=True)
 
 
 # ---------------------------------------------------------------------------
@@ -211,12 +143,13 @@ def evaluate(
     y_train: np.ndarray,
     X_test: list[str],
     y_test: np.ndarray,
+    groups_train: np.ndarray,
     n_folds: int,
     label_names: list[str],
 ) -> dict:
     import time
 
-    cv = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=RANDOM_SEED)
+    cv = StratifiedGroupKFold(n_splits=n_folds, shuffle=True, random_state=RANDOM_SEED)
 
     t0_cv = time.perf_counter()
     with warnings.catch_warnings():
@@ -225,6 +158,7 @@ def evaluate(
             pipeline,
             X_train,
             y_train,
+            groups=groups_train,
             cv=cv,
             scoring=["accuracy", "f1_macro", "f1_weighted"],
             return_train_score=False,
@@ -337,6 +271,7 @@ def evaluate_embeddings(
     X_emb_test: np.ndarray,
     y_train: np.ndarray,
     y_test: np.ndarray,
+    groups_train: np.ndarray,
     n_folds: int,
     label_names: list[str],
     head: str = "logreg",
@@ -351,23 +286,27 @@ def evaluate_embeddings(
         Precomputed embedding arrays of shape ``(N, d)``.
     head:
         ``"logreg"`` or ``"mlp"``.
+
+    The ``StandardScaler`` is fit inside the cross-validated pipeline (not
+    once on the full training split beforehand) so no fold's held-out
+    portion leaks into the scaling statistics used to transform it.
     """
     import time
 
-    scaler = StandardScaler()
-    X_tr = scaler.fit_transform(X_emb_train)
-    X_te = scaler.transform(X_emb_test)
+    def _make_pipeline() -> Pipeline:
+        return Pipeline(
+            [("scaler", StandardScaler()), ("clf", _build_embedding_classifier(head))]
+        )
 
-    clf = _build_embedding_classifier(head)
-
-    cv = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=RANDOM_SEED)
+    cv = StratifiedGroupKFold(n_splits=n_folds, shuffle=True, random_state=RANDOM_SEED)
     t0_cv = time.perf_counter()
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         scores = cross_validate(
-            _build_embedding_classifier(head),  # fresh instance for CV
-            X_tr,
+            _make_pipeline(),
+            X_emb_train,
             y_train,
+            groups=groups_train,
             cv=cv,
             scoring=["accuracy", "f1_macro", "f1_weighted"],
             return_train_score=False,
@@ -375,10 +314,11 @@ def evaluate_embeddings(
         )
     cv_time_s = time.perf_counter() - t0_cv
 
+    pipeline = _make_pipeline()
     t0_fit = time.perf_counter()
-    clf.fit(X_tr, y_train)
+    pipeline.fit(X_emb_train, y_train)
     fit_time_s = time.perf_counter() - t0_fit
-    y_pred = clf.predict(X_te)
+    y_pred = pipeline.predict(X_emb_test)
 
     result = {
         "name": name,
@@ -600,6 +540,17 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Optional path to write results as JSON",
     )
+    parser.add_argument(
+        "--split-strategy",
+        default="group",
+        choices=["group", "random"],
+        help=(
+            "'group' (default) keeps RetroRules radius-siblings (same "
+            "reaction_group) together, avoiding train/test leakage. "
+            "'random' reproduces the old plain-stratified split, kept only "
+            "for before/after comparison — do not use for reported numbers."
+        ),
+    )
 
     # --- Embedding-based experiments ---
     emb = parser.add_argument_group(
@@ -644,12 +595,19 @@ def main() -> None:
     n_samples = args.n_samples if args.n_samples > 0 else None
 
     logger.info("Loading labelled SMARTS (EC depth=%d)...", args.ec_depth)
-    df = load_labelled_smarts(
+    df, n_available = load_labelled_smarts(
         args.raw,
         args.validated,
         args.ec_depth,
         n_samples,
         RANDOM_SEED,
+    )
+    logger.info(
+        "%d labelled templates available (post rare-class filter) — using %d "
+        "(n_samples=%s)",
+        n_available,
+        len(df),
+        n_samples if n_samples else "all",
     )
 
     import time as _time
@@ -657,22 +615,34 @@ def main() -> None:
     t0_total = _time.perf_counter()
 
     X = df["smarts"].tolist()
+    groups = df["group"].to_numpy()
     le = LabelEncoder()
     y = le.fit_transform(df["label"])
     label_names = list(le.classes_)
     logger.info("Labels: %s", label_names)
 
-    # Stratified 80/20 train/test split — CV runs on train, report on test
+    # 80/20 train/test split — CV runs on train, report on test.
+    # 'group' keeps RetroRules radius-siblings (same reaction_group) on one
+    # side of the split; 'random' is the old leaky behavior, kept only for
+    # before/after comparison (see --split-strategy help).
     indices = np.arange(len(X))
-    train_idx, test_idx, y_train, y_test = train_test_split(
-        indices, y, test_size=0.2, stratify=y, random_state=RANDOM_SEED
-    )
+    if args.split_strategy == "group":
+        train_idx, test_idx = stratified_group_holdout_split(
+            y, groups, test_size=0.2, seed=RANDOM_SEED
+        )
+    else:
+        train_idx, test_idx = train_test_split(
+            indices, test_size=0.2, stratify=y, random_state=RANDOM_SEED
+        )
+    y_train, y_test = y[train_idx], y[test_idx]
+    groups_train = groups[train_idx]
     X_train = [X[i] for i in train_idx]
     X_test = [X[i] for i in test_idx]
     logger.info(
-        "Train: %d samples | Test: %d samples (stratified 80/20)",
+        "Train: %d samples | Test: %d samples (80/20, split_strategy=%s)",
         len(X_train),
         len(X_test),
+        args.split_strategy,
     )
 
     results: list[dict] = []
@@ -688,6 +658,7 @@ def main() -> None:
             y_train,
             X_test,
             y_test,
+            groups_train,
             args.folds,
             label_names,
         )
@@ -720,6 +691,7 @@ def main() -> None:
             y_train,
             X_test,
             y_test,
+            groups_train,
             args.folds,
             label_names,
         )
@@ -780,6 +752,7 @@ def main() -> None:
                     X_emb_test,
                     y_train,
                     y_test,
+                    groups_train,
                     args.folds,
                     label_names,
                     head=head,
@@ -794,6 +767,7 @@ def main() -> None:
                     X_emb_rand_test,
                     y_train,
                     y_test,
+                    groups_train,
                     args.folds,
                     label_names,
                     head=head,
@@ -821,8 +795,10 @@ def main() -> None:
             "date": _date.today().isoformat(),
             "ec_depth": args.ec_depth,
             "n_samples_requested": args.n_samples if args.n_samples > 0 else "all",
+            "n_available": n_available,
             "n_samples_actual": len(X),
-            "train_test_split": "80/20 stratified",
+            "split_strategy": args.split_strategy,
+            "train_test_split": f"80/20 ({args.split_strategy}-aware, stratified)",
             "random_seed": RANDOM_SEED,
             "folds": args.folds,
             "label_names": label_names,
