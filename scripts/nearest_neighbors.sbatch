@@ -42,6 +42,13 @@ QUERY_MODE="${QUERY_MODE:-index}"
 QUERY_INDEX="${QUERY_INDEX:-0}"
 QUERY_SMARTS="${QUERY_SMARTS:-}"
 
+# Label only (small/medium/large) — used to mirror artifacts into
+# results/final/3d-nearest-neighbors/${MODEL_SIZE}/ for easy browsing.
+MODEL_SIZE="${MODEL_SIZE:-unspecified}"
+# Optional label for ad-hoc example queries (e.g. "ec1_query") so they can
+# be mirrored alongside the main run without overwriting results.json.
+QUERY_LABEL="${QUERY_LABEL:-}"
+
 # Derive a run ID from the job ID for unique output paths
 RUN_ID="nn_${SLURM_JOB_ID}"
 OUTPUT_JSON="${OUTPUT_JSON:-results/${RUN_ID}.json}"
@@ -65,6 +72,8 @@ elif [ "${QUERY_MODE}" = "smarts" ]; then
 fi
 echo "Results JSON: ${OUTPUT_JSON}"
 echo "Report:       ${OUTPUT_REPORT}"
+echo "Model size:   ${MODEL_SIZE}"
+echo "Query label:  ${QUERY_LABEL:-<none>}"
 
 # ---- collect environment info ----
 echo ""
@@ -109,6 +118,25 @@ echo ""
 echo "=== Committing results to git ($(date)) ==="
 git add "${OUTPUT_JSON}" "${OUTPUT_ENV}" "${OUTPUT_REPORT}"
 git commit -m "[results] Nearest neighbors (run ${RUN_ID})"
+
+# ---- mirror into results/final/ for easy browsing ----
+# (local convenience copy only, gitignored — the flat results/ files above,
+# git-tracked, remain the actual backed-up record)
+echo ""
+echo "=== Mirroring artifacts into results/final/3d-nearest-neighbors/${MODEL_SIZE}/ ($(date)) ==="
+MIRROR_DIR="results/final/3d-nearest-neighbors/${MODEL_SIZE}"
+mkdir -p "${MIRROR_DIR}"
+if [ -n "${QUERY_LABEL}" ]; then
+    cp "${OUTPUT_JSON}"   "${MIRROR_DIR}/${QUERY_LABEL}.json"
+    cp "${OUTPUT_ENV}"    "${MIRROR_DIR}/${QUERY_LABEL}_env.json"
+    cp "${OUTPUT_REPORT}" "${MIRROR_DIR}/${QUERY_LABEL}_report.md"
+else
+    cp "${OUTPUT_JSON}"   "${MIRROR_DIR}/results.json"
+    cp "${OUTPUT_ENV}"    "${MIRROR_DIR}/env.json"
+    cp "${OUTPUT_REPORT}" "${MIRROR_DIR}/report.md"
+fi
+cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.out" "${MIRROR_DIR}/" 2>/dev/null || true
+cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.err" "${MIRROR_DIR}/" 2>/dev/null || true
 
 echo "=== Job finished on $(date) ==="
 

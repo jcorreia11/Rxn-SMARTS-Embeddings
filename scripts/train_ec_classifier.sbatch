@@ -41,6 +41,9 @@ FOLDS="${FOLDS:-5}"
 # train/test leakage. 'random' reproduces the old leaky split — only for
 # before/after comparison via generate_split_comparison_report.py.
 SPLIT_STRATEGY="${SPLIT_STRATEGY:-group}"
+# Label only (small/medium/large) — used with EC_DEPTH to mirror artifacts
+# into results/final/3b-ec-classifier/${MODEL_SIZE}/depth${EC_DEPTH}/.
+MODEL_SIZE="${MODEL_SIZE:-unspecified}"
 
 # Embedding experiment — set these to enable pretrained/random embedding runs.
 # Leave WEIGHTS empty to skip embedding experiments and run TF-IDF only.
@@ -64,6 +67,7 @@ echo "EC depth:         ${EC_DEPTH}"
 echo "N samples:        ${N_SAMPLES}"
 echo "Folds:            ${FOLDS}"
 echo "Split strategy:   ${SPLIT_STRATEGY}"
+echo "Model size:       ${MODEL_SIZE}"
 echo "Results JSON:     ${OUTPUT}"
 echo "Environment JSON: ${ENV_JSON}"
 echo "Report:           ${REPORT}"
@@ -129,6 +133,20 @@ echo ""
 echo "=== Committing results to git ($(date)) ==="
 git add "${OUTPUT}" "${ENV_JSON}" "${REPORT}" "${REPORT%.md}.pdf"
 git commit -m "[results] EC classifier (run ${RUN_ID})"
+
+# ---- mirror into results/final/ for easy browsing ----
+# (local convenience copy only, gitignored — the flat results/ files above,
+# git-tracked, remain the actual backed-up record)
+echo ""
+echo "=== Mirroring artifacts into results/final/3b-ec-classifier/${MODEL_SIZE}/depth${EC_DEPTH}/ ($(date)) ==="
+MIRROR_DIR="results/final/3b-ec-classifier/${MODEL_SIZE}/depth${EC_DEPTH}"
+mkdir -p "${MIRROR_DIR}"
+cp "${OUTPUT}" "${MIRROR_DIR}/results.json"
+cp "${ENV_JSON}" "${MIRROR_DIR}/env.json"
+cp "${REPORT}" "${MIRROR_DIR}/report.md"
+cp "${REPORT%.md}.pdf" "${MIRROR_DIR}/report.pdf"
+cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.out" "${MIRROR_DIR}/" 2>/dev/null || true
+cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.err" "${MIRROR_DIR}/" 2>/dev/null || true
 
 echo "=== Job finished on $(date) ==="
 

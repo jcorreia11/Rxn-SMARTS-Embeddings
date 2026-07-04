@@ -50,11 +50,15 @@ EMBED_BATCH_SIZE="${EMBED_BATCH_SIZE:-64}"
 # train/test leakage. 'random' reproduces the old leaky split — only for
 # before/after comparison via generate_split_comparison_report.py.
 SPLIT_STRATEGY="${SPLIT_STRATEGY:-group}"
+# Label only (small/medium/large) — used to mirror artifacts into
+# results/final/3a-pooling-ablation/${MODEL_SIZE}/ for easy browsing.
+MODEL_SIZE="${MODEL_SIZE:-unspecified}"
 
 RUN_ID="pooling_ablation_${SLURM_JOB_ID}"
 OUTPUT_JSON="${OUTPUT_JSON:-results/${RUN_ID}.json}"
 OUTPUT_ENV="${OUTPUT_ENV:-results/${RUN_ID}_env.json}"
 OUTPUT_REPORT="${OUTPUT_REPORT:-results/${RUN_ID}_report.md}"
+OUTPUT_FIGURE="${OUTPUT_REPORT%.md}.pdf"
 
 mkdir -p results
 
@@ -67,6 +71,7 @@ echo "EC depth:         ${EC_DEPTH}"
 echo "CV folds:         ${FOLDS}"
 echo "Embed batch size: ${EMBED_BATCH_SIZE}"
 echo "Split strategy:   ${SPLIT_STRATEGY}"
+echo "Model size:       ${MODEL_SIZE}"
 echo "Results JSON:     ${OUTPUT_JSON}"
 echo "Report:           ${OUTPUT_REPORT}"
 
@@ -105,8 +110,22 @@ echo "Report:       ${OUTPUT_REPORT}"
 # ---- commit results to git ----
 echo ""
 echo "=== Committing results to git ($(date)) ==="
-git add "${OUTPUT_JSON}" "${OUTPUT_ENV}" "${OUTPUT_REPORT}"
+git add "${OUTPUT_JSON}" "${OUTPUT_ENV}" "${OUTPUT_REPORT}" "${OUTPUT_FIGURE}"
 git commit -m "[results] Pooling ablation (run ${RUN_ID})"
+
+# ---- mirror into results/final/ for easy browsing ----
+# (local convenience copy only, gitignored — the flat results/ files above,
+# git-tracked, remain the actual backed-up record)
+echo ""
+echo "=== Mirroring artifacts into results/final/3a-pooling-ablation/${MODEL_SIZE}/ ($(date)) ==="
+MIRROR_DIR="results/final/3a-pooling-ablation/${MODEL_SIZE}"
+mkdir -p "${MIRROR_DIR}"
+cp "${OUTPUT_JSON}" "${MIRROR_DIR}/results.json"
+cp "${OUTPUT_ENV}" "${MIRROR_DIR}/env.json"
+cp "${OUTPUT_REPORT}" "${MIRROR_DIR}/report.md"
+cp "${OUTPUT_FIGURE}" "${MIRROR_DIR}/report.pdf"
+cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.out" "${MIRROR_DIR}/" 2>/dev/null || true
+cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.err" "${MIRROR_DIR}/" 2>/dev/null || true
 
 echo "=== Job finished on $(date) ==="
 

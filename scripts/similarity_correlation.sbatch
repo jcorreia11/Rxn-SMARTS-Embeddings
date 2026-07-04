@@ -37,6 +37,9 @@ SEED="${SEED:-42}"
 FORMAT="${FORMAT:-pdf}"
 DPI="${DPI:-300}"
 GRIDSIZE="${GRIDSIZE:-50}"
+# Label only (small/medium/large) — used to mirror artifacts into
+# results/final/3c-similarity-correlation/${MODEL_SIZE}/ for easy browsing.
+MODEL_SIZE="${MODEL_SIZE:-unspecified}"
 
 RUN_ID="sim_corr_${SLURM_JOB_ID}"
 OUTPUT_FIG="${OUTPUT_FIG:-results/figures/${RUN_ID}}"
@@ -54,6 +57,7 @@ echo "Seed:        ${SEED}"
 echo "Figure:      ${OUTPUT_FIG}.${FORMAT}"
 echo "JSON:        ${OUTPUT_JSON}"
 echo "Report:      ${OUTPUT_REPORT}"
+echo "Model size:  ${MODEL_SIZE}"
 
 # ---- collect environment info ----
 echo ""
@@ -94,6 +98,20 @@ echo ""
 echo "=== Committing results to git ($(date)) ==="
 git add "${OUTPUT_FIG}.${FORMAT}" "${OUTPUT_JSON}" "${OUTPUT_ENV}" "${OUTPUT_REPORT}"
 git commit -m "[results] Similarity correlation (run ${RUN_ID}, N=${N_REACTIONS})"
+
+# ---- mirror into results/final/ for easy browsing ----
+# (local convenience copy only, gitignored — the flat results/ files above,
+# git-tracked, remain the actual backed-up record)
+echo ""
+echo "=== Mirroring artifacts into results/final/3c-similarity-correlation/${MODEL_SIZE}/ ($(date)) ==="
+MIRROR_DIR="results/final/3c-similarity-correlation/${MODEL_SIZE}"
+mkdir -p "${MIRROR_DIR}"
+cp "${OUTPUT_JSON}" "${MIRROR_DIR}/results.json"
+cp "${OUTPUT_ENV}" "${MIRROR_DIR}/env.json"
+cp "${OUTPUT_REPORT}" "${MIRROR_DIR}/report.md"
+cp "${OUTPUT_FIG}.${FORMAT}" "${MIRROR_DIR}/figure.${FORMAT}"
+cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.out" "${MIRROR_DIR}/" 2>/dev/null || true
+cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.err" "${MIRROR_DIR}/" 2>/dev/null || true
 
 echo "=== Job finished on $(date) ==="
 

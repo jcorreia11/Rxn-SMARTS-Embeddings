@@ -71,6 +71,10 @@ NUM_WORKERS="${NUM_WORKERS:-4}"
 # plain random_split, kept only for comparison.
 SPLIT_STRATEGY="${SPLIT_STRATEGY:-group}"
 SPLIT_SEED="${SPLIT_SEED:-42}"
+# Label only (small/medium/large) — used to mirror lightweight artifacts
+# into results/final/1-train-mlm/${MODEL_SIZE}/ for easy browsing. Not
+# validated against D_MODEL/NUM_LAYERS; set it consistently yourself.
+MODEL_SIZE="${MODEL_SIZE:-unspecified}"
 
 RUN_ID=$(date +%Y%m%d_%H%M%S)
 CHECKPOINT_DIR="models/checkpoints/${RUN_ID}"
@@ -99,6 +103,7 @@ echo "Max grad norm:   ${MAX_GRAD_NORM}"
 echo "Num workers:     ${NUM_WORKERS}"
 echo "Split strategy:  ${SPLIT_STRATEGY}"
 echo "Split seed:      ${SPLIT_SEED}"
+echo "Model size:      ${MODEL_SIZE}"
 echo "Checkpoint dir:  ${CHECKPOINT_DIR}"
 echo "Output:          ${OUTPUT}"
 
@@ -177,6 +182,17 @@ dvc add "${OUTPUT}" "${OUTPUT%.pt}.json"
 git add "${OUTPUT}.dvc" "${OUTPUT%.pt}.json.dvc" models/.gitignore
 git commit -m "[DVC] Track MLM model weights and config (run ${RUN_ID})"
 dvc push
+
+# ---- mirror lightweight artifacts into results/final/ for easy browsing ----
+# (local convenience copy only, gitignored — the flat models/ output above,
+# DVC-tracked, remains the actual backed-up record)
+echo ""
+echo "=== Mirroring artifacts into results/final/1-train-mlm/${MODEL_SIZE}/ ($(date)) ==="
+MIRROR_DIR="results/final/1-train-mlm/${MODEL_SIZE}"
+mkdir -p "${MIRROR_DIR}"
+cp "${OUTPUT%.pt}.json" "${ENV_JSON}" "${FIGURE}" "${REPORT}" "${MIRROR_DIR}/"
+cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.out" "${MIRROR_DIR}/" 2>/dev/null || true
+cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.err" "${MIRROR_DIR}/" 2>/dev/null || true
 
 echo "=== Job finished on $(date) ==="
 

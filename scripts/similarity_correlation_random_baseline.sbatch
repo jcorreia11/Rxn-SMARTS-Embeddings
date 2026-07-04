@@ -47,10 +47,19 @@ DPI="${DPI:-300}"
 GRIDSIZE="${GRIDSIZE:-50}"
 
 VOCAB="data/processed/vocab.json"
-OUT_BASE="results/final/3c-similarity-correlation"
 SUFFIX="${SUFFIX:-_random_s${MODEL_SEED}}"
 
 RUN_ID="sim_corr_random_${SLURM_JOB_ID}"
+
+# Flat, git-tracked primary outputs (the actual backed-up record).
+# OUT_BASE below is a gitignored local mirror only — a prior version of
+# this script wrote *only* to OUT_BASE, so its "commit results" step was a
+# silent no-op (nothing to add) and, under `set -euo pipefail`, `git commit`
+# on an empty index exits non-zero and fails the whole job even though the
+# analysis itself succeeded. Writing the flat copies first fixes that.
+FLAT_BASE="results/${RUN_ID}"
+OUT_BASE="results/final/3c-similarity-correlation"
+mkdir -p results
 
 # ============================================================
 # small  (6L, d=256, max_len=256)
@@ -64,11 +73,11 @@ python scripts/similarity_correlation_random_baseline.py \
     --n-reactions "${N_REACTIONS}" \
     --seed        "${SEED}" \
     --model-seed  "${MODEL_SEED}" \
-    --output      "${OUT_BASE}/small${SUFFIX}/figure" \
+    --output      "${FLAT_BASE}_small${SUFFIX}_figure" \
     --format      "${FORMAT}" \
     --dpi         "${DPI}" \
     --gridsize    "${GRIDSIZE}" \
-    --save-json   "${OUT_BASE}/small${SUFFIX}/results.json"
+    --save-json   "${FLAT_BASE}_small${SUFFIX}.json"
 
 # ============================================================
 # medium  (6L, d=256, max_len=512)
@@ -82,11 +91,11 @@ python scripts/similarity_correlation_random_baseline.py \
     --n-reactions "${N_REACTIONS}" \
     --seed        "${SEED}" \
     --model-seed  "${MODEL_SEED}" \
-    --output      "${OUT_BASE}/medium${SUFFIX}/figure" \
+    --output      "${FLAT_BASE}_medium${SUFFIX}_figure" \
     --format      "${FORMAT}" \
     --dpi         "${DPI}" \
     --gridsize    "${GRIDSIZE}" \
-    --save-json   "${OUT_BASE}/medium${SUFFIX}/results.json"
+    --save-json   "${FLAT_BASE}_medium${SUFFIX}.json"
 
 # ============================================================
 # large  (8L, d=512, max_len=512)
@@ -100,20 +109,34 @@ python scripts/similarity_correlation_random_baseline.py \
     --n-reactions "${N_REACTIONS}" \
     --seed        "${SEED}" \
     --model-seed  "${MODEL_SEED}" \
-    --output      "${OUT_BASE}/large${SUFFIX}/figure" \
+    --output      "${FLAT_BASE}_large${SUFFIX}_figure" \
     --format      "${FORMAT}" \
     --dpi         "${DPI}" \
     --gridsize    "${GRIDSIZE}" \
-    --save-json   "${OUT_BASE}/large${SUFFIX}/results.json"
+    --save-json   "${FLAT_BASE}_large${SUFFIX}.json"
 
 # ---- commit results to git ----
 echo ""
 echo "=== Committing results ($(date)) ==="
 git add \
-    "${OUT_BASE}/small${SUFFIX}/"  \
-    "${OUT_BASE}/medium${SUFFIX}/" \
-    "${OUT_BASE}/large${SUFFIX}/"
+    "${FLAT_BASE}_small${SUFFIX}.json"  "${FLAT_BASE}_small${SUFFIX}_figure.${FORMAT}" \
+    "${FLAT_BASE}_medium${SUFFIX}.json" "${FLAT_BASE}_medium${SUFFIX}_figure.${FORMAT}" \
+    "${FLAT_BASE}_large${SUFFIX}.json"  "${FLAT_BASE}_large${SUFFIX}_figure.${FORMAT}"
 git commit -m "[results] Similarity correlation — random-init baseline (${RUN_ID}, model-seed=${MODEL_SEED}, N=${N_REACTIONS})"
+
+# ---- mirror into results/final/ for easy browsing ----
+# (local convenience copy only, gitignored — the flat results/ files above,
+# git-tracked, remain the actual backed-up record)
+echo ""
+echo "=== Mirroring artifacts into ${OUT_BASE}/{small,medium,large}${SUFFIX}/ ($(date)) ==="
+for size in small medium large; do
+    MIRROR_DIR="${OUT_BASE}/${size}${SUFFIX}"
+    mkdir -p "${MIRROR_DIR}"
+    cp "${FLAT_BASE}_${size}${SUFFIX}.json" "${MIRROR_DIR}/results.json"
+    cp "${FLAT_BASE}_${size}${SUFFIX}_figure.${FORMAT}" "${MIRROR_DIR}/figure.${FORMAT}"
+    cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.out" "${MIRROR_DIR}/" 2>/dev/null || true
+    cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.err" "${MIRROR_DIR}/" 2>/dev/null || true
+done
 
 echo "=== Job finished on $(date) ==="
 

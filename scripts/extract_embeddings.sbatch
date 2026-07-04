@@ -44,8 +44,11 @@ WEIGHTS="${WEIGHTS:-models/smarts_transformer.pt}"
 CONFIG="${CONFIG:-${WEIGHTS%.pt}.json}"
 VOCAB="${VOCAB:-data/processed/vocab.json}"
 DATA="${DATA:-data/processed/validated_smarts.csv}"
-OUTPUT="${OUTPUT:-data/embeddings/reaction_embeddings.npy}"
-SMARTS_OUTPUT="${SMARTS_OUTPUT:-data/embeddings/reaction_smarts.txt}"
+# Label only (small/medium/large) — also shapes the default OUTPUT paths
+# below and the results/final/2-extract-embeddings/${MODEL_SIZE}/ mirror.
+MODEL_SIZE="${MODEL_SIZE:-unspecified}"
+OUTPUT="${OUTPUT:-data/embeddings/${MODEL_SIZE}/embeddings.npy}"
+SMARTS_OUTPUT="${SMARTS_OUTPUT:-data/embeddings/${MODEL_SIZE}/smarts.txt}"
 POOLING="${POOLING:-cls}"
 BATCH_SIZE="${BATCH_SIZE:-256}"
 
@@ -54,6 +57,7 @@ echo "Weights:       ${WEIGHTS}"
 echo "Config:        ${CONFIG}"
 echo "Vocab:         ${VOCAB}"
 echo "Data:          ${DATA}"
+echo "Model size:    ${MODEL_SIZE}"
 echo "Output:        ${OUTPUT}"
 echo "SMARTS output: ${SMARTS_OUTPUT}"
 echo "Pooling:       ${POOLING}"
@@ -84,6 +88,17 @@ dvc add "${OUTPUT}" "${SMARTS_OUTPUT}"
 git add "${OUTPUT}.dvc" "${SMARTS_OUTPUT}.dvc" data/embeddings/.gitignore
 git commit -m "[DVC] Track reaction embeddings (pooling=${POOLING})"
 dvc push
+
+# ---- mirror into results/final/ for easy browsing ----
+# (local convenience copy only, gitignored — data/embeddings/ above,
+# DVC-tracked, remains the actual backed-up record)
+echo ""
+echo "=== Mirroring artifacts into results/final/2-extract-embeddings/${MODEL_SIZE}/ ($(date)) ==="
+MIRROR_DIR="results/final/2-extract-embeddings/${MODEL_SIZE}"
+mkdir -p "${MIRROR_DIR}"
+cp "${OUTPUT}" "${OUTPUT}.dvc" "${SMARTS_OUTPUT}" "${SMARTS_OUTPUT}.dvc" "${MIRROR_DIR}/"
+cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.out" "${MIRROR_DIR}/" 2>/dev/null || true
+cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.err" "${MIRROR_DIR}/" 2>/dev/null || true
 
 echo "=== Job finished on $(date) ==="
 
