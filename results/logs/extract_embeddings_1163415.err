@@ -1,9 +1,0 @@
-11:18:13 INFO     Loaded 361751 valid SMARTS from data/processed/validated_smarts.csv
-11:18:14 INFO     Loaded model from models/smarts_transformer_20260410_111830.pt (d_model=256, layers=6)
-11:18:55 INFO     SMARTSDataset: 361751 sequences | max_length=256 | avg_len=119.8 | vocab_size=4465
-/projects/F202508983CPCAA0/jcorreia/work/smartrxn_env/lib/python3.12/site-packages/torch/nn/modules/transformer.py:508: UserWarning: The PyTorch API of nested tensors is in prototype stage and will change in the near future. We recommend specifying layout=torch.jagged when constructing a nested tensor, as this layout receives active development, has better operator coverage, and works with torch.compile. (Triggered internally at /pytorch/aten/src/ATen/NestedTensorImpl.cpp:178.)
-  output = torch._nested_tensor_from_mask(
-11:20:03 INFO     Extracted 361751 embeddings | dim=256 | pooling=mean | device=cuda
-11:20:03 INFO     Extraction complete: 361751 sequences in 108.0 s (3351 sequences/s)
-11:20:03 INFO     Saved embeddings (361751, 256) to data/embeddings/reaction_embeddings.npy
-11:20:03 INFO     Saved aligned SMARTS list to data/embeddings/reaction_smarts.txt
