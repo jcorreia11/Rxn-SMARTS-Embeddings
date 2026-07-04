@@ -92,13 +92,18 @@ SMARTS_OUTPUT=data/embeddings/reaction_smarts.txt \
 scripts/extract_embeddings.sbatch
 
 # 2b -- CLS vs mean pooling ablation
+# SPLIT_STRATEGY=group (default) keeps RetroRules radius-siblings out of
+# both sides of the split -- see the "Train/test split fix" note in
+# results/run_log.md. Omit for the default, or set =random only to
+# reproduce the old leaky split for a before/after comparison.
 sbatch --export=ALL,\
 WEIGHTS=${WEIGHTS},\
 CONFIG=${CONFIG},\
 N_SAMPLES=20000,\
 EC_DEPTH=1,\
 FOLDS=10,\
-EMBED_BATCH_SIZE=128 \
+EMBED_BATCH_SIZE=128,\
+SPLIT_STRATEGY=group \
 scripts/ablation_pooling.sbatch
 ```
 
@@ -141,6 +146,7 @@ scripts/similarity_correlation.sbatch
 
 # 3c -- EC classification benchmark (TF-IDF vs pretrained vs random embeddings)
 # Set POOLING to the winner from ablation_pooling (2b) — default in script is mean
+# SPLIT_STRATEGY=group (default) — see note on 2b above.
 sbatch --export=ALL,\
 WEIGHTS=${WEIGHTS},\
 CONFIG=${CONFIG},\
@@ -148,7 +154,8 @@ POOLING=${BEST_POOLING},\
 N_SAMPLES=50000,\
 EC_DEPTH=1,\
 FOLDS=10,\
-EMBED_BATCH_SIZE=256 \
+EMBED_BATCH_SIZE=256,\
+SPLIT_STRATEGY=group \
 scripts/train_ec_classifier.sbatch
 ```
 

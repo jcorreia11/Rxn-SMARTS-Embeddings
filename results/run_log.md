@@ -2,6 +2,27 @@
 
 Maps every generated artifact to the script, job ID, date, and key parameters that produced it.
 
+> ## ⚠️ Train/test split fix — 2026-07-04
+>
+> RetroRules generates several templates per underlying reaction at different
+> context radii (`RADIUS_MIN`/`RADIUS_MAX`). On the full corpus, 361,751
+> templates collapse to ~45,600 distinct reactions (mean ~8 templates each,
+> 98% with a sibling), and every template in a group shares one EC label.
+> **All runs dated before 2026-07-04 split train/test/CV folds at the
+> template level with plain (stratified) randomness**, so a template's
+> near-duplicate siblings routinely leaked across the split — inflating
+> MLM validation accuracy, EC-classification/pooling-ablation metrics, and
+> making nearest-neighbor retrieval trivially "succeed" on siblings.
+>
+> `train_ec_classifier.py`, `ablation_pooling.py`, `similarity_correlation.py`,
+> and `nearest_neighbors.py` now support group-aware splitting (see
+> `--split-strategy group`, the new default) that keeps each `reaction_group`
+> on one side of any split. **Entries below marked `Split strategy: random
+> (pre-fix — superseded)` should not be cited in the paper** until replaced
+> by a group-split re-run. Use `scripts/generate_split_comparison_report.py`
+> to quantify the before/after delta once both runs exist, and log the new
+> run in the "Group-split re-runs" section at the bottom of this file.
+
 ---
 
 ## Phase 0 — Dataset Statistics & Tokenizer Comparison (CPU)
@@ -102,7 +123,7 @@ Maps every generated artifact to the script, job ID, date, and key parameters th
 | `data/embeddings/reaction_embeddings.npy` | Reaction embeddings — 361751 × 256 (DVC-tracked) |
 | `data/embeddings/reaction_smarts.txt` | Corresponding SMARTS list (DVC-tracked) |
 
-### ablation_pooling — job 1163359 ✅
+### ablation_pooling — job 1163359 ⚠️ (superseded — see split fix note above)
 | Field | Value |
 |---|---|
 | Script | `scripts/ablation_pooling.sbatch` |
@@ -114,6 +135,7 @@ Maps every generated artifact to the script, job ID, date, and key parameters th
 | EC depth | 1 |
 | Folds | 10 |
 | Embed batch size | 128 |
+| Split strategy | random (pre-fix — superseded, re-run with `--split-strategy group`) |
 
 **Results summary**
 
@@ -180,7 +202,7 @@ Maps every generated artifact to the script, job ID, date, and key parameters th
 | `results/sim_corr_1163425_report.md` / `sim_corr_1163426_report.md` | Reports |
 | `results/figures/sim_corr_1163425.pdf` / `sim_corr_1163426.pdf` | Figures |
 
-### train_ec_classifier (EC depth=1) — run 20260422_112754
+### train_ec_classifier (EC depth=1) — run 20260422_112754 ⚠️ (superseded — see split fix note above)
 | Field | Value |
 |---|---|
 | Script | `scripts/train_ec_classifier.sbatch` |
@@ -192,6 +214,7 @@ Maps every generated artifact to the script, job ID, date, and key parameters th
 | N samples | 50000 |
 | EC depth | 1 |
 | Folds | 10 |
+| Split strategy | random (pre-fix — superseded, re-run with `--split-strategy group`) |
 
 **Results summary**
 
@@ -254,3 +277,47 @@ Maps every generated artifact to the script, job ID, date, and key parameters th
 ```bash
 sbatch --export=ALL,WEIGHTS=models/smarts_transformer_20260410_111830.pt,CONFIG=models/smarts_transformer_20260410_111830.json,POOLING=mean,N_SAMPLES=50000,EC_DEPTH=2,FOLDS=10,EMBED_BATCH_SIZE=256 train_ec_classifier.sbatch
 ```
+
+---
+
+## Group-split re-runs (leakage fix) — pending
+
+Preprocessing already re-ran locally with the fix (`dvc repro load_data
+validate_smarts`, 2026-07-04): `validated_smarts.csv` now has a
+`reaction_group` column (45,596 groups over 361,751 templates, 97.7% with a
+sibling). **`dvc push` this to the HPC remote (or re-run `dvc repro` there)
+before submitting the jobs below**, since they read `validated_smarts.csv`.
+
+`train_ec_classifier.sbatch` and `ablation_pooling.sbatch` now accept
+`SPLIT_STRATEGY` (default `group` — no need to pass it explicitly for the
+new correct behavior). To reproduce the superseded runs above for a
+before/after comparison, submit both strategies with matching config:
+
+```bash
+# EC classifier depth=1 — group (correct) and random (comparison-only)
+sbatch --export=ALL,WEIGHTS=models/smarts_transformer_20260410_111830.pt,CONFIG=models/smarts_transformer_20260410_111830.json,POOLING=mean,N_SAMPLES=50000,EC_DEPTH=1,FOLDS=10,EMBED_BATCH_SIZE=256,SPLIT_STRATEGY=group  train_ec_classifier.sbatch
+sbatch --export=ALL,WEIGHTS=models/smarts_transformer_20260410_111830.pt,CONFIG=models/smarts_transformer_20260410_111830.json,POOLING=mean,N_SAMPLES=50000,EC_DEPTH=1,FOLDS=10,EMBED_BATCH_SIZE=256,SPLIT_STRATEGY=random train_ec_classifier.sbatch
+
+# Pooling ablation — group (correct) and random (comparison-only)
+sbatch --export=ALL,WEIGHTS=models/smarts_transformer_20260410_111830.pt,CONFIG=models/smarts_transformer_20260410_111830.json,N_SAMPLES=20000,EC_DEPTH=1,FOLDS=10,EMBED_BATCH_SIZE=128,SPLIT_STRATEGY=group  ablation_pooling.sbatch
+sbatch --export=ALL,WEIGHTS=models/smarts_transformer_20260410_111830.pt,CONFIG=models/smarts_transformer_20260410_111830.json,N_SAMPLES=20000,EC_DEPTH=1,FOLDS=10,EMBED_BATCH_SIZE=128,SPLIT_STRATEGY=random ablation_pooling.sbatch
+```
+
+Once both `group` and `random` runs for a given experiment have completed:
+
+```bash
+python scripts/generate_split_comparison_report.py \
+    --random results/ec_classifier_<RANDOM_RUN_ID>.json \
+    --group  results/ec_classifier_<GROUP_RUN_ID>.json \
+    --label  "EC classifier (depth=1)" \
+    --output results/ec_classifier_split_comparison.md
+```
+
+Log the new `group`-strategy run under Phase 2/3 above (replacing the
+superseded entries) once complete, and keep the `random` run only as the
+comparison artifact — it should not be cited as a paper result.
+
+**Note:** `results/run_log.md` itself is missing entries for a number of
+later runs already present under `results/` (multiple `ec_classifier_*` and
+`models/smarts_transformer_*` runs from 2026-04-28 through 2026-05-14) —
+that gap predates this fix and is a separate cleanup.
