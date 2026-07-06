@@ -1,8 +1,15 @@
 """
 Compute EC classifier dataset and protocol statistics for Methods section 2.7.1.
 
-Reads the final EC classifier result JSONs (medium model, all three EC depths)
-and reports exact sample counts, class counts, and experimental protocol.
+Reads the final EC classifier result JSONs for all three model sizes (small,
+medium, large) at all three EC depths, cross-checks that dataset/protocol
+metadata (sample counts, class counts, split settings) agree across sizes —
+they should, since the labelled dataset and protocol don't depend on which
+embedding model is used — and reports the shared values.
+
+Reads from the results/final/ mirror using stable, generic filenames (no
+run-ID in the path), so this keeps working across retraining runs without
+edits.
 
 Output: paper/ec_classifier_stats.json
 Run from project root: python paper/ec_classifier_stats.py
@@ -11,27 +18,48 @@ Run from project root: python paper/ec_classifier_stats.py
 import json
 from pathlib import Path
 
-RESULT_FILES = {
-    1: Path("results/final/3b-ec-classifier/medium/depth-1/ec_classifier_20260513_184828.json"),
-    2: Path("results/final/3b-ec-classifier/medium/depth-2/ec_classifier_20260513_190834.json"),
-    3: Path("results/final/3b-ec-classifier/medium/depth-3/ec_classifier_20260513_194406.json"),
-}
+SIZES = ["small", "medium", "large"]
+DEPTHS = [1, 2, 3]
+RESULT_ROOT = Path("results/final/3b-ec-classifier")
 OUTPUT_JSON = Path("paper/ec_classifier_stats.json")
 
-# ── Load and extract dataset metadata ─────────────────────────────────────
-depths = {}
-for depth, path in RESULT_FILES.items():
-    doc = json.loads(path.read_text())
-    m = doc["meta"]
-    depths[depth] = {
-        "n_samples": m["n_samples_actual"],
-        "n_classes": len(m["label_names"]),
-        "train_test_split": m["train_test_split"],
-        "n_folds": m["folds"],
-        "random_seed": m["random_seed"],
-        "methods": [r["name"] for r in doc["results"]],
-        "source_json": str(path),
-    }
+
+def _load(size: str, depth: int) -> dict:
+    path = RESULT_ROOT / size / f"depth{depth}" / "results.json"
+    if not path.exists():
+        raise FileNotFoundError(
+            f"{path} not found — has train_ec_classifier.sbatch been run for "
+            f"MODEL_SIZE={size}, EC_DEPTH={depth}?"
+        )
+    return json.loads(path.read_text())
+
+
+# ── Load all (size, depth) combinations and cross-check dataset metadata ──
+per_size_depth = {}
+for size in SIZES:
+    for depth in DEPTHS:
+        doc = _load(size, depth)
+        m = doc["meta"]
+        per_size_depth[(size, depth)] = {
+            "n_samples": m["n_samples_actual"],
+            "n_classes": len(m["label_names"]),
+            "train_test_split": m["train_test_split"],
+            "n_folds": m["folds"],
+            "random_seed": m["random_seed"],
+            "methods": [r["name"] for r in doc["results"]],
+        }
+
+depths: dict[int, dict] = {}
+for depth in DEPTHS:
+    values = [per_size_depth[(size, depth)] for size in SIZES]
+    ref = values[0]
+    for key in ("n_samples", "n_classes", "train_test_split", "n_folds", "random_seed"):
+        mismatched = [(SIZES[i], v[key]) for i, v in enumerate(values) if v[key] != ref[key]]
+        assert not mismatched, (
+            f"depth={depth} '{key}' differs across model sizes (expected identical "
+            f"dataset/protocol regardless of embedding model): {ref[key]!r} vs {mismatched}"
+        )
+    depths[depth] = ref
 
 # ── Shared protocol (consistent across all depths) ────────────────────────
 ref = depths[1]
@@ -53,6 +81,7 @@ results = {
         "first EC number used; truncated to k components for depth k; "
         "rare classes pruned to ensure stratified splitting feasibility."
     ),
+    "cross_checked_across_sizes": SIZES,
     "depths": {
         str(d): {
             "n_samples": v["n_samples"],
@@ -102,6 +131,7 @@ results = {
 # ── Print summary ──────────────────────────────────────────────────────────
 print("=== EC CLASSIFIER — DATASET & PROTOCOL ===")
 print(f"Task            : {results['task']}")
+print(f"Cross-checked across: {', '.join(SIZES)}")
 print(f"Split           : {results['protocol']['train_test_split']}, "
       f"{results['protocol']['n_cv_folds']}-fold CV, seed={results['protocol']['random_seed']}")
 print()

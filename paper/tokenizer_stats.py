@@ -12,11 +12,19 @@ from pathlib import Path
 import numpy as np
 
 # ── Paths ──────────────────────────────────────────────────────────────────
-VOCAB_JSON         = Path("data/processed/vocab.json")
-SP_VOCAB_FILE      = Path("data/processed/sp_tokenizer.vocab")
-METRICS_JSON       = Path(
-    "results/tokenizer_comparison_20260409_131636/tokenizer_metrics.json"
-)
+# METRICS_JSON auto-discovers the lexicographically-latest (most recent,
+# since the RUN_ID is a YYYYMMDD_HHMMSS timestamp) tokenizer_comparison_*
+# directory, rather than a hardcoded RUN_ID, so this keeps working across
+# reruns of compare_tokenizers.sbatch without edits.
+VOCAB_JSON    = Path("data/processed/vocab.json")
+SP_VOCAB_FILE = Path("data/processed/sp_tokenizer.vocab")
+_tok_comparison_dirs = sorted(Path("results").glob("tokenizer_comparison_*"))
+if not _tok_comparison_dirs:
+    raise FileNotFoundError(
+        "No results/tokenizer_comparison_* directory found — has "
+        "compare_tokenizers.sbatch been run?"
+    )
+METRICS_JSON = _tok_comparison_dirs[-1] / "tokenizer_metrics.json"
 OUTPUT_JSON = Path("paper/tokenizer_stats.json")
 
 # ── Load inputs ────────────────────────────────────────────────────────────

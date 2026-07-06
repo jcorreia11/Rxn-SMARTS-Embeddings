@@ -1,8 +1,14 @@
 """
 Compute training statistics for Methods section 2.5.
 
-Reads the published model config (20260428_160310) and environment JSON;
-reports all hyperparameters, convergence trajectory, and hardware details.
+Reads the Medium configuration's published model config and environment
+JSON (the model Section 3.2 uses as its primary pretraining-convergence
+narrative — see results/final/1-train-mlm/medium/); reports all
+hyperparameters, convergence trajectory, and hardware details.
+
+Reads from the results/final/ mirror using stable, generic filenames (no
+run-ID in the path), so this keeps working across retraining runs without
+edits.
 
 Output: paper/training_stats.json
 Run from project root: python paper/training_stats.py
@@ -12,11 +18,17 @@ import json
 import math
 from pathlib import Path
 
-RUN_JSON = Path("models/smarts_transformer_20260428_160310.json")
-ENV_JSON = Path("models/smarts_transformer_20260428_160310_env.json")
+MIRROR_DIR = Path("results/final/1-train-mlm/medium")
+RUN_JSON = MIRROR_DIR / "config.json"
+ENV_JSON = MIRROR_DIR / "env.json"
 OUTPUT_JSON = Path("paper/training_stats.json")
 
 # ── Load ───────────────────────────────────────────────────────────────────
+if not RUN_JSON.exists() or not ENV_JSON.exists():
+    raise FileNotFoundError(
+        f"{RUN_JSON} / {ENV_JSON} not found — has train_mlm.sbatch been run "
+        f"for MODEL_SIZE=medium?"
+    )
 run = json.loads(RUN_JSON.read_text())
 env = json.loads(ENV_JSON.read_text())
 

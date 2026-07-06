@@ -1,8 +1,14 @@
 """
 Compute MLM / span-masking statistics for Methods section 2.4.
 
-Reads vocab.json and the final training run config; reports vocabulary
-composition, masking budget statistics, and final pretraining metrics.
+Reads vocab.json and the Medium configuration's training run config (the
+model Section 3.2 uses as its primary pretraining-convergence narrative —
+see results/final/1-train-mlm/medium/); reports vocabulary composition,
+masking budget statistics, and final pretraining metrics.
+
+Reads the training run config from the results/final/ mirror using a
+stable, generic filename (no run-ID in the path), so this keeps working
+across retraining runs without edits.
 
 Output: paper/mlm_stats.json
 Run from project root: python paper/mlm_stats.py
@@ -16,10 +22,16 @@ import math
 from pathlib import Path
 
 OUTPUT_JSON = Path("paper/mlm_stats.json")
+RUN_JSON = Path("results/final/1-train-mlm/medium/config.json")
 
 # ── Inputs ─────────────────────────────────────────────────────────────────
 vocab = json.load(open("data/processed/vocab.json"))
-run   = json.load(open("models/smarts_transformer_20260428_160310.json"))
+if not RUN_JSON.exists():
+    raise FileNotFoundError(
+        f"{RUN_JSON} not found — has train_mlm.sbatch been run for "
+        f"MODEL_SIZE=medium?"
+    )
+run = json.load(open(RUN_JSON))
 tok2id = vocab["token_to_id"]
 
 # ── MLM hyperparameters (from collator defaults / training config) ──────────
