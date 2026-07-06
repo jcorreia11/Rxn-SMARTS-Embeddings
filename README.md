@@ -11,21 +11,24 @@ git clone https://github.com/jcorreia11/SmartRxnEmbeddings.git
 cd SmartRxnEmbeddings
 ```
 
-**Prediction only** — just `torch` + DVC to pull the model weights:
+**Prediction only** — just `torch`:
 
 ```bash
-uv sync --no-dev --group data
-dvc pull   # restore pretrained model weights
+uv sync --no-dev
 ```
 
 **Full install** — adds preprocessing, training, evaluation, and visualisation dependencies:
 
 ```bash
 uv sync --extra full
-dvc pull   # restore model weights, embeddings, and processed data
 ```
 
-The `dev` group (DVC + pytest) is included automatically with `uv sync`.
+The `dev` group (pytest) is included automatically with `uv sync`.
+
+Model weights, embeddings, and processed data are local artifacts (gitignored,
+not distributed with the repo) — see "Data pipeline" and "Training" below to
+regenerate them, or copy an existing `models/smarts_transformer_<RUN_ID>.*`
+from wherever you trained it.
 
 ## Getting started
 
@@ -137,17 +140,26 @@ scripts/
 
 ## Data pipeline
 
-Preprocessing is managed with [DVC](https://dvc.org/):
+Preprocessing is a plain sequence of scripts — each is cheap (a couple of
+minutes on the full corpus) and deterministic, so just re-run them in order
+when a dependency changes:
 
 ```bash
-dvc repro
+python src/smart_rxn_embeddings/preprocessing/load_data.py
+python src/smart_rxn_embeddings/preprocessing/validate_smarts.py
+python src/smart_rxn_embeddings/tokenization/build_vocab.py
+python src/smart_rxn_embeddings/tokenization/sentencepiece_tokenizer.py
 ```
 
 | Stage | Input | Output |
 |---|---|---|
-| `load_data` | `data/raw/retrorules-v3.0-*.csv` | `data/processed/clean_smarts.txt` |
-| `validate_smarts` | `clean_smarts.txt` | `data/processed/validated_smarts.csv` |
-| `build_vocab` | `validated_smarts.csv` | `data/processed/vocab.json` |
+| `load_data.py` | `data/raw/retrorules-v3.0-*.csv` | `data/processed/clean_smarts.txt`, `reaction_groups.csv` |
+| `validate_smarts.py` | `clean_smarts.txt`, `reaction_groups.csv` | `data/processed/validated_smarts.csv` |
+| `build_vocab.py` | `validated_smarts.csv` | `data/processed/vocab.json` |
+| `sentencepiece_tokenizer.py` | `validated_smarts.csv` | `data/processed/sp_tokenizer.{model,vocab}` |
+
+On HPC: `sbatch scripts/dvc_repro.sbatch` no longer exists — submit the four
+commands above directly, or wrap them in your own job script.
 
 ## Training
 

@@ -23,11 +23,10 @@ jobs:
         run: uv sync --frozen
 
       - name: Audit dependencies for known vulnerabilities
-        # CVE-2025-69872: diskcache transitive dep via DVC, no fix available yet.
         # CVE-2026-4539: pygments 2.19.2, no patched release available yet.
-        # Remove each --ignore-vuln once a patched version is released.
+        # Remove --ignore-vuln once a patched version is released.
         # VCS deps (e.g. rxnfp from git) are stripped before auditing because pip-audit
         # cannot hash them and fails at the install stage before --skip-editable applies.
         # torch/torchvision/torchaudio are sourced from download.pytorch.org (CUDA builds)
         # and are not resolvable by pip-audit's internal pip against PyPI.
-        run: uvx pip-audit --requirement <(uv export --no-dev --no-emit-project --format requirements-txt | grep -v ' @ git+' | grep -vE '^torch(vision|audio)?==') --ignore-vuln CVE-2025-69872 --ignore-vuln CVE-2026-4539
+        run: uvx pip-audit --requirement <(uv export --no-dev --no-emit-project --format requirements-txt | grep -v ' @ git+' | grep -vE '^torch(vision|audio)?==') --ignore-vuln CVE-2026-4539

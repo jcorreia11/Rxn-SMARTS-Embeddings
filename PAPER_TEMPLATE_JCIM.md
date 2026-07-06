@@ -661,19 +661,20 @@ Include the exact commit hash or release tag used to produce the reported result
 [The RetroRules v3.0 database used for training is publicly available at
 `https://retrorules.org/` (cite the original paper). The preprocessed SMARTS file
 (`data/processed/validated_smarts.csv`) and vocabulary (`data/processed/vocab.json`)
-can be reproduced by running `dvc repro` with the provided `dvc.yaml` pipeline,
-or downloaded directly via `dvc pull` from the DVC remote (add remote URL or Zenodo DOI).]
+can be reproduced by running the preprocessing scripts in `src/smart_rxn_embeddings/preprocessing/`
+and `tokenization/` in sequence (see README), or downloaded directly from
+[add Zenodo/Figshare DOI].]
 
 **Model weights and embeddings:**
 [The pretrained transformer weights and the extracted reaction embeddings (.npy) are
-tracked with DVC and available at [add Zenodo/Figshare DOI or repository release URL].
-Weights can alternatively be restored by running `dvc pull` after cloning the repository.
+available at [add Zenodo/Figshare DOI or repository release URL] — these are large
+binary artifacts and are not stored in the git repository itself.
 Report the exact model run ID used for publication: `smarts_transformer_[PENDING_RUN_ID]`.]
 
 **Reproducibility:**
 [All experiments are fully reproducible via the SLURM sbatch scripts in `scripts/` with
-the hyperparameters documented in `experiments-dependency-graph.md`. A `pyproject.toml`
-and `uv.lock` file pin all software dependencies. Python ≥ 3.9 and uv are required.]
+the hyperparameters and exact submission commands documented in `hpc-runbook.md`.
+A `pyproject.toml` and `uv.lock` file pin all software dependencies. Python ≥ 3.9 and uv are required.]
 
 ---
 
@@ -731,4 +732,4 @@ below are what remains open as of this draft.]
 | Section 3.6 (UMAP) qualitative write-up | TODO | Currently bracketed instructions only |
 | Section 3.7 (Nearest-neighbor retrieval) qualitative write-up | TODO | Currently bracketed instructions only; should also report whether retrieved neighbors are RetroRules radius-siblings of the query (trivial) or genuine cross-family matches — `nearest_neighbors.py --exclude-same-group` supports this distinction |
 | `[CITE]` placeholders throughout Methods/Introduction/References | TODO | Required before submission |
-| Data/Software Availability — repository URL, DVC remote/DOI, model run ID | TODO | Required by JCIM |
+| Data/Software Availability — repository URL, Zenodo/Figshare DOI for data+weights, model run ID | TODO | Required by JCIM |

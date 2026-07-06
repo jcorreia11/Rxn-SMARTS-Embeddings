@@ -64,9 +64,9 @@ def load_reaction_groups(validated_file: str, smarts_list: list[str]) -> list[st
     header = pd.read_csv(validated_file, nrows=0).columns
     if "reaction_group" not in header:
         logger.warning(
-            "%s has no 'reaction_group' column (re-run `dvc repro` to "
-            "regenerate it) — sibling-pair breakdown will show 0%% within-"
-            "group pairs",
+            "%s has no 'reaction_group' column (re-run load_data.py + "
+            "validate_smarts.py to regenerate it) — sibling-pair breakdown "
+            "will show 0%% within-group pairs",
             validated_file,
         )
         return list(smarts_list)

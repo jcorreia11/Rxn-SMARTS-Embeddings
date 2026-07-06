@@ -104,8 +104,8 @@ def load_reaction_groups(validated_file: str, smarts_set: set[str]) -> dict[str,
     header = pd.read_csv(validated_file, nrows=0).columns
     if "reaction_group" not in header:
         logger.warning(
-            "%s has no 'reaction_group' column (re-run `dvc repro`) — "
-            "skipping sibling tagging",
+            "%s has no 'reaction_group' column (re-run load_data.py + "
+            "validate_smarts.py) — skipping sibling tagging",
             validated_file,
         )
         return {}

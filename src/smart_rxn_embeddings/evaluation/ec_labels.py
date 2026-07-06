@@ -62,8 +62,9 @@ def load_labelled_smarts(
     if "reaction_group" not in val.columns:
         logger.warning(
             "%s has no 'reaction_group' column — falling back to SMARTS-as-"
-            "group (no cross-radius leakage protection). Re-run `dvc repro` "
-            "to regenerate validated_smarts.csv with reaction groups.",
+            "group (no cross-radius leakage protection). Re-run the "
+            "preprocessing pipeline (load_data.py, validate_smarts.py) to "
+            "regenerate validated_smarts.csv with reaction groups.",
             validated_file,
         )
         val["reaction_group"] = val["smarts"]
