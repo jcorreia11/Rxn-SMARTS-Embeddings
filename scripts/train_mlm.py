@@ -3,9 +3,12 @@
 import argparse
 import json
 import logging
+import random
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
+import torch
 
 from smart_rxn_embeddings.datasets.smarts_dataset import SMARTSDataset
 from smart_rxn_embeddings.models.smarts_transformer import (
@@ -24,6 +27,22 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 logger = logging.getLogger(__name__)
+
+
+def set_seed(seed: int) -> None:
+    """Seed Python/NumPy/PyTorch RNGs for weight init and data shuffling.
+
+    Does not force ``torch.use_deterministic_algorithms`` / cuDNN determinism
+    — those cost throughput and some ops lack deterministic GPU kernels. This
+    seeds enough to make replicate runs (different ``--seed`` values) a
+    controlled source of variation rather than accidental noise; it does not
+    guarantee bit-exact reproduction of a prior run.
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
 
 
 def parse_args() -> argparse.Namespace:
@@ -106,12 +125,22 @@ def parse_args() -> argparse.Namespace:
         "--split-seed", type=int, default=42,
         help="Random seed for the group-aware train/val split (default: 42)",
     )
+    train.add_argument(
+        "--seed", type=int, default=42,
+        help=(
+            "Random seed for weight init and data loader shuffling/masking "
+            "(default: 42). Vary across replicate runs (e.g. same "
+            "MODEL_SIZE, different --seed) to estimate run-to-run variance "
+            "separately from the group/random --split-seed."
+        ),
+    )
 
     return p.parse_args()
 
 
 def main() -> None:
     args = parse_args()
+    set_seed(args.seed)
 
     vocab = json.loads(Path(args.vocab).read_text())
     token_to_id: dict[str, int] = vocab["token_to_id"]
@@ -127,9 +156,9 @@ def main() -> None:
             groups = df.loc[valid_mask, "reaction_group"].to_numpy()
         else:
             logger.warning(
-                "%s has no 'reaction_group' column (re-run `dvc repro` to "
-                "regenerate it) — falling back to plain random_split for "
-                "the train/val split.",
+                "%s has no 'reaction_group' column (re-run load_data.py + "
+                "validate_smarts.py to regenerate it) — falling back to "
+                "plain random_split for the train/val split.",
                 args.data,
             )
 
@@ -172,6 +201,7 @@ def main() -> None:
         warmup_steps=args.warmup_steps,
         max_grad_norm=args.max_grad_norm,
         num_workers=args.num_workers,
+        seed=args.seed,
     )
 
     trainer = Trainer(

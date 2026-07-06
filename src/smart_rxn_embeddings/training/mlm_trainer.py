@@ -7,6 +7,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
+import numpy as np
 import torch
 import torch.nn as nn
 from torch import Tensor
@@ -15,6 +16,19 @@ from torch.utils.data import DataLoader, Dataset, Subset, random_split
 from smart_rxn_embeddings.evaluation.splitting import group_holdout_split
 
 logger = logging.getLogger(__name__)
+
+
+def _seed_worker(worker_id: int) -> None:
+    """Reseed a DataLoader worker's Python/NumPy RNGs from its torch seed.
+
+    ``MLMCollator._mask`` uses the stdlib ``random`` module, which each
+    worker process inherits unseeded (OS entropy) unless explicitly reseeded
+    here — without this, the masking pattern is not controlled by
+    ``TrainingConfig.seed`` whenever ``num_workers > 0``.
+    """
+    worker_seed = torch.initial_seed() % 2**32
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
 
 _MASK_TOKEN = "[MASK]"
 _SPECIAL_TOKENS = {"[PAD]", "[UNK]", "[BOS]", "[EOS]"}
@@ -187,6 +201,10 @@ class TrainingConfig:
     warmup_steps:   Linear LR warmup steps; cosine decay for the remainder.
     max_grad_norm:  Gradient clipping max norm (0 = disabled).
     num_workers:    DataLoader worker processes.
+    seed:           Seed for DataLoader shuffling and (via worker re-seeding)
+                    the masking collator. Weight init is seeded separately by
+                    the caller (see ``scripts/train_mlm.py:set_seed``) before
+                    the model is constructed.
     """
 
     learning_rate: float = 1e-4
@@ -200,6 +218,7 @@ class TrainingConfig:
     warmup_steps: int = 0
     max_grad_norm: float = 1.0
     num_workers: int = 0
+    seed: int = 42
 
 
 class Trainer:
@@ -290,6 +309,9 @@ class Trainer:
         """
         pin = self.device.type == "cuda"
         persistent = self.config.num_workers > 0
+        worker_init_fn = _seed_worker if self.config.num_workers > 0 else None
+        shuffle_generator = torch.Generator()
+        shuffle_generator.manual_seed(self.config.seed)
         train_loader = DataLoader(
             self.train_dataset,
             batch_size=self.config.batch_size,
@@ -298,6 +320,8 @@ class Trainer:
             num_workers=self.config.num_workers,
             pin_memory=pin,
             persistent_workers=persistent,
+            worker_init_fn=worker_init_fn,
+            generator=shuffle_generator,
         )
         val_loader = None
         if self.val_dataset is not None:
@@ -309,6 +333,7 @@ class Trainer:
                 num_workers=self.config.num_workers,
                 pin_memory=pin,
                 persistent_workers=persistent,
+                worker_init_fn=worker_init_fn,
             )
 
         total_steps = len(train_loader) * self.config.num_epochs

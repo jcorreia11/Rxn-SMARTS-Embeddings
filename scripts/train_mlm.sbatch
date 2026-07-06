@@ -66,6 +66,10 @@ VAL_SPLIT="${VAL_SPLIT:-0.1}"
 WARMUP_STEPS="${WARMUP_STEPS:-500}"
 MAX_GRAD_NORM="${MAX_GRAD_NORM:-1.0}"
 NUM_WORKERS="${NUM_WORKERS:-4}"
+# Weight init + data-loader shuffling/masking seed. Vary this (keeping
+# everything else fixed) across replicate runs of the same MODEL_SIZE to
+# measure pretraining run-to-run variance — see hpc-runbook.md Phase 1.
+SEED="${SEED:-42}"
 # 'group' (default) keeps RetroRules radius-siblings (same reaction_group)
 # out of both sides of the train/val split. 'random' reproduces the old
 # plain random_split, kept only for comparison.
@@ -103,6 +107,7 @@ echo "Max grad norm:   ${MAX_GRAD_NORM}"
 echo "Num workers:     ${NUM_WORKERS}"
 echo "Split strategy:  ${SPLIT_STRATEGY}"
 echo "Split seed:      ${SPLIT_SEED}"
+echo "Seed:            ${SEED}"
 echo "Model size:      ${MODEL_SIZE}"
 echo "Checkpoint dir:  ${CHECKPOINT_DIR}"
 echo "Output:          ${OUTPUT}"
@@ -131,6 +136,7 @@ python scripts/train_mlm.py \
     --num-workers   "${NUM_WORKERS}" \
     --split-strategy "${SPLIT_STRATEGY}" \
     --split-seed    "${SPLIT_SEED}" \
+    --seed          "${SEED}" \
     --checkpoint-dir "${CHECKPOINT_DIR}" \
     --output        "${OUTPUT}"
 
@@ -174,23 +180,24 @@ echo "=== Committing report and plot to git ($(date)) ==="
 git add "${ENV_JSON}" "${FIGURE}" "${REPORT}"
 git commit -m "[results] MLM training report and plot (run ${RUN_ID})"
 
-# ---- version-track model artifacts with DVC ----
-echo ""
-echo "=== Tracking model artifacts with DVC ($(date)) ==="
-dvc add "${OUTPUT}" "${OUTPUT%.pt}.json"
+# Model weights and config (${OUTPUT}, ${OUTPUT%.pt}.json) are gitignored,
+# local-only artifacts — not versioned in git. The results/final/ mirror
+# below is the only copy of the weights beyond models/ itself, so treat
+# both as equally "primary" for backup purposes (rsync/scp off-machine).
 
-git add "${OUTPUT}.dvc" "${OUTPUT%.pt}.json.dvc" models/.gitignore
-git commit -m "[DVC] Track MLM model weights and config (run ${RUN_ID})"
-dvc push
-
-# ---- mirror lightweight artifacts into results/final/ for easy browsing ----
-# (local convenience copy only, gitignored — the flat models/ output above,
-# DVC-tracked, remains the actual backed-up record)
+# ---- mirror artifacts into results/final/ for easy browsing ----
+# (local convenience copy, gitignored; generic filenames — not run-ID
+# based — so downstream tooling, e.g. paper/*.py, can reference a stable
+# path regardless of which run produced it)
 echo ""
 echo "=== Mirroring artifacts into results/final/1-train-mlm/${MODEL_SIZE}/ ($(date)) ==="
 MIRROR_DIR="results/final/1-train-mlm/${MODEL_SIZE}"
 mkdir -p "${MIRROR_DIR}"
-cp "${OUTPUT%.pt}.json" "${ENV_JSON}" "${FIGURE}" "${REPORT}" "${MIRROR_DIR}/"
+cp "${OUTPUT}" "${MIRROR_DIR}/weights.pt"
+cp "${OUTPUT%.pt}.json" "${MIRROR_DIR}/config.json"
+cp "${ENV_JSON}" "${MIRROR_DIR}/env.json"
+cp "${REPORT}" "${MIRROR_DIR}/report.md"
+cp "${FIGURE}" "${MIRROR_DIR}/training_loss.pdf"
 cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.out" "${MIRROR_DIR}/" 2>/dev/null || true
 cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.err" "${MIRROR_DIR}/" 2>/dev/null || true
 
