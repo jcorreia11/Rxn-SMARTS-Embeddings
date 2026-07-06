@@ -36,6 +36,10 @@ N_SAMPLES="${N_SAMPLES:-10000}"
 EC_DEPTH="${EC_DEPTH:-1}"
 SP_MODEL="${SP_MODEL:-data/processed/sp_tokenizer.model}"
 SP_VOCAB_SIZE="${SP_VOCAB_SIZE:-1000}"
+# Deliberately 5, not the 10 used by the main train_ec_classifier phase (3b) —
+# this is a lighter-weight tokenizer probe, not the headline EC result; see
+# hpc-runbook.md's "publication-quality argument choices" table.
+FOLDS="${FOLDS:-5}"
 
 RUN_ID=$(date +%Y%m%d_%H%M%S)
 RESULTS_DIR="results/tokenizer_comparison_${RUN_ID}"
@@ -49,6 +53,7 @@ echo "N samples:     ${N_SAMPLES}"
 echo "EC depth:      ${EC_DEPTH}"
 echo "SP model:      ${SP_MODEL}"
 echo "SP vocab size: ${SP_VOCAB_SIZE}"
+echo "CV folds:      ${FOLDS}"
 
 # ---- step 1: collect environment info ----
 echo ""
@@ -63,7 +68,7 @@ python scripts/train_ec_classifier.py \
     --ec-depth "${EC_DEPTH}" \
     --sp-model "${SP_MODEL}" \
     --sp-vocab-size "${SP_VOCAB_SIZE}" \
-    --folds 5 \
+    --folds "${FOLDS}" \
     --output "${RESULTS_DIR}/ec_classifier.json"
 
 # ---- step 3: intrinsic metrics ----
@@ -102,6 +107,19 @@ echo ""
 echo "=== Committing results to git ($(date)) ==="
 git add "${RESULTS_DIR}/"
 git commit -m "[results] Tokenizer comparison (run ${RUN_ID}, N=${N_SAMPLES}, EC_DEPTH=${EC_DEPTH})"
+
+# ---- mirror into results/final/ for easy browsing ----
+# (local convenience copy only, gitignored — ${RESULTS_DIR} above, git-tracked,
+# remains the actual backed-up record. Stable "tokenizer_comparison" name, not
+# RUN_ID-based, so paper/dataset_tokenizer_results.py's own latest-dir lookup
+# and this mirror don't need to agree on which RUN_ID is current.)
+echo ""
+echo "=== Mirroring artifacts into results/final/0-dataset-stats/tokenizer_comparison/ ($(date)) ==="
+MIRROR_DIR="results/final/0-dataset-stats/tokenizer_comparison"
+mkdir -p "${MIRROR_DIR}"
+cp -r "${RESULTS_DIR}/." "${MIRROR_DIR}/"
+cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.out" "${MIRROR_DIR}/" 2>/dev/null || true
+cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.err" "${MIRROR_DIR}/" 2>/dev/null || true
 
 echo "=== Job finished on $(date) ==="
 

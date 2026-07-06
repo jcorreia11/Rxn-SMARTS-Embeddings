@@ -266,7 +266,8 @@ def main() -> None:
     else:
         logger.warning(
             "SentencePiece model not found at %s — skipping.\n"
-            "Run `dvc repro train_sentencepiece` or pass --sp-model to specify the path.",
+            "Run `python src/smart_rxn_embeddings/tokenization/sentencepiece_tokenizer.py` "
+            "or pass --sp-model to specify the path.",
             sp_model,
         )
 
