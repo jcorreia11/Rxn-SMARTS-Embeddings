@@ -30,14 +30,6 @@ source ../smartrxn_env/bin/activate
 echo "Python executable: $(which python)"
 python -V
 
-# ---- pull model config JSONs (DVC-tracked, small files) ----
-echo ""
-echo "=== Pulling model config JSONs via DVC ($(date)) ==="
-dvc pull \
-    models/smarts_transformer_20260410_111830.json \
-    models/smarts_transformer_20260428_160310.json \
-    models/smarts_transformer_20260513_093030.json
-
 # ---- shared config ----
 N_REACTIONS="${N_REACTIONS:-3000}"
 SEED="${SEED:-42}"
@@ -46,8 +38,24 @@ FORMAT="${FORMAT:-pdf}"
 DPI="${DPI:-300}"
 GRIDSIZE="${GRIDSIZE:-50}"
 
+# Only the architecture (model_config) is read from these — random weights
+# are generated fresh from MODEL_SEED, no checkpoint is loaded. Still, these
+# configs are gitignored, local-only artifacts (see extract_embeddings.sbatch)
+# tied to a specific Phase 1 RUN_ID, so they do NOT auto-update when Phase 1
+# is re-run. After retraining, override with e.g.
+#   --export=ALL,SMALL_CONFIG=${SMALL_CONFIG},MEDIUM_CONFIG=${MEDIUM_CONFIG},LARGE_CONFIG=${LARGE_CONFIG}
+# (see hpc-runbook.md Phase 4b) — the defaults below are just the last known-good run IDs.
+SMALL_CONFIG="${SMALL_CONFIG:-models/smarts_transformer_20260410_111830.json}"
+MEDIUM_CONFIG="${MEDIUM_CONFIG:-models/smarts_transformer_20260428_160310.json}"
+LARGE_CONFIG="${LARGE_CONFIG:-models/smarts_transformer_20260513_093030.json}"
+
 VOCAB="data/processed/vocab.json"
 SUFFIX="${SUFFIX:-_random_s${MODEL_SEED}}"
+
+echo ""
+echo "Small config:  ${SMALL_CONFIG}"
+echo "Medium config: ${MEDIUM_CONFIG}"
+echo "Large config:  ${LARGE_CONFIG}"
 
 RUN_ID="sim_corr_random_${SLURM_JOB_ID}"
 
@@ -67,7 +75,7 @@ mkdir -p results
 echo ""
 echo "=== small model (model-seed=${MODEL_SEED}, $(date)) ==="
 python scripts/similarity_correlation_random_baseline.py \
-    --config      "models/smarts_transformer_20260410_111830.json" \
+    --config      "${SMALL_CONFIG}" \
     --vocab       "${VOCAB}" \
     --smarts      "data/embeddings/small/smarts.txt" \
     --n-reactions "${N_REACTIONS}" \
@@ -85,7 +93,7 @@ python scripts/similarity_correlation_random_baseline.py \
 echo ""
 echo "=== medium model (model-seed=${MODEL_SEED}, $(date)) ==="
 python scripts/similarity_correlation_random_baseline.py \
-    --config      "models/smarts_transformer_20260428_160310.json" \
+    --config      "${MEDIUM_CONFIG}" \
     --vocab       "${VOCAB}" \
     --smarts      "data/embeddings/medium/smarts.txt" \
     --n-reactions "${N_REACTIONS}" \
@@ -103,7 +111,7 @@ python scripts/similarity_correlation_random_baseline.py \
 echo ""
 echo "=== large model (model-seed=${MODEL_SEED}, $(date)) ==="
 python scripts/similarity_correlation_random_baseline.py \
-    --config      "models/smarts_transformer_20260513_093030.json" \
+    --config      "${LARGE_CONFIG}" \
     --vocab       "${VOCAB}" \
     --smarts      "data/embeddings/large/smarts.txt" \
     --n-reactions "${N_REACTIONS}" \
