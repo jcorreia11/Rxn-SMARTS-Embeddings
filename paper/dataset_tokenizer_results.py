@@ -4,8 +4,11 @@ Compile Dataset and Tokenization result statistics for Results section 3.1.
 Sources:
   - data/raw/retrorules-v3.0-{metanetx,rhea}.csv  — provenance counts
   - paper/tokenizer_stats.json                      — intrinsic metrics
-  - results/tokenizer_comparison_20260409_131636/ec_classifier.json
-                                                    — extrinsic EC results
+  - results/tokenizer_comparison_<RUN_ID>/ec_classifier.json — extrinsic EC
+    results; auto-discovers the lexicographically-latest (i.e. most recent,
+    since RUN_ID is a YYYYMMDD_HHMMSS timestamp) tokenizer_comparison_*
+    directory rather than a hardcoded RUN_ID, so this keeps working across
+    reruns of compare_tokenizers.sbatch without edits.
 
 Output: paper/dataset_tokenizer_results.json
 Run from project root: python paper/dataset_tokenizer_results.py
@@ -31,14 +34,19 @@ n_combined = len(combined)
 val = pd.read_csv("data/processed/validated_smarts.csv")
 n_final = (val["valid"].astype(str).str.upper() == "TRUE").sum()
 
-# EC label coverage (same as UMAP)
-raw_merged = pd.concat([
+# EC label coverage. Resolve each template's ECS across *all* raw
+# occurrences before deduping — a template appearing in both MetaNetX and
+# Rhea can have the annotation on only one duplicate row, so
+# deduplicate-then-check silently drops it (the 212,952 vs 214,007
+# discrepancy documented in PAPER_TEMPLATE_JCIM.md §2.1).
+raw_all = pd.concat([
     pd.read_csv("data/raw/retrorules-v3.0-metanetx.csv", usecols=["TEMPLATE", "ECS", "VALID"]),
     pd.read_csv("data/raw/retrorules-v3.0-rhea.csv",     usecols=["TEMPLATE", "ECS", "VALID"]),
-]).drop_duplicates(subset="TEMPLATE")
-raw_merged = raw_merged[raw_merged["VALID"].astype(str).str.upper() == "TRUE"]
-raw_merged["has_ec"] = raw_merged["ECS"].notna() & (raw_merged["ECS"].str.strip() != "")
-n_with_ec = raw_merged[raw_merged["TEMPLATE"].isin(val["smarts"])]["has_ec"].sum()
+])
+raw_all = raw_all[raw_all["VALID"].astype(str).str.upper() == "TRUE"]
+has_ecs_mask = raw_all["ECS"].notna() & (raw_all["ECS"].str.strip() != "")
+annotated_templates = set(raw_all.loc[has_ecs_mask, "TEMPLATE"])
+n_with_ec = val["smarts"].isin(annotated_templates).sum()
 
 dataset = {
     "n_metanetx_valid": int(n_metanetx),
@@ -92,9 +100,13 @@ intrinsic = {
 }
 
 # ── 3. Extrinsic tokenizer metrics (TF-IDF + LR, EC depth=1) ─────────────
-ec_raw = json.loads(
-    Path("results/tokenizer_comparison_20260409_131636/ec_classifier.json").read_text()
-)
+_tok_comparison_dirs = sorted(Path("results").glob("tokenizer_comparison_*"))
+if not _tok_comparison_dirs:
+    raise FileNotFoundError(
+        "No results/tokenizer_comparison_* directory found — has "
+        "compare_tokenizers.sbatch been run?"
+    )
+ec_raw = json.loads((_tok_comparison_dirs[-1] / "ec_classifier.json").read_text())
 ec_meta = ec_raw["meta"]
 ec_results = {r["name"]: r for r in ec_raw["results"]}
 

@@ -1,6 +1,7 @@
 """Compute exact dataset statistics for Methods section 2.1."""
 import sys
-sys.path.insert(0, '/home/joao-correia/PycharmProjects/SmartRxnEmbeddings')
+from pathlib import Path as _Path
+sys.path.insert(0, str(_Path(__file__).resolve().parents[1]))
 
 import json
 from pathlib import Path
@@ -74,8 +75,21 @@ for p in RAW_FILES:
     raw = raw[raw['VALID'].astype(str).str.upper() == 'TRUE']
     frames.append(raw)
 
-raw = pd.concat(frames, ignore_index=True).drop_duplicates(subset='TEMPLATE')
+raw_all = pd.concat(frames, ignore_index=True)
+# Resolve each template's ECS across *all* raw occurrences before deduping —
+# a template that appears in both MetaNetX and Rhea can have the annotation
+# on only one of the duplicate rows, so deduplicate-then-check (as done
+# previously here) silently drops it. This is the same fix documented in
+# PAPER_TEMPLATE_JCIM.md §2.1 for the 212,952 vs 214,007 discrepancy.
+has_ecs_mask = raw_all['ECS'].notna() & (raw_all['ECS'].str.strip() != '')
+ecs_resolved = (
+    raw_all[has_ecs_mask]
+    .drop_duplicates(subset='TEMPLATE')
+    .set_index('TEMPLATE')['ECS']
+)
+raw = raw_all.drop_duplicates(subset='TEMPLATE').copy()
 raw = raw[raw['TEMPLATE'].isin(set(smarts_list))]
+raw['ECS'] = raw['TEMPLATE'].map(ecs_resolved)
 
 has_ec = raw['ECS'].notna() & (raw['ECS'].str.strip() != '')
 print(f"\n=== EC ANNOTATIONS ===")
