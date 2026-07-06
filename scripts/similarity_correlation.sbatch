@@ -30,16 +30,16 @@ python -V
 
 # ---- config ----
 # Override at submission time with --export=ALL,VAR=value
-EMBEDDINGS="${EMBEDDINGS:-data/embeddings/reaction_embeddings.npy}"
-SMARTS_FILE="${SMARTS_FILE:-data/embeddings/reaction_smarts.txt}"
+# MODEL_SIZE (small/medium/large) also shapes the default EMBEDDINGS path
+# and the results/final/3c-similarity-correlation/${MODEL_SIZE}/ mirror below.
+MODEL_SIZE="${MODEL_SIZE:-unspecified}"
+EMBEDDINGS="${EMBEDDINGS:-data/embeddings/${MODEL_SIZE}/embeddings.npy}"
+SMARTS_FILE="${SMARTS_FILE:-data/embeddings/${MODEL_SIZE}/smarts.txt}"
 N_REACTIONS="${N_REACTIONS:-1000}"
 SEED="${SEED:-42}"
 FORMAT="${FORMAT:-pdf}"
 DPI="${DPI:-300}"
 GRIDSIZE="${GRIDSIZE:-50}"
-# Label only (small/medium/large) — used to mirror artifacts into
-# results/final/3c-similarity-correlation/${MODEL_SIZE}/ for easy browsing.
-MODEL_SIZE="${MODEL_SIZE:-unspecified}"
 
 RUN_ID="sim_corr_${SLURM_JOB_ID}"
 OUTPUT_FIG="${OUTPUT_FIG:-results/figures/${RUN_ID}}"

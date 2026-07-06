@@ -31,8 +31,12 @@ python -V
 #   sbatch --export=ALL,QUERY_INDEX=42 nearest_neighbors.sbatch
 # Example: use a random query with a fixed seed
 #   sbatch --export=ALL,QUERY_MODE=random,SEED=7 nearest_neighbors.sbatch
-EMBEDDINGS="${EMBEDDINGS:-data/embeddings/reaction_embeddings.npy}"
-SMARTS_FILE="${SMARTS_FILE:-data/embeddings/reaction_smarts.txt}"
+#
+# MODEL_SIZE (small/medium/large) also shapes the default EMBEDDINGS path
+# and the results/final/3d-nearest-neighbors/${MODEL_SIZE}/ mirror below.
+MODEL_SIZE="${MODEL_SIZE:-unspecified}"
+EMBEDDINGS="${EMBEDDINGS:-data/embeddings/${MODEL_SIZE}/embeddings.npy}"
+SMARTS_FILE="${SMARTS_FILE:-data/embeddings/${MODEL_SIZE}/smarts.txt}"
 TOP_K="${TOP_K:-5}"
 METRIC="${METRIC:-cosine}"
 SEED="${SEED:-42}"
@@ -41,10 +45,6 @@ SEED="${SEED:-42}"
 QUERY_MODE="${QUERY_MODE:-index}"
 QUERY_INDEX="${QUERY_INDEX:-0}"
 QUERY_SMARTS="${QUERY_SMARTS:-}"
-
-# Label only (small/medium/large) — used to mirror artifacts into
-# results/final/3d-nearest-neighbors/${MODEL_SIZE}/ for easy browsing.
-MODEL_SIZE="${MODEL_SIZE:-unspecified}"
 # Optional label for ad-hoc example queries (e.g. "ec1_query") so they can
 # be mirrored alongside the main run without overwriting results.json.
 QUERY_LABEL="${QUERY_LABEL:-}"
