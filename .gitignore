@@ -215,10 +215,9 @@ related_papers/*
 # Temporary files
 /temp/*
 
-results/*.pt
-results/final/
-models/*.pt
-models/checkpoints/*
+results/*
+models/*
+data/*
 
 latex/*
 out/*
