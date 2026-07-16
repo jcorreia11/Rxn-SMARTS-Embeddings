@@ -1,0 +1,19 @@
+{
+  "python_version": "3.12.3",
+  "platform": "Linux-4.18.0-348.el8.0.2.x86_64-x86_64-with-glibc2.28",
+  "torch_version": "2.6.0+cu124",
+  "cuda_available": true,
+  "cuda_version": "12.4",
+  "gpu_count": 1,
+  "gpu_name": "NVIDIA A100-SXM4-40GB",
+  "gpu_memory_gb": 39.5,
+  "cpu_model": "AMD EPYC 7742 64-Core Processor",
+  "cpu_cores": 128,
+  "ram_gb": 503.7,
+  "driver_version": "580.167.08",
+  "pkg_numpy": "2.4.3",
+  "pkg_pandas": "3.0.2",
+  "pkg_scikit_learn": "1.8.0",
+  "pkg_sentencepiece": "0.2.1",
+  "pkg_rdkit": "2025.9.6"
+}
