@@ -45,9 +45,9 @@ GRIDSIZE="${GRIDSIZE:-50}"
 # is re-run. After retraining, override with e.g.
 #   --export=ALL,SMALL_CONFIG=${SMALL_CONFIG},MEDIUM_CONFIG=${MEDIUM_CONFIG},LARGE_CONFIG=${LARGE_CONFIG}
 # (see hpc-runbook.md Phase 4b) — the defaults below are just the last known-good run IDs.
-SMALL_CONFIG="${SMALL_CONFIG:-models/smarts_transformer_20260410_111830.json}"
-MEDIUM_CONFIG="${MEDIUM_CONFIG:-models/smarts_transformer_20260428_160310.json}"
-LARGE_CONFIG="${LARGE_CONFIG:-models/smarts_transformer_20260513_093030.json}"
+SMALL_CONFIG="${SMALL_CONFIG:-models/smarts_transformer_20260715_110917.json}"
+MEDIUM_CONFIG="${MEDIUM_CONFIG:-models/smarts_transformer_20260715_111009.json}"
+LARGE_CONFIG="${LARGE_CONFIG:-models/smarts_transformer_20260715_111042.json}"
 
 VOCAB="data/processed/vocab.json"
 SUFFIX="${SUFFIX:-_random_s${MODEL_SEED}}"
