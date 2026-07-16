@@ -6,9 +6,14 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=16G
+#SBATCH --mem=64G
 #SBATCH --output=/projects/F202508983CPCAA0/jcorreia/logs/%x_%j.out
 #SBATCH --error=/projects/F202508983CPCAA0/jcorreia/logs/%x_%j.err
+
+# 16G previously OOM-risked here too: load_reaction_groups() in
+# nearest_neighbors.py reads the full validated_smarts.csv (~361k rows) into
+# a pandas DataFrame plus a dict, same as similarity_correlation.py — see
+# that sbatch script's memory note. Bumped preemptively before first run.
 
 set -euo pipefail
 

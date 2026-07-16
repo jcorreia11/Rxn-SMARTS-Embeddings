@@ -6,12 +6,17 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=32G
+#SBATCH --mem=64G
 #SBATCH --output=/projects/F202508983CPCAA0/jcorreia/logs/%x_%j.out
 #SBATCH --error=/projects/F202508983CPCAA0/jcorreia/logs/%x_%j.err
 
-# Memory note: 32 GB covers loading the full embedding matrix (~1.4 GB for
-# 361k × 256 float32) plus the pairwise cosine matrix for the sampled subset.
+# Memory note: the pairwise arrays themselves are small (well under 1 GB,
+# even for large's 361k x 512 float32 embedding matrix). The real memory
+# cost is similarity_correlation.py's load_reaction_groups(), which reads
+# the full validated_smarts.csv (~361k rows) into a pandas DataFrame plus a
+# dict + list keyed on every SMARTS (not just the sampled subset), all held
+# for the whole job. 32G OOM-killed the `large` run right after the pairwise
+# stage, before "Computing correlation statistics" — 64G leaves real headroom.
 
 set -euo pipefail
 
