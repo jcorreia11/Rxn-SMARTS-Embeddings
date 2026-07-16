@@ -91,15 +91,10 @@ echo ""
 echo "Figure:     ${OUTPUT}.${FORMAT}"
 echo "UMAP cache: ${UMAP_CACHE}"
 
-# ---- commit results to git ----
-echo ""
-echo "=== Committing results to git ($(date)) ==="
-git add "${OUTPUT}.${FORMAT}"
-git commit -m "[results] UMAP embedding space depth=${EC_DEPTH} (job ${SLURM_JOB_ID})"
-
 # ---- mirror into results/final/ for easy browsing ----
-# (local convenience copy only, gitignored — the flat results/figures/ file
-# above, git-tracked, remains the actual backed-up record)
+# (results/ is gitignored — neither the flat results/figures/ file above
+# nor this mirror are committed to git. Both are local-only; back them up
+# via rsync/scp.)
 echo ""
 echo "=== Mirroring artifacts into results/final/3e-umap/${MODEL_SIZE}/depth${EC_DEPTH}/ ($(date)) ==="
 MIRROR_DIR="results/final/3e-umap/${MODEL_SIZE}/depth${EC_DEPTH}"

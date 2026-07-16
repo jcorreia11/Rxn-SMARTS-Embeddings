@@ -84,25 +84,20 @@ echo ""
 echo "=== Generating tokenizer example figure ($(date)) ==="
 python paper/plot_tokenizer_example.py
 
-# ---- commit results to git ----
+# ---- commit paper/ tokenizer example figure to git ----
+# (paper/ is not gitignored, but results/figures/ below is — mixing an
+# ignored path into a single `git add` call makes the whole call exit
+# non-zero and, under `set -e`, aborts the job before mirroring runs. So
+# only the paper/ path is added here.)
 echo ""
-echo "=== Committing results to git ($(date)) ==="
-git add "${FIGURES_DIR}/panel_a_smarts_length."* \
-        "${FIGURES_DIR}/panel_b_ec_distribution."* \
-        "${FIGURES_DIR}/panel_c_train_val_split."* \
-        "${OUTPUT}.pdf" \
-        "${FIGURES_DIR}/length_dist_char."* \
-        "${FIGURES_DIR}/length_dist_rule_tok."* \
-        "${FIGURES_DIR}/length_dist_sp_tok."* \
-        "${LENGTH_DIST_OUTPUT}.pdf" \
-        "${LENGTH_DIST_OUTPUT}.json" \
-        "paper/figures/tokenizer_example.pdf" \
-        "paper/figures/tokenizer_example.png"
-git commit -m "[results] Dataset overview, length distribution, and tokenizer example figures (job ${SLURM_JOB_ID})"
+echo "=== Committing tokenizer example figure to git ($(date)) ==="
+git add "paper/figures/tokenizer_example.pdf" "paper/figures/tokenizer_example.png"
+git commit -m "[results] Tokenizer example figure (job ${SLURM_JOB_ID})"
 
 # ---- mirror into results/final/ for easy browsing ----
-# (local convenience copy only, gitignored — the flat results/figures/ and
-# paper/figures/ files above, git-tracked, remain the actual backed-up record)
+# (results/figures/ is gitignored — neither the flat files above nor this
+# mirror are committed to git. Both are local-only; back them up via
+# rsync/scp.)
 echo ""
 echo "=== Mirroring artifacts into results/final/0-dataset-stats/ ($(date)) ==="
 MIRROR_DIR="results/final/0-dataset-stats"

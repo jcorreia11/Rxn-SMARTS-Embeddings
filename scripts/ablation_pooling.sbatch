@@ -107,15 +107,9 @@ echo "Results JSON: ${OUTPUT_JSON}"
 echo "Environment:  ${OUTPUT_ENV}"
 echo "Report:       ${OUTPUT_REPORT}"
 
-# ---- commit results to git ----
-echo ""
-echo "=== Committing results to git ($(date)) ==="
-git add "${OUTPUT_JSON}" "${OUTPUT_ENV}" "${OUTPUT_REPORT}" "${OUTPUT_FIGURE}"
-git commit -m "[results] Pooling ablation (run ${RUN_ID})"
-
 # ---- mirror into results/final/ for easy browsing ----
-# (local convenience copy only, gitignored — the flat results/ files above,
-# git-tracked, remain the actual backed-up record)
+# (results/ is gitignored — neither the flat files above nor this mirror
+# are committed to git. Both are local-only; back them up via rsync/scp.)
 echo ""
 echo "=== Mirroring artifacts into results/final/3a-pooling-ablation/${MODEL_SIZE}/ ($(date)) ==="
 MIRROR_DIR="results/final/3a-pooling-ablation/${MODEL_SIZE}"

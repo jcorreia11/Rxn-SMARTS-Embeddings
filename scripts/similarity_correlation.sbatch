@@ -93,15 +93,9 @@ echo "Stats:       ${OUTPUT_JSON}"
 echo "Environment: ${OUTPUT_ENV}"
 echo "Report:      ${OUTPUT_REPORT}"
 
-# ---- commit results to git ----
-echo ""
-echo "=== Committing results to git ($(date)) ==="
-git add "${OUTPUT_FIG}.${FORMAT}" "${OUTPUT_JSON}" "${OUTPUT_ENV}" "${OUTPUT_REPORT}"
-git commit -m "[results] Similarity correlation (run ${RUN_ID}, N=${N_REACTIONS})"
-
 # ---- mirror into results/final/ for easy browsing ----
-# (local convenience copy only, gitignored — the flat results/ files above,
-# git-tracked, remain the actual backed-up record)
+# (results/ is gitignored — neither the flat files above nor this mirror
+# are committed to git. Both are local-only; back them up via rsync/scp.)
 echo ""
 echo "=== Mirroring artifacts into results/final/3c-similarity-correlation/${MODEL_SIZE}/ ($(date)) ==="
 MIRROR_DIR="results/final/3c-similarity-correlation/${MODEL_SIZE}"

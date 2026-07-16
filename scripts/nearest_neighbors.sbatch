@@ -113,15 +113,9 @@ echo "Results JSON: ${OUTPUT_JSON}"
 echo "Environment:  ${OUTPUT_ENV}"
 echo "Report:       ${OUTPUT_REPORT}"
 
-# ---- commit results to git ----
-echo ""
-echo "=== Committing results to git ($(date)) ==="
-git add "${OUTPUT_JSON}" "${OUTPUT_ENV}" "${OUTPUT_REPORT}"
-git commit -m "[results] Nearest neighbors (run ${RUN_ID})"
-
 # ---- mirror into results/final/ for easy browsing ----
-# (local convenience copy only, gitignored — the flat results/ files above,
-# git-tracked, remain the actual backed-up record)
+# (results/ is gitignored — neither the flat files above nor this mirror
+# are committed to git. Both are local-only; back them up via rsync/scp.)
 echo ""
 echo "=== Mirroring artifacts into results/final/3d-nearest-neighbors/${MODEL_SIZE}/ ($(date)) ==="
 MIRROR_DIR="results/final/3d-nearest-neighbors/${MODEL_SIZE}"

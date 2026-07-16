@@ -59,12 +59,8 @@ echo "Large config:  ${LARGE_CONFIG}"
 
 RUN_ID="sim_corr_random_${SLURM_JOB_ID}"
 
-# Flat, git-tracked primary outputs (the actual backed-up record).
-# OUT_BASE below is a gitignored local mirror only — a prior version of
-# this script wrote *only* to OUT_BASE, so its "commit results" step was a
-# silent no-op (nothing to add) and, under `set -euo pipefail`, `git commit`
-# on an empty index exits non-zero and fails the whole job even though the
-# analysis itself succeeded. Writing the flat copies first fixes that.
+# Flat outputs, mirrored into OUT_BASE below for easy browsing. Both are
+# gitignored (results/*), local-only artifacts — back them up via rsync/scp.
 FLAT_BASE="results/${RUN_ID}"
 OUT_BASE="results/final/3c-similarity-correlation"
 mkdir -p results
@@ -123,18 +119,9 @@ python scripts/similarity_correlation_random_baseline.py \
     --gridsize    "${GRIDSIZE}" \
     --save-json   "${FLAT_BASE}_large${SUFFIX}.json"
 
-# ---- commit results to git ----
-echo ""
-echo "=== Committing results ($(date)) ==="
-git add \
-    "${FLAT_BASE}_small${SUFFIX}.json"  "${FLAT_BASE}_small${SUFFIX}_figure.${FORMAT}" \
-    "${FLAT_BASE}_medium${SUFFIX}.json" "${FLAT_BASE}_medium${SUFFIX}_figure.${FORMAT}" \
-    "${FLAT_BASE}_large${SUFFIX}.json"  "${FLAT_BASE}_large${SUFFIX}_figure.${FORMAT}"
-git commit -m "[results] Similarity correlation — random-init baseline (${RUN_ID}, model-seed=${MODEL_SEED}, N=${N_REACTIONS})"
-
 # ---- mirror into results/final/ for easy browsing ----
-# (local convenience copy only, gitignored — the flat results/ files above,
-# git-tracked, remain the actual backed-up record)
+# (results/ is gitignored — neither the flat files above nor this mirror
+# are committed to git. Both are local-only; back them up via rsync/scp.)
 echo ""
 echo "=== Mirroring artifacts into ${OUT_BASE}/{small,medium,large}${SUFFIX}/ ($(date)) ==="
 for size in small medium large; do

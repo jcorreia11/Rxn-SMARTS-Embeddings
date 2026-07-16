@@ -102,17 +102,12 @@ echo ""
 echo "Figures:  ${FIGURES_DIR}/"
 echo "Report:   ${RESULTS_DIR}/tokenizer_comparison_report.md"
 
-# ---- commit results to git ----
-echo ""
-echo "=== Committing results to git ($(date)) ==="
-git add "${RESULTS_DIR}/"
-git commit -m "[results] Tokenizer comparison (run ${RUN_ID}, N=${N_SAMPLES}, EC_DEPTH=${EC_DEPTH})"
-
 # ---- mirror into results/final/ for easy browsing ----
-# (local convenience copy only, gitignored — ${RESULTS_DIR} above, git-tracked,
-# remains the actual backed-up record. Stable "tokenizer_comparison" name, not
-# RUN_ID-based, so paper/dataset_tokenizer_results.py's own latest-dir lookup
-# and this mirror don't need to agree on which RUN_ID is current.)
+# (results/ is gitignored — neither ${RESULTS_DIR} above nor this mirror
+# are committed to git. Both are local-only; back them up via rsync/scp.
+# Stable "tokenizer_comparison" name, not RUN_ID-based, so
+# paper/dataset_tokenizer_results.py's own latest-dir lookup and this
+# mirror don't need to agree on which RUN_ID is current.)
 echo ""
 echo "=== Mirroring artifacts into results/final/0-dataset-stats/tokenizer_comparison/ ($(date)) ==="
 MIRROR_DIR="results/final/0-dataset-stats/tokenizer_comparison"

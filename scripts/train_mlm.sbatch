@@ -174,16 +174,11 @@ echo ""
 echo "Training plot: ${FIGURE}"
 echo "Report:        ${REPORT}"
 
-# ---- commit lightweight artifacts to git ----
-echo ""
-echo "=== Committing report and plot to git ($(date)) ==="
-git add "${ENV_JSON}" "${FIGURE}" "${REPORT}"
-git commit -m "[results] MLM training report and plot (run ${RUN_ID})"
-
-# Model weights and config (${OUTPUT}, ${OUTPUT%.pt}.json) are gitignored,
-# local-only artifacts — not versioned in git. The results/final/ mirror
-# below is the only copy of the weights beyond models/ itself, so treat
-# both as equally "primary" for backup purposes (rsync/scp off-machine).
+# models/ (weights, config, env, figure, report — everything above) is
+# gitignored, local-only. Nothing here is committed to git. The
+# results/final/ mirror below is the only other copy of these artifacts,
+# so treat both models/ and the mirror as equally "primary" for backup
+# purposes (rsync/scp off-machine).
 
 # ---- mirror artifacts into results/final/ for easy browsing ----
 # (local convenience copy, gitignored; generic filenames — not run-ID

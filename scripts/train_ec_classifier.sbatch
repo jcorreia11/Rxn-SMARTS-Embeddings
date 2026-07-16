@@ -128,15 +128,9 @@ echo "Environment:   ${ENV_JSON}"
 echo "Report:        ${REPORT}"
 echo "Figure:        ${REPORT%.md}.pdf"
 
-# ---- commit results to git ----
-echo ""
-echo "=== Committing results to git ($(date)) ==="
-git add "${OUTPUT}" "${ENV_JSON}" "${REPORT}" "${REPORT%.md}.pdf"
-git commit -m "[results] EC classifier (run ${RUN_ID})"
-
 # ---- mirror into results/final/ for easy browsing ----
-# (local convenience copy only, gitignored — the flat results/ files above,
-# git-tracked, remain the actual backed-up record)
+# (results/ is gitignored — neither the flat files above nor this mirror
+# are committed to git. Both are local-only; back them up via rsync/scp.)
 echo ""
 echo "=== Mirroring artifacts into results/final/3b-ec-classifier/${MODEL_SIZE}/depth${EC_DEPTH}/ ($(date)) ==="
 MIRROR_DIR="results/final/3b-ec-classifier/${MODEL_SIZE}/depth${EC_DEPTH}"
