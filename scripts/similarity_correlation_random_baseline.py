@@ -175,7 +175,7 @@ def main() -> None:
 
     # Pass n_reactions == len(sub_smarts) so sample_and_compute uses all rows
     # in their existing order (same SMARTS order → same Tanimoto pairs as pretrained runs).
-    cosine, tanimoto, n_reactions, n_pairs = sample_and_compute(
+    cosine, tanimoto, n_reactions, n_pairs, _same_group = sample_and_compute(
         embeddings, sub_smarts, len(sub_smarts), args.seed
     )
 
