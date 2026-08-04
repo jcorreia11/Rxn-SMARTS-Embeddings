@@ -1,0 +1,70 @@
+{
+  "dataset": {
+    "n_metanetx_valid": 302879,
+    "n_rhea_valid": 125842,
+    "n_combined_before_dedup": 428721,
+    "n_after_dedup": 361751,
+    "n_final_corpus": 361751,
+    "n_duplicates_removed": 66970,
+    "n_with_ec_annotation": 214007,
+    "pct_with_ec": 59.2
+  },
+  "intrinsic_tokenizer": {
+    "rule_based": {
+      "vocab_size": 4465,
+      "seq_len_median": 101,
+      "seq_len_mean": 119.8,
+      "seq_len_max": 763,
+      "fertility_mean": 0.276,
+      "coverage_256": 93.5,
+      "coverage_512": 99.8,
+      "n_truncated_512": 553,
+      "throughput_smarts_per_s": 9018.0,
+      "round_trip_fidelity_pct": 100.0,
+      "error_rate_pct": 0.0
+    },
+    "sentencepiece": {
+      "vocab_size": 1000,
+      "seq_len_median": 161,
+      "seq_len_mean": 190.4,
+      "seq_len_max": 1433,
+      "fertility_mean": 0.447,
+      "coverage_256": 77.0,
+      "coverage_512": 97.4,
+      "throughput_smarts_per_s": 2965.0,
+      "round_trip_fidelity_pct": 100.0,
+      "error_rate_pct": 0.0
+    },
+    "deltas": {
+      "median_len_ratio_rb_vs_sp": 0.627,
+      "throughput_speedup_rb_vs_sp": 3.0,
+      "coverage_gain_rb_at_256_pp": 16.5,
+      "coverage_gain_rb_at_512_pp": 2.4
+    }
+  },
+  "extrinsic_tokenizer_ec": {
+    "n_samples": 214007,
+    "n_train": 171206,
+    "n_test": 42801,
+    "n_classes": 7,
+    "n_folds": 5,
+    "rule_based": {
+      "accuracy_mean": 0.5902,
+      "accuracy_std": 0.0042,
+      "f1_macro_mean": 0.4273,
+      "f1_macro_std": 0.0042,
+      "f1_weighted_mean": 0.6197,
+      "f1_weighted_std": 0.0034
+    },
+    "sentencepiece": {
+      "accuracy_mean": 0.6322,
+      "accuracy_std": 0.0019,
+      "f1_macro_mean": 0.4627,
+      "f1_macro_std": 0.0025,
+      "f1_weighted_mean": 0.656,
+      "f1_weighted_std": 0.0022
+    },
+    "delta_accuracy_sp_minus_rb": 0.042,
+    "delta_f1_macro_sp_minus_rb": 0.0354
+  }
+}

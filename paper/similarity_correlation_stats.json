@@ -1,0 +1,73 @@
+{
+  "sampling": {
+    "n_reactions_total": 361751,
+    "n_reactions_sampled": 3000,
+    "seed": 42,
+    "n_pairs_possible": 4498500
+  },
+  "fingerprint": {
+    "type": "RDKit structural reaction fingerprint",
+    "rdkit_function": "rdChemReactions.CreateStructuralFingerprintForReaction",
+    "n_bits": 4096,
+    "similarity_metric": "Tanimoto coefficient (DataStructs.TanimotoSimilarity)"
+  },
+  "embedding_similarity": {
+    "metric": "cosine similarity",
+    "normalisation": "L2 (unit norm)",
+    "computation": "upper-triangle pairwise cosine of sampled embedding rows"
+  },
+  "sizes": {
+    "small": {
+      "n_pairs_retained": 4498500,
+      "pct_pairs_retained": 100.0,
+      "pearson_r": 0.587102,
+      "pearson_p": 0.0,
+      "spearman_r": 0.565344,
+      "spearman_p": 0.0,
+      "n_pairs": 4498500,
+      "cosine_mean": 0.738968,
+      "cosine_std": 0.094851,
+      "tanimoto_mean": 0.33845,
+      "tanimoto_std": 0.15987,
+      "total_time_s": 55.69
+    },
+    "medium": {
+      "n_pairs_retained": 4498500,
+      "pct_pairs_retained": 100.0,
+      "pearson_r": 0.61955,
+      "pearson_p": 0.0,
+      "spearman_r": 0.59327,
+      "spearman_p": 0.0,
+      "n_pairs": 4498500,
+      "cosine_mean": 0.716519,
+      "cosine_std": 0.100621,
+      "tanimoto_mean": 0.33845,
+      "tanimoto_std": 0.15987,
+      "total_time_s": 55.63
+    },
+    "large": {
+      "n_pairs_retained": 4498500,
+      "pct_pairs_retained": 100.0,
+      "pearson_r": 0.581922,
+      "pearson_p": 0.0,
+      "spearman_r": 0.573182,
+      "spearman_p": 0.0,
+      "n_pairs": 4498500,
+      "cosine_mean": 0.714379,
+      "cosine_std": 0.101645,
+      "tanimoto_mean": 0.33845,
+      "tanimoto_std": 0.15987,
+      "total_time_s": 55.11
+    }
+  },
+  "visualisation": {
+    "type": "hexbin density scatter plot",
+    "gridsize": 50,
+    "overlay": "OLS linear regression",
+    "output_figures": [
+      "results/final/3c-similarity-correlation/small/figure.pdf",
+      "results/final/3c-similarity-correlation/medium/figure.pdf",
+      "results/final/3c-similarity-correlation/large/figure.pdf"
+    ]
+  }
+}

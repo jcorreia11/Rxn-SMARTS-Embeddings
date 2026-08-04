@@ -1,0 +1,116 @@
+{
+  "small": {
+    "config": {
+      "vocab_size": 4466,
+      "d_model": 256,
+      "nhead": 8,
+      "num_encoder_layers": 6,
+      "dim_feedforward": 1024,
+      "dropout": 0.1,
+      "max_seq_len": 256,
+      "pad_id": 0
+    },
+    "derived": {
+      "head_dim": 32,
+      "ffn_expansion_ratio": 4,
+      "ffn_activation_encoder_layers": "relu",
+      "ffn_activation_mlm_head": "gelu",
+      "normalization": "post-LN (norm_first=False)",
+      "positional_encoding": "learned (nn.Embedding)",
+      "architecture_type": "encoder-only (BERT-style)",
+      "framework": "PyTorch nn.TransformerEncoder"
+    },
+    "parameters": {
+      "token_embedding": 1143296,
+      "positional_embedding": 65536,
+      "transformer_stack_total": 4738560,
+      "per_encoder_layer": 789760,
+      "per_layer_self_attention": 263168,
+      "per_layer_ffn": 525568,
+      "per_layer_layernorms": 1024,
+      "encoder_total": 5947392,
+      "mlm_head": 1214066,
+      "full_model_total": 7161458
+    },
+    "size_mb_float32": {
+      "full_model": 28.65,
+      "encoder_only": 23.79
+    }
+  },
+  "medium": {
+    "config": {
+      "vocab_size": 4466,
+      "d_model": 256,
+      "nhead": 8,
+      "num_encoder_layers": 6,
+      "dim_feedforward": 1024,
+      "dropout": 0.1,
+      "max_seq_len": 512,
+      "pad_id": 0
+    },
+    "derived": {
+      "head_dim": 32,
+      "ffn_expansion_ratio": 4,
+      "ffn_activation_encoder_layers": "relu",
+      "ffn_activation_mlm_head": "gelu",
+      "normalization": "post-LN (norm_first=False)",
+      "positional_encoding": "learned (nn.Embedding)",
+      "architecture_type": "encoder-only (BERT-style)",
+      "framework": "PyTorch nn.TransformerEncoder"
+    },
+    "parameters": {
+      "token_embedding": 1143296,
+      "positional_embedding": 131072,
+      "transformer_stack_total": 4738560,
+      "per_encoder_layer": 789760,
+      "per_layer_self_attention": 263168,
+      "per_layer_ffn": 525568,
+      "per_layer_layernorms": 1024,
+      "encoder_total": 6012928,
+      "mlm_head": 1214066,
+      "full_model_total": 7226994
+    },
+    "size_mb_float32": {
+      "full_model": 28.91,
+      "encoder_only": 24.05
+    }
+  },
+  "large": {
+    "config": {
+      "vocab_size": 4466,
+      "d_model": 512,
+      "nhead": 16,
+      "num_encoder_layers": 8,
+      "dim_feedforward": 2048,
+      "dropout": 0.1,
+      "max_seq_len": 512,
+      "pad_id": 0
+    },
+    "derived": {
+      "head_dim": 32,
+      "ffn_expansion_ratio": 4,
+      "ffn_activation_encoder_layers": "relu",
+      "ffn_activation_mlm_head": "gelu",
+      "normalization": "post-LN (norm_first=False)",
+      "positional_encoding": "learned (nn.Embedding)",
+      "architecture_type": "encoder-only (BERT-style)",
+      "framework": "PyTorch nn.TransformerEncoder"
+    },
+    "parameters": {
+      "token_embedding": 2286592,
+      "positional_embedding": 262144,
+      "transformer_stack_total": 25219072,
+      "per_encoder_layer": 3152384,
+      "per_layer_self_attention": 1050624,
+      "per_layer_ffn": 2099712,
+      "per_layer_layernorms": 2048,
+      "encoder_total": 27767808,
+      "mlm_head": 2554738,
+      "full_model_total": 30322546
+    },
+    "size_mb_float32": {
+      "full_model": 121.29,
+      "encoder_only": 111.07
+    }
+  }
+}

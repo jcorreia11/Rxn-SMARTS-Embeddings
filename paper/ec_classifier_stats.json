@@ -1,0 +1,89 @@
+{
+  "task": "EC number classification at depth=1, 2, 3",
+  "source_data": [
+    "data/raw/retrorules-v3.0-metanetx.csv",
+    "data/raw/retrorules-v3.0-rhea.csv"
+  ],
+  "label_construction": "EC annotations joined with validated SMARTS via TEMPLATE column; first EC number used; truncated to k components for depth k; rare classes pruned to ensure stratified splitting feasibility.",
+  "cross_checked_across_sizes": [
+    "small",
+    "medium",
+    "large"
+  ],
+  "depths": {
+    "1": {
+      "n_samples": 49996,
+      "n_classes": 7
+    },
+    "2": {
+      "n_samples": 49962,
+      "n_classes": 72
+    },
+    "3": {
+      "n_samples": 49884,
+      "n_classes": 237
+    }
+  },
+  "protocol": {
+    "train_test_split": "80/20 (group-aware, stratified)",
+    "n_cv_folds": 10,
+    "random_seed": 42,
+    "embedding_normalisation": "StandardScaler (zero mean, unit variance) per feature",
+    "cv_metric": "stratified k-fold on training set; final report on held-out test set"
+  },
+  "methods": {
+    "tfidf_smarts": {
+      "type": "TF-IDF + logistic regression",
+      "tokenizer": "SmartsTokenizer (\u00a72.2.1)"
+    },
+    "tfidf_sp": {
+      "type": "TF-IDF + logistic regression",
+      "tokenizer": "SentencePieceTokenizer (\u00a72.2.2)"
+    },
+    "random_logreg": {
+      "type": "Random-init embeddings + logistic regression",
+      "note": "untrained control"
+    },
+    "random_mlp": {
+      "type": "Random-init embeddings + MLP",
+      "note": "untrained control"
+    },
+    "pretrained_logreg": {
+      "type": "Pretrained embeddings + logistic regression",
+      "note": "proposed method"
+    },
+    "pretrained_mlp": {
+      "type": "Pretrained embeddings + MLP",
+      "note": "proposed method"
+    }
+  },
+  "classifier_details": {
+    "tfidf": {
+      "vectoriser": "TfidfVectorizer",
+      "sublinear_tf": true,
+      "lowercase": false,
+      "token_pattern": "custom (tokenizer function)"
+    },
+    "logistic_regression": {
+      "solver": "lbfgs",
+      "C": 1.0,
+      "class_weight": "balanced",
+      "max_iter": 1000
+    },
+    "mlp": {
+      "hidden_layer_sizes": [
+        256,
+        128
+      ],
+      "activation": "relu",
+      "max_iter": 300,
+      "early_stopping": true,
+      "validation_fraction": 0.1
+    }
+  },
+  "metrics": [
+    "accuracy",
+    "F1-macro",
+    "F1-weighted"
+  ]
+}
