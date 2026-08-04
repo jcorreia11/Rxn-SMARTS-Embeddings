@@ -85,5 +85,86 @@
     "accuracy",
     "F1-macro",
     "F1-weighted"
-  ]
+  ],
+  "pretraining_seed_variance": {
+    "model_size": "medium",
+    "method": "Pretrained+mlp",
+    "seeds": [
+      "medium",
+      "medium_seed1",
+      "medium_seed2"
+    ],
+    "note": "medium_seed1/medium_seed2 are independent Phase 1 pretraining runs with different SEED values (weight init + data-loader shuffling/masking), carried through Phase 2 (embeddings) and Phase 3b (this classifier) independently of the headline medium run (seed=42).",
+    "depths": {
+      "1": {
+        "accuracy_mean": 0.813733,
+        "accuracy_std": 0.008776,
+        "f1_macro_mean": 0.653433,
+        "f1_macro_std": 0.009363,
+        "per_seed": {
+          "medium": {
+            "accuracy_mean": 0.8189,
+            "f1_macro_mean": 0.6625,
+            "f1_weighted_mean": 0.8174
+          },
+          "medium_seed1": {
+            "accuracy_mean": 0.8036,
+            "f1_macro_mean": 0.6438,
+            "f1_weighted_mean": 0.8011
+          },
+          "medium_seed2": {
+            "accuracy_mean": 0.8187,
+            "f1_macro_mean": 0.654,
+            "f1_weighted_mean": 0.8165
+          }
+        }
+      },
+      "2": {
+        "accuracy_mean": 0.696733,
+        "accuracy_std": 0.010006,
+        "f1_macro_mean": 0.418467,
+        "f1_macro_std": 0.010312,
+        "per_seed": {
+          "medium": {
+            "accuracy_mean": 0.7031,
+            "f1_macro_mean": 0.4218,
+            "f1_weighted_mean": 0.6978
+          },
+          "medium_seed1": {
+            "accuracy_mean": 0.6852,
+            "f1_macro_mean": 0.4069,
+            "f1_weighted_mean": 0.6796
+          },
+          "medium_seed2": {
+            "accuracy_mean": 0.7019,
+            "f1_macro_mean": 0.4267,
+            "f1_weighted_mean": 0.6965
+          }
+        }
+      },
+      "3": {
+        "accuracy_mean": 0.632433,
+        "accuracy_std": 0.010276,
+        "f1_macro_mean": 0.325267,
+        "f1_macro_std": 0.010225,
+        "per_seed": {
+          "medium": {
+            "accuracy_mean": 0.6409,
+            "f1_macro_mean": 0.3331,
+            "f1_weighted_mean": 0.6302
+          },
+          "medium_seed1": {
+            "accuracy_mean": 0.621,
+            "f1_macro_mean": 0.3137,
+            "f1_weighted_mean": 0.6105
+          },
+          "medium_seed2": {
+            "accuracy_mean": 0.6354,
+            "f1_macro_mean": 0.329,
+            "f1_weighted_mean": 0.6259
+          }
+        }
+      }
+    }
+  }
 }

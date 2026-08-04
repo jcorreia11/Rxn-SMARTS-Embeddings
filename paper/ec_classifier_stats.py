@@ -11,15 +11,26 @@ Reads from the results/final/ mirror using stable, generic filenames (no
 run-ID in the path), so this keeps working across retraining runs without
 edits.
 
+Also aggregates pretraining seed variance: medium_seed1/medium_seed2 are
+independent Phase 1 reruns (different SEED, everything else identical),
+carried through Phase 2/3b on their own. This complements the random-init
+baseline comparison in similarity_correlation_stats.py — that shows the
+pretrained model beats random projections; this shows the result isn't a
+fluke of one training run, by reporting EC-classifier accuracy/F1 stability
+across independent pretraining seeds.
+
 Output: paper/ec_classifier_stats.json
 Run from project root: python paper/ec_classifier_stats.py
 """
 
 import json
+import statistics
 from pathlib import Path
 
 SIZES = ["small", "medium", "large"]
 DEPTHS = [1, 2, 3]
+SEED_VARIANTS = ["medium", "medium_seed1", "medium_seed2"]
+HEADLINE_METHOD = "Pretrained+mlp"
 RESULT_ROOT = Path("results/final/3b-ec-classifier")
 OUTPUT_JSON = Path("paper/ec_classifier_stats.json")
 
@@ -128,6 +139,53 @@ results = {
     "metrics": ["accuracy", "F1-macro", "F1-weighted"],
 }
 
+
+def _headline_metrics(doc: dict) -> dict:
+    for r in doc["results"]:
+        if r["name"] == HEADLINE_METHOD:
+            return {
+                "accuracy_mean": r["accuracy_mean"],
+                "f1_macro_mean": r["f1_macro_mean"],
+                "f1_weighted_mean": r["f1_weighted_mean"],
+            }
+    raise KeyError(f"method '{HEADLINE_METHOD}' not found in results")
+
+
+# ── Pretraining seed variance (medium model, 3 independent seeds) ─────────
+seed_variant_docs = {
+    (variant, depth): _load(variant, depth)
+    for variant in SEED_VARIANTS
+    for depth in DEPTHS
+}
+
+results["pretraining_seed_variance"] = {
+    "model_size": "medium",
+    "method": HEADLINE_METHOD,
+    "seeds": SEED_VARIANTS,
+    "note": (
+        "medium_seed1/medium_seed2 are independent Phase 1 pretraining runs "
+        "with different SEED values (weight init + data-loader shuffling/"
+        "masking), carried through Phase 2 (embeddings) and Phase 3b (this "
+        "classifier) independently of the headline medium run (seed=42)."
+    ),
+    "depths": {},
+}
+
+for depth in DEPTHS:
+    per_seed = {
+        variant: _headline_metrics(seed_variant_docs[(variant, depth)])
+        for variant in SEED_VARIANTS
+    }
+    accs = [v["accuracy_mean"] for v in per_seed.values()]
+    f1s = [v["f1_macro_mean"] for v in per_seed.values()]
+    results["pretraining_seed_variance"]["depths"][str(depth)] = {
+        "accuracy_mean": round(statistics.mean(accs), 6),
+        "accuracy_std": round(statistics.stdev(accs), 6),
+        "f1_macro_mean": round(statistics.mean(f1s), 6),
+        "f1_macro_std": round(statistics.stdev(f1s), 6),
+        "per_seed": per_seed,
+    }
+
 # ── Print summary ──────────────────────────────────────────────────────────
 print("=== EC CLASSIFIER — DATASET & PROTOCOL ===")
 print(f"Task            : {results['task']}")
@@ -149,6 +207,18 @@ for name, m in results["methods"].items():
 print()
 print("=== METRICS ===")
 print(f"  {', '.join(results['metrics'])}")
+
+print()
+print(f"=== PRETRAINING SEED VARIANCE (medium, {HEADLINE_METHOD}, {len(SEED_VARIANTS)} seeds) ===")
+print(f"{'Depth':>6} {'Accuracy (mean±std)':>21} {'F1-macro (mean±std)':>21}")
+print("-" * 52)
+for depth in DEPTHS:
+    v = results["pretraining_seed_variance"]["depths"][str(depth)]
+    print(
+        f"{depth:>6} "
+        f"{v['accuracy_mean']:>10.4f} ± {v['accuracy_std']:<8.4f} "
+        f"{v['f1_macro_mean']:>10.4f} ± {v['f1_macro_std']:<8.4f}"
+    )
 
 # ── Save ───────────────────────────────────────────────────────────────────
 OUTPUT_JSON.parent.mkdir(parents=True, exist_ok=True)
