@@ -69,5 +69,93 @@
       "results/final/3c-similarity-correlation/medium/figure.pdf",
       "results/final/3c-similarity-correlation/large/figure.pdf"
     ]
+  },
+  "random_baseline": {
+    "n_seeds": 5,
+    "model_seeds": [
+      1,
+      2,
+      3,
+      4,
+      42
+    ],
+    "sizes": {
+      "small": {
+        "pearson_r_mean": 0.505462,
+        "pearson_r_std": 0.026205,
+        "spearman_r_mean": 0.540208,
+        "spearman_r_std": 0.021722,
+        "pearson_r_per_seed": {
+          "1": 0.49327,
+          "2": 0.51922,
+          "3": 0.491301,
+          "4": 0.544388,
+          "42": 0.479133
+        },
+        "spearman_r_per_seed": {
+          "1": 0.540324,
+          "2": 0.531857,
+          "3": 0.544932,
+          "4": 0.571873,
+          "42": 0.512055
+        }
+      },
+      "medium": {
+        "pearson_r_mean": 0.471598,
+        "pearson_r_std": 0.08064,
+        "spearman_r_mean": 0.515618,
+        "spearman_r_std": 0.054551,
+        "pearson_r_per_seed": {
+          "1": 0.465251,
+          "2": 0.409217,
+          "3": 0.377636,
+          "4": 0.555822,
+          "42": 0.550064
+        },
+        "spearman_r_per_seed": {
+          "1": 0.507444,
+          "2": 0.485541,
+          "3": 0.44496,
+          "4": 0.57218,
+          "42": 0.567965
+        }
+      },
+      "large": {
+        "pearson_r_mean": 0.44024,
+        "pearson_r_std": 0.049121,
+        "spearman_r_mean": 0.496687,
+        "spearman_r_std": 0.030975,
+        "pearson_r_per_seed": {
+          "1": 0.470469,
+          "2": 0.356248,
+          "3": 0.479979,
+          "4": 0.445577,
+          "42": 0.448926
+        },
+        "spearman_r_per_seed": {
+          "1": 0.517381,
+          "2": 0.445181,
+          "3": 0.523585,
+          "4": 0.502225,
+          "42": 0.495065
+        }
+      }
+    }
+  },
+  "comparison": {
+    "sizes": {
+      "small": {
+        "pearson_r_gap": 0.08164,
+        "spearman_r_gap": 0.025136
+      },
+      "medium": {
+        "pearson_r_gap": 0.147952,
+        "spearman_r_gap": 0.077652
+      },
+      "large": {
+        "pearson_r_gap": 0.141682,
+        "spearman_r_gap": 0.076495
+      }
+    }
   }
 }
