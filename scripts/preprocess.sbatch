@@ -1,14 +1,14 @@
 #!/bin/bash
 #SBATCH --job-name=preprocess
-#SBATCH --account=f202508983cpcaa0x
+#SBATCH --account=f202607628cpcaa1x
 #SBATCH --partition=normal-x86
 #SBATCH --time=01:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
-#SBATCH --output=/projects/F202508983CPCAA0/jcorreia/logs/%x_%j.out
-#SBATCH --error=/projects/F202508983CPCAA0/jcorreia/logs/%x_%j.err
+#SBATCH --output=/projects/F202607628CPCAA1/joao.correia/logs/%x_%j.out
+#SBATCH --error=/projects/F202607628CPCAA1/joao.correia/logs/%x_%j.err
 
 # Runs the full preprocessing chain (no pipeline tool — each step is cheap
 # and deterministic, plain sequential python):
@@ -24,7 +24,7 @@ echo "Running on node(s): $SLURM_NODELIST"
 module purge
 module load Python/3.12.3-GCCcore-13.3.0
 
-cd /projects/F202508983CPCAA0/jcorreia/work/SmartRxnEmbeddings
+cd /projects/F202607628CPCAA1/joao.correia/work/SmartRxnEmbeddings
 
 source ../smartrxn_env/bin/activate
 

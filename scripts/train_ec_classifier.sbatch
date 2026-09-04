@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=ec_classifier
-#SBATCH --account=F202508983CPCAA0G
+#SBATCH --account=f202607628cpcaa1g
 #SBATCH --partition=normal-a100-40
 #SBATCH --time=04:00:00
 #SBATCH --nodes=1
@@ -8,8 +8,8 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32G
 #SBATCH --gres=gpu:1
-#SBATCH --output=/projects/F202508983CPCAA0/jcorreia/logs/%x_%j.out
-#SBATCH --error=/projects/F202508983CPCAA0/jcorreia/logs/%x_%j.err
+#SBATCH --output=/projects/F202607628CPCAA1/joao.correia/logs/%x_%j.out
+#SBATCH --error=/projects/F202607628CPCAA1/joao.correia/logs/%x_%j.err
 
 set -euo pipefail
 
@@ -19,7 +19,7 @@ echo "Running on node(s): $SLURM_NODELIST"
 module purge
 module load Python/3.12.3-GCCcore-13.3.0
 
-cd /projects/F202508983CPCAA0/jcorreia/work/SmartRxnEmbeddings
+cd /projects/F202607628CPCAA1/joao.correia/work/SmartRxnEmbeddings
 
 source ../smartrxn_env/bin/activate
 
@@ -139,8 +139,8 @@ cp "${OUTPUT}" "${MIRROR_DIR}/results.json"
 cp "${ENV_JSON}" "${MIRROR_DIR}/env.json"
 cp "${REPORT}" "${MIRROR_DIR}/report.md"
 cp "${REPORT%.md}.pdf" "${MIRROR_DIR}/report.pdf"
-cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.out" "${MIRROR_DIR}/" 2>/dev/null || true
-cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.err" "${MIRROR_DIR}/" 2>/dev/null || true
+cp "/projects/F202607628CPCAA1/joao.correia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.out" "${MIRROR_DIR}/" 2>/dev/null || true
+cp "/projects/F202607628CPCAA1/joao.correia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.err" "${MIRROR_DIR}/" 2>/dev/null || true
 
 echo "=== Job finished on $(date) ==="
 

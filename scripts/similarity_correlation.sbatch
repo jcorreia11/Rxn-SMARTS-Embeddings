@@ -1,14 +1,14 @@
 #!/bin/bash
 #SBATCH --job-name=similarity_correlation
-#SBATCH --account=f202508983cpcaa0x
+#SBATCH --account=f202607628cpcaa1x
 #SBATCH --partition=normal-x86
 #SBATCH --time=01:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=64G
-#SBATCH --output=/projects/F202508983CPCAA0/jcorreia/logs/%x_%j.out
-#SBATCH --error=/projects/F202508983CPCAA0/jcorreia/logs/%x_%j.err
+#SBATCH --output=/projects/F202607628CPCAA1/joao.correia/logs/%x_%j.out
+#SBATCH --error=/projects/F202607628CPCAA1/joao.correia/logs/%x_%j.err
 
 # Memory note: the pairwise arrays themselves are small (well under 1 GB,
 # even for large's 361k x 512 float32 embedding matrix). The real memory
@@ -26,7 +26,7 @@ echo "Running on node(s): $SLURM_NODELIST"
 module purge
 module load Python/3.12.3-GCCcore-13.3.0
 
-cd /projects/F202508983CPCAA0/jcorreia/work/SmartRxnEmbeddings
+cd /projects/F202607628CPCAA1/joao.correia/work/SmartRxnEmbeddings
 
 source ../smartrxn_env/bin/activate
 
@@ -109,8 +109,8 @@ cp "${OUTPUT_JSON}" "${MIRROR_DIR}/results.json"
 cp "${OUTPUT_ENV}" "${MIRROR_DIR}/env.json"
 cp "${OUTPUT_REPORT}" "${MIRROR_DIR}/report.md"
 cp "${OUTPUT_FIG}.${FORMAT}" "${MIRROR_DIR}/figure.${FORMAT}"
-cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.out" "${MIRROR_DIR}/" 2>/dev/null || true
-cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.err" "${MIRROR_DIR}/" 2>/dev/null || true
+cp "/projects/F202607628CPCAA1/joao.correia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.out" "${MIRROR_DIR}/" 2>/dev/null || true
+cp "/projects/F202607628CPCAA1/joao.correia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.err" "${MIRROR_DIR}/" 2>/dev/null || true
 
 echo "=== Job finished on $(date) ==="
 

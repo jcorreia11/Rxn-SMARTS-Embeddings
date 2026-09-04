@@ -1,14 +1,14 @@
 #!/bin/bash
 #SBATCH --job-name=paper_stats
-#SBATCH --account=f202508983cpcaa0x
+#SBATCH --account=f202607628cpcaa1x
 #SBATCH --partition=normal-x86
 #SBATCH --time=00:30:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
-#SBATCH --output=/projects/F202508983CPCAA0/jcorreia/logs/%x_%j.out
-#SBATCH --error=/projects/F202508983CPCAA0/jcorreia/logs/%x_%j.err
+#SBATCH --output=/projects/F202607628CPCAA1/joao.correia/logs/%x_%j.out
+#SBATCH --error=/projects/F202607628CPCAA1/joao.correia/logs/%x_%j.err
 
 # Aggregates every paper/*_stats.json used by PAPER_TEMPLATE_JCIM.md, then
 # mirrors them (+ paper/figures/) into results/final/4-paper/. Run this last,
@@ -24,7 +24,7 @@ echo "Running on node(s): $SLURM_NODELIST"
 module purge
 module load Python/3.12.3-GCCcore-13.3.0
 
-cd /projects/F202508983CPCAA0/jcorreia/work/SmartRxnEmbeddings
+cd /projects/F202607628CPCAA1/joao.correia/work/SmartRxnEmbeddings
 
 source ../smartrxn_env/bin/activate
 

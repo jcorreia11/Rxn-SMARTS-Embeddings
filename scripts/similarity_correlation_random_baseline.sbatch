@@ -1,14 +1,14 @@
 #!/bin/bash
 #SBATCH --job-name=sim_corr_random
-#SBATCH --account=f202508983cpcaa0x
+#SBATCH --account=f202607628cpcaa1x
 #SBATCH --partition=normal-x86
 #SBATCH --time=01:30:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
-#SBATCH --output=/projects/F202508983CPCAA0/jcorreia/logs/%x_%j.out
-#SBATCH --error=/projects/F202508983CPCAA0/jcorreia/logs/%x_%j.err
+#SBATCH --output=/projects/F202607628CPCAA1/joao.correia/logs/%x_%j.out
+#SBATCH --error=/projects/F202607628CPCAA1/joao.correia/logs/%x_%j.err
 
 # Runs the similarity–structural correlation analysis for random-initialised
 # (untrained) models at all three sizes (small / medium / large) using the
@@ -23,7 +23,7 @@ echo "Running on node(s): $SLURM_NODELIST"
 module purge
 module load Python/3.12.3-GCCcore-13.3.0
 
-cd /projects/F202508983CPCAA0/jcorreia/work/SmartRxnEmbeddings
+cd /projects/F202607628CPCAA1/joao.correia/work/SmartRxnEmbeddings
 
 source ../smartrxn_env/bin/activate
 
@@ -129,8 +129,8 @@ for size in small medium large; do
     mkdir -p "${MIRROR_DIR}"
     cp "${FLAT_BASE}_${size}${SUFFIX}.json" "${MIRROR_DIR}/results.json"
     cp "${FLAT_BASE}_${size}${SUFFIX}_figure.${FORMAT}" "${MIRROR_DIR}/figure.${FORMAT}"
-    cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.out" "${MIRROR_DIR}/" 2>/dev/null || true
-    cp "/projects/F202508983CPCAA0/jcorreia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.err" "${MIRROR_DIR}/" 2>/dev/null || true
+    cp "/projects/F202607628CPCAA1/joao.correia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.out" "${MIRROR_DIR}/" 2>/dev/null || true
+    cp "/projects/F202607628CPCAA1/joao.correia/logs/${SLURM_JOB_NAME}_${SLURM_JOB_ID}.err" "${MIRROR_DIR}/" 2>/dev/null || true
 done
 
 echo "=== Job finished on $(date) ==="
