@@ -209,7 +209,7 @@ def evaluate(
     )
 
     present_labels = sorted(set(y_test) | set(y_pred))
-    present_names = [label_names[l] if isinstance(l, int) and l < len(label_names) else str(l) for l in present_labels]
+    present_names = [label_names[int(l)] for l in present_labels]
     report_str = classification_report(
         y_test, y_pred, labels=present_labels, target_names=present_names, zero_division=0
     )
@@ -358,7 +358,7 @@ def evaluate_embeddings(
     )
 
     present_labels = sorted(set(y_test) | set(y_pred))
-    present_names = [label_names[l] if isinstance(l, int) and l < len(label_names) else str(l) for l in present_labels]
+    present_names = [label_names[int(l)] for l in present_labels]
     report_str = classification_report(
         y_test, y_pred, labels=present_labels, target_names=present_names, zero_division=0
     )
