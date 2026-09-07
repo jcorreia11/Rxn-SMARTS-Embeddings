@@ -1,14 +1,47 @@
 [project]
 name = "rxn-smarts-embeddings"
 version = "0.1.0"
-description = "Add your description here"
+description = "Self-supervised transformer embeddings for reaction SMARTS, pretrained via span-masked language modeling on RetroRules v3.0"
 readme = "README.md"
 requires-python = ">=3.10, <3.13"
+license = { file = "LICENSE" }
+authors = [
+    { name = "João Correia", email = "jfcorreia@fe.up.pt" },
+]
+keywords = [
+    "cheminformatics",
+    "reaction-smarts",
+    "transformer",
+    "embeddings",
+    "self-supervised-learning",
+    "masked-language-modeling",
+    "retrosynthesis",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Chemistry",
+]
 dependencies = [
     "torch>=2.0.0",
     "numpy>=1.24.0",
     "huggingface-hub>=0.20.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/jcorreia11/Rxn-SMARTS-Embeddings"
+Repository = "https://github.com/jcorreia11/Rxn-SMARTS-Embeddings"
+Issues = "https://github.com/jcorreia11/Rxn-SMARTS-Embeddings/issues"
+Experiments = "https://github.com/jcorreia11/Rxn-SMARTS-Embeddings-paper"
+"Model Weights" = "https://huggingface.co/jcorreia11/Rxn-SMARTS-Embeddings"
+Dataset = "https://doi.org/10.5281/zenodo.22645328"
 
 [project.optional-dependencies]
 all = [
