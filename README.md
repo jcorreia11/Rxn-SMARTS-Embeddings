@@ -1,157 +1,67 @@
 # Rxn-SMARTS-Embeddings
 
-Self-supervised transformer embeddings for reaction SMARTS, trained on [RetroRules v3.0](https://retrorules.org/) using a masked language modelling objective.
+Self-supervised transformer embeddings for reaction SMARTS, pretrained via
+span-masked language modelling directly on [RetroRules v3.0](https://retrorules.org/).
+
+- **Paper**: citation to follow upon publication
+- **Companion repo** (experiment pipeline, SLURM scripts, paper stats): [Rxn-SMARTS-Embeddings-paper](https://github.com/jcorreia11/Rxn-SMARTS-Embeddings-paper)
+- **Pretrained weights**: [Hugging Face Hub](https://huggingface.co/jcorreia11/Rxn-SMARTS-Embeddings)
+- **Training corpus, tokenizer, embeddings**: [Zenodo](https://doi.org/10.5281/zenodo.22645328)
+- **Full experiment results/logs**: [Zenodo](https://doi.org/10.5281/zenodo.22646105)
 
 ## Installation
 
-Requires Python ≥ 3.10 and [uv](https://github.com/astral-sh/uv).
+Requires Python 3.10–3.12 and [uv](https://github.com/astral-sh/uv).
 
 ```bash
 git clone https://github.com/jcorreia11/Rxn-SMARTS-Embeddings.git
 cd Rxn-SMARTS-Embeddings
+
+uv sync --no-dev          # embedding SMARTS only — just torch + numpy
+uv sync --extra all       # + preprocessing/training/evaluation/visualisation, for the full pipeline
 ```
-
-**Embedding SMARTS (default)** — just `torch` + `numpy`:
-
-```bash
-uv sync --no-dev
-```
-
-**Everything** — adds preprocessing, training, evaluation, and visualisation dependencies, for reproducing the full experiment pipeline:
-
-```bash
-uv sync --extra all
-```
-
-The `dev` group (pytest) is included automatically with `uv sync`.
-
-This repo is the pip-installable package only. The experiment pipeline scripts,
-SLURM job scripts, and paper-statistics code used to produce the paper's results
-live in a separate companion repo:
-[Rxn-SMARTS-Embeddings-paper](https://github.com/jcorreia11/Rxn-SMARTS-Embeddings-paper).
 
 ## Getting started
 
-No setup beyond installation is required: the first call downloads and caches
-the medium model and vocabulary from the
-[Hugging Face Hub](https://huggingface.co/jcorreia11/Rxn-SMARTS-Embeddings)
-automatically. If a local checkpoint already exists in `models/` (e.g. from
-training your own), that one is used instead — see "Data pipeline" and
-"Training" below to reproduce one.
-
-### Command line
+No setup beyond installation is required — the first call downloads and caches
+the medium model and vocabulary from the Hugging Face Hub automatically.
 
 ```bash
-# Single SMARTS → JSON to stdout
-smarts-embed "[C:1]-[O:2]>>[C:1]=[O:2]"
-
-# Batch from file → numpy array
-smarts-embed --file smarts.txt --output embeddings.npy
-
-# Pipe from stdin → CSV
-echo "[C:1]-[O:2]>>[C:1]=[O:2]" | smarts-embed --format csv
-
-# Use the small or large released model instead of medium
-smarts-embed "[C:1]-[O:2]>>[C:1]=[O:2]" --size large
+smarts-embed "[C:1]-[O:2]>>[C:1]=[O:2]"                      # → JSON to stdout
+smarts-embed --file smarts.txt --output embeddings.npy       # batch → numpy array
+smarts-embed "[C:1]-[O:2]>>[C:1]=[O:2]" --size large          # small | medium | large
 ```
-
-To use a specific local checkpoint instead of the auto-discovered/downloaded one:
-
-```bash
-smarts-embed "[C:1]-[O:2]>>[C:1]=[O:2]" \
-    --weights models/smarts_transformer_20260715_111009.pt \
-    --config  models/smarts_transformer_20260715_111009.json
-```
-
-Full options:
-
-```
-positional args:  one or more SMARTS strings
---file PATH       text file with one SMARTS per line (alternative to positional)
---output PATH     write to file; format inferred from extension (.npy, .json, .csv)
---format          override output format: npy | json | csv  (default: json)
---pooling         mean | cls  (default: mean)
---batch-size N    sequences per forward pass (default: 64)
---max-length N    pad/truncate length (default: from model)
---device          cuda | cpu  (auto-detected)
---weights PATH    model weights (.pt); auto-discovered locally, else downloaded
---config PATH     model config (.json)
---vocab PATH      vocab.json (default: data/processed/vocab.json, else downloaded)
---size            small | medium | large  (default: medium) — which released
-                  model to download when no local checkpoint is found
-```
-
-### Python API
 
 ```python
 from rxn_smarts_embeddings.predict import predict, load_embedder
 
-# Single reaction — returns (d_model,) array
-emb = predict("[C:1]-[O:2]>>[C:1]=[O:2]")
+emb = predict("[C:1]-[O:2]>>[C:1]=[O:2]")          # (d_model,)
+embs = predict(["[C:1]-[O:2]>>[C:1]=[O:2]", "c1ccccc1>>c1cccnc1"])  # (N, d_model)
 
-# Batch — returns (N, d_model) array
-embs = predict([
-    "[C:1]-[O:2]>>[C:1]=[O:2]",
-    "c1ccccc1>>c1cccnc1",
-])
-
-# Reuse the same loaded model for multiple calls
-embedder = load_embedder()
+embedder = load_embedder()                          # reuse across calls
 embs = embedder.embed(smarts_list, batch_size=128)
 ```
 
-Both functions auto-discover the latest local checkpoint in `models/`, falling
-back to a Hugging Face Hub download (`hf_size="medium"` by default) when none
-is found. Pass `weights=`, `config=`, and `vocab=` to use a specific run.
+Both auto-discover the latest local checkpoint in `models/`, falling back to a
+Hugging Face Hub download when none is found. Pass `weights=`/`config=`/`vocab=`
+(or `--weights`/`--config`/`--vocab`) to use a specific run instead.
 
-## Overview
-
-The pipeline trains a BERT-style transformer encoder on reaction SMARTS using span-masked language modelling. The model learns chemical patterns — atom environments, bond contexts, reaction centres — directly from SMARTS syntax without labels.
-
-```
-RetroRules CSV
-      │
-      ▼
-  load_data          clean & deduplicate
-      │
-      ▼
- validate_smarts     RDKit validation + feature extraction
-      │
-      ▼
-  build_vocab        rule-based tokenization → vocab.json
-      │
-      ▼
-SmartsMLMModel       TransformerEncoder (d_model=256, 6 layers, 8 heads)
-      │
-      ▼
-  models/smarts_transformer_<RUN_ID>.pt
-```
+Run `smarts-embed --help` for the full option list (pooling, batch size, output
+format, device, etc.).
 
 ## Project structure
 
 ```
 src/rxn_smarts_embeddings/
-├── predict.py            # predict() API + smarts-embed CLI entry point
-├── preprocessing/
-│   ├── load_data.py      # load & deduplicate RetroRules CSVs
-│   └── validate_smarts.py
-├── tokenization/
-│   ├── smarts_tokenizer.py   # rule-based tokenizer (Daylight SMARTS grammar)
-│   └── build_vocab.py
-├── datasets/
-│   └── smarts_dataset.py
-├── models/
-│   ├── smarts_transformer.py # TransformerConfig, encoder, MLM head
-│   └── embed.py              # SmartsEmbedder
-└── training/
-    └── mlm_trainer.py        # MLMCollator, Trainer
+├── predict.py       # predict() API + smarts-embed CLI entry point
+├── preprocessing/   # load & deduplicate RetroRules CSVs, RDKit validation
+├── tokenization/    # rule-based tokenizer (Daylight SMARTS grammar) + vocab
+├── datasets/        # SMARTSDataset (tokenize, pad, batch)
+├── models/          # TransformerConfig, encoder, MLM head, SmartsEmbedder
+└── training/        # MLMCollator, Trainer
 ```
 
-## Data pipeline
-
-Preprocessing is a plain sequence of scripts — each is cheap (a couple of
-minutes on the full corpus) and deterministic, so just re-run them in order
-when a dependency changes:
+## Reproducing the data pipeline
 
 ```bash
 python src/rxn_smarts_embeddings/preprocessing/load_data.py
@@ -167,17 +77,10 @@ python src/rxn_smarts_embeddings/tokenization/sentencepiece_tokenizer.py
 | `build_vocab.py` | `validated_smarts.csv` | `data/processed/vocab.json` |
 | `sentencepiece_tokenizer.py` | `validated_smarts.csv` | `data/processed/sp_tokenizer.{model,vocab}` |
 
-On HPC, submit the four commands above directly, or use the `.sbatch` job scripts in
-[Rxn-SMARTS-Embeddings-paper](https://github.com/jcorreia11/Rxn-SMARTS-Embeddings-paper).
-
-## Training
-
-Training is done via `MLMTrainer` (`rxn_smarts_embeddings.training.mlm_trainer`); the
-`train_mlm.py` CLI wrapper and its `.sbatch` SLURM job script live in
-[Rxn-SMARTS-Embeddings-paper](https://github.com/jcorreia11/Rxn-SMARTS-Embeddings-paper),
-along with the full phase-by-phase reproduction guide (`hpc-runbook.md`).
-
-Output files are stamped `models/smarts_transformer_<YYYYMMDD_HHMMSS>.{pt,json}`.
+Training uses `Trainer` (`rxn_smarts_embeddings.training.mlm_trainer`); output
+checkpoints are stamped `models/smarts_transformer_<YYYYMMDD_HHMMSS>.{pt,json}`.
+For the CLI wrapper, SLURM `.sbatch` scripts, and full HPC reproduction guide, see
+the [companion repo](https://github.com/jcorreia11/Rxn-SMARTS-Embeddings-paper).
 
 ## Development
 
@@ -185,3 +88,11 @@ Output files are stamped `models/smarts_transformer_<YYYYMMDD_HHMMSS>.{pt,json}`
 uv run pytest
 ruff check src tests && ruff format src tests
 ```
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+## Citation
+
+Citation details will be added once the paper is published.
