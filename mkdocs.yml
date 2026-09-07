@@ -1,8 +1,9 @@
 site_name: Rxn-SMARTS-Embeddings
 site_description: Self-supervised transformer embeddings for reaction SMARTS
+site_url: https://rxn-smarts-embeddings.readthedocs.io/
 repo_url: https://github.com/jcorreia11/Rxn-SMARTS-Embeddings
 repo_name: jcorreia11/Rxn-SMARTS-Embeddings
-edit_uri: edit/main/docs/
+edit_uri: edit/documentation/docs/
 
 nav:
   - Home: index.md
