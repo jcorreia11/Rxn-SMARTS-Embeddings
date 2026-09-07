@@ -96,6 +96,7 @@ def reaction_fingerprint(smarts: str):
 
 def tanimoto(fp1, fp2) -> float:
     from rdkit.DataStructs import TanimotoSimilarity
+
     return TanimotoSimilarity(fp1, fp2)
 
 
@@ -169,7 +170,11 @@ def sample_and_compute(
 
     n_failed = sum(1 for v in valid_mask if not v)
     if n_failed:
-        logger.warning("  %d / %d SMARTS failed to parse — pairs involving them will be dropped", n_failed, n_reactions)
+        logger.warning(
+            "  %d / %d SMARTS failed to parse — pairs involving them will be dropped",
+            n_failed,
+            n_reactions,
+        )
     logger.info("  Fingerprints computed in %.1f s", time.perf_counter() - t0)
 
     # --- Pairwise Tanimoto (upper triangle) ---
@@ -202,7 +207,12 @@ def sample_and_compute(
     tanimoto_arr = tanimoto_arr[keep_arr]
 
     n_pairs = int(keep_arr.sum())
-    logger.info("Retained %d pairs (%.1f%% of %d total)", n_pairs, 100 * n_pairs / len(keep_arr), len(keep_arr))
+    logger.info(
+        "Retained %d pairs (%.1f%% of %d total)",
+        n_pairs,
+        100 * n_pairs / len(keep_arr),
+        len(keep_arr),
+    )
 
     same_group_arr = None
     if groups is not None:
@@ -211,7 +221,9 @@ def sample_and_compute(
         n_within = int(same_group_arr.sum())
         logger.info(
             "%d / %d pairs (%.2f%%) are RetroRules radius-siblings (same reaction_group)",
-            n_within, n_pairs, 100 * n_within / n_pairs if n_pairs else 0.0,
+            n_within,
+            n_pairs,
+            100 * n_within / n_pairs if n_pairs else 0.0,
         )
 
     return cosine_arr, tanimoto_arr, n_reactions, n_pairs, same_group_arr
@@ -247,15 +259,21 @@ def compute_stats(
     if same_group is not None:
         cross_group = ~same_group
         n_within = int(same_group.sum())
-        stats["frac_within_group_pairs"] = round(n_within / len(same_group), 6) if len(same_group) else 0.0
+        stats["frac_within_group_pairs"] = (
+            round(n_within / len(same_group), 6) if len(same_group) else 0.0
+        )
         stats["n_within_group_pairs"] = n_within
         stats["n_cross_group_pairs"] = int(cross_group.sum())
         # Robustness check: is the correlation just an artifact of trivial
         # near-duplicate (radius-sibling) pairs? Recompute on cross-group
         # pairs only. Requires >=2 cross-group pairs with variance.
         if cross_group.sum() >= 2:
-            cg_pearson_r, cg_pearson_p = pearsonr(tanimoto[cross_group], cosine[cross_group])
-            cg_spearman_r, cg_spearman_p = spearmanr(tanimoto[cross_group], cosine[cross_group])
+            cg_pearson_r, cg_pearson_p = pearsonr(
+                tanimoto[cross_group], cosine[cross_group]
+            )
+            cg_spearman_r, cg_spearman_p = spearmanr(
+                tanimoto[cross_group], cosine[cross_group]
+            )
             stats["cross_group_pearson_r"] = round(float(cg_pearson_r), 6)
             stats["cross_group_pearson_p"] = float(cg_pearson_p)
             stats["cross_group_spearman_r"] = round(float(cg_spearman_r), 6)
@@ -279,9 +297,9 @@ def plot_correlation(
     gridsize: int,
 ) -> None:
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    import matplotlib.ticker as ticker
     from scipy.stats import linregress
 
     fig, ax = plt.subplots(figsize=(7, 6))
@@ -301,14 +319,21 @@ def plot_correlation(
     # Trend line
     slope, intercept, *_ = linregress(tanimoto, cosine)
     x_line = np.array([float(tanimoto.min()), float(tanimoto.max())])
-    ax.plot(x_line, slope * x_line + intercept, color="#1d4ed8", linewidth=1.5,
-            linestyle="--", label="Linear fit")
+    ax.plot(
+        x_line,
+        slope * x_line + intercept,
+        color="#1d4ed8",
+        linewidth=1.5,
+        linestyle="--",
+        label="Linear fit",
+    )
 
     ax.set_xlabel("Tanimoto similarity (structural reaction fingerprint)", fontsize=11)
     ax.set_ylabel("Cosine similarity (embedding space)", fontsize=11)
     ax.set_title(
         "Embedding Similarity vs Structural Similarity",
-        fontsize=13, fontweight="bold",
+        fontsize=13,
+        fontweight="bold",
     )
     ax.spines[["top", "right"]].set_visible(False)
 
@@ -316,18 +341,18 @@ def plot_correlation(
     pr = stats["pearson_r"]
     sr = stats["spearman_r"]
     n = stats["n_pairs"]
-    info = (
-        f"Pearson $r$ = {pr:.3f}\n"
-        f"Spearman $\\rho$ = {sr:.3f}\n"
-        f"$n$ = {n:,} pairs"
-    )
+    info = f"Pearson $r$ = {pr:.3f}\nSpearman $\\rho$ = {sr:.3f}\n$n$ = {n:,} pairs"
     ax.text(
-        0.97, 0.05, info,
+        0.97,
+        0.05,
+        info,
         transform=ax.transAxes,
-        ha="right", va="bottom",
+        ha="right",
+        va="bottom",
         fontsize=9.5,
-        bbox=dict(boxstyle="round,pad=0.4", facecolor="white",
-                  edgecolor="#cccccc", alpha=0.9),
+        bbox=dict(
+            boxstyle="round,pad=0.4", facecolor="white", edgecolor="#cccccc", alpha=0.9
+        ),
     )
 
     ax.legend(loc="upper left", fontsize=9)
@@ -391,7 +416,9 @@ def parse_args() -> argparse.Namespace:
         choices=["pdf", "png", "svg"],
         help="Figure format (default: pdf)",
     )
-    p.add_argument("--dpi", type=int, default=300, help="DPI for raster formats (default: 300)")
+    p.add_argument(
+        "--dpi", type=int, default=300, help="DPI for raster formats (default: 300)"
+    )
     p.add_argument(
         "--gridsize",
         type=int,
@@ -437,24 +464,32 @@ def main() -> None:
         "  N pairs    = %d\n"
         "  Cosine  : mean=%.4f  std=%.4f\n"
         "  Tanimoto: mean=%.4f  std=%.4f",
-        stats["pearson_r"], stats["pearson_p"],
-        stats["spearman_r"], stats["spearman_p"],
+        stats["pearson_r"],
+        stats["pearson_p"],
+        stats["spearman_r"],
+        stats["spearman_p"],
         stats["n_pairs"],
-        stats["cosine_mean"], stats["cosine_std"],
-        stats["tanimoto_mean"], stats["tanimoto_std"],
+        stats["cosine_mean"],
+        stats["cosine_std"],
+        stats["tanimoto_mean"],
+        stats["tanimoto_std"],
     )
     if "cross_group_pearson_r" in stats:
         logger.info(
             "  Within-group (sibling) pairs: %d / %d (%.2f%%)\n"
             "  Cross-group-only  Pearson  r = %.4f\n"
             "  Cross-group-only  Spearman ρ = %.4f",
-            stats["n_within_group_pairs"], stats["n_pairs"],
+            stats["n_within_group_pairs"],
+            stats["n_pairs"],
             100 * stats["frac_within_group_pairs"],
-            stats["cross_group_pearson_r"], stats["cross_group_spearman_r"],
+            stats["cross_group_pearson_r"],
+            stats["cross_group_spearman_r"],
         )
 
     plot_correlation(
-        cosine, tanimoto, stats,
+        cosine,
+        tanimoto,
+        stats,
         output_path=Path(args.output),
         fmt=args.format,
         dpi=args.dpi,

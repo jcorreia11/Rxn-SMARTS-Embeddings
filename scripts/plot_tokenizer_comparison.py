@@ -43,9 +43,7 @@ def _save(fig, path: Path, dpi: int) -> None:
 # ---------------------------------------------------------------------------
 
 
-def plot_length_distribution(
-    metrics: list[dict], out_dir: Path, dpi: int
-) -> Path:
+def plot_length_distribution(metrics: list[dict], out_dir: Path, dpi: int) -> Path:
     import matplotlib
 
     matplotlib.use("Agg")
@@ -92,9 +90,7 @@ def plot_length_distribution(
 # ---------------------------------------------------------------------------
 
 
-def plot_throughput_fertility(
-    metrics: list[dict], out_dir: Path, dpi: int
-) -> Path:
+def plot_throughput_fertility(metrics: list[dict], out_dir: Path, dpi: int) -> Path:
     import matplotlib
 
     matplotlib.use("Agg")
@@ -158,9 +154,7 @@ def plot_throughput_fertility(
 # ---------------------------------------------------------------------------
 
 
-def plot_ec_classifier(
-    clf_results: list[dict], out_dir: Path, dpi: int
-) -> Path:
+def plot_ec_classifier(clf_results: list[dict], out_dir: Path, dpi: int) -> Path:
     import matplotlib
 
     matplotlib.use("Agg")
@@ -297,7 +291,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--metrics", required=True, help="tokenizer_metrics.json")
     p.add_argument("--classifier", default=None, help="ec_classifier.json (optional)")
     p.add_argument("--output-dir", default="results/figures", help="Output directory")
-    p.add_argument("--dpi", type=int, default=300, help="DPI for raster outputs (default: 300)")
+    p.add_argument(
+        "--dpi", type=int, default=300, help="DPI for raster outputs (default: 300)"
+    )
     return p.parse_args()
 
 

@@ -55,7 +55,14 @@ def _check_comparable(random_meta: dict, group_meta: dict) -> list[str]:
     differ.
     """
     warnings = []
-    for key in ("ec_depth", "n_samples_requested", "folds", "random_seed", "embedding_weights", "ablation"):
+    for key in (
+        "ec_depth",
+        "n_samples_requested",
+        "folds",
+        "random_seed",
+        "embedding_weights",
+        "ablation",
+    ):
         r, g = random_meta.get(key), group_meta.get(key)
         if key in random_meta or key in group_meta:
             if r != g:
@@ -73,9 +80,15 @@ def build_report(
     group_results = {r["name"]: r for r in group_doc["results"]}
 
     if random_meta.get("split_strategy", "random") != "random":
-        logger.warning("--random file's meta.split_strategy is not 'random': %r", random_meta.get("split_strategy"))
+        logger.warning(
+            "--random file's meta.split_strategy is not 'random': %r",
+            random_meta.get("split_strategy"),
+        )
     if group_meta.get("split_strategy") != "group":
-        logger.warning("--group file's meta.split_strategy is not 'group': %r", group_meta.get("split_strategy"))
+        logger.warning(
+            "--group file's meta.split_strategy is not 'group': %r",
+            group_meta.get("split_strategy"),
+        )
 
     warnings = _check_comparable(random_meta, group_meta)
 
@@ -107,7 +120,10 @@ def build_report(
             "",
         ]
     if missing:
-        lines += [f"> Methods present in only one run (excluded below): {', '.join(missing)}", ""]
+        lines += [
+            f"> Methods present in only one run (excluded below): {', '.join(missing)}",
+            "",
+        ]
 
     lines += [
         "## Setup",
@@ -137,7 +153,9 @@ def build_report(
         row = f"| {name} |"
         for mean_key, _, _ in _METRICS:
             r_val, g_val = r.get(mean_key), g.get(mean_key)
-            delta = (g_val - r_val) if (r_val is not None and g_val is not None) else None
+            delta = (
+                (g_val - r_val) if (r_val is not None and g_val is not None) else None
+            )
             row += f" {_pct(r_val)} | {_pct(g_val)} | {_pp(delta)} |"
         lines.append(row)
 
@@ -159,8 +177,12 @@ def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(
         description="Compare a random-split (leaky) run against its group-split fix."
     )
-    p.add_argument("--random", required=True, help="JSON produced with --split-strategy random")
-    p.add_argument("--group", required=True, help="JSON produced with --split-strategy group")
+    p.add_argument(
+        "--random", required=True, help="JSON produced with --split-strategy random"
+    )
+    p.add_argument(
+        "--group", required=True, help="JSON produced with --split-strategy group"
+    )
     p.add_argument(
         "--label",
         default="Experiment",

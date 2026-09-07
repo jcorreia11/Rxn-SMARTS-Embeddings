@@ -78,7 +78,10 @@ def load_labelled_smarts(
     dropped = sorted(set(class_counts.index) - set(valid_classes))
     if dropped:
         logger.info(
-            "Dropping %d rare classes (<%d samples): %s", len(dropped), min_count, dropped
+            "Dropping %d rare classes (<%d samples): %s",
+            len(dropped),
+            min_count,
+            dropped,
         )
         val = val[val["label"].isin(valid_classes)].reset_index(drop=True)
 
@@ -98,7 +101,11 @@ def load_labelled_smarts(
             )
             for _, group in val.groupby("label")
         ]
-        val = pd.concat(sampled).sample(frac=1, random_state=random_seed).reset_index(drop=True)
+        val = (
+            pd.concat(sampled)
+            .sample(frac=1, random_state=random_seed)
+            .reset_index(drop=True)
+        )
         logger.info(
             "Sampled %d SMARTS (stratified) out of %d available", len(val), n_available
         )

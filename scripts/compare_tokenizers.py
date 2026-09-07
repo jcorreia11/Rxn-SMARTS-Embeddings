@@ -100,13 +100,19 @@ def benchmark_smarts_tokenizer(smarts_list: list[str]) -> dict:
         "error_rate": errors / len(smarts_list) if smarts_list else 0.0,
         "elapsed_s": round(elapsed, 4),
         "throughput_smarts_per_s": round(n_ok / elapsed, 1) if elapsed > 0 else 0,
-        "throughput_chars_per_s": round(sum(char_counts) / elapsed, 1) if elapsed > 0 else 0,
+        "throughput_chars_per_s": round(sum(char_counts) / elapsed, 1)
+        if elapsed > 0
+        else 0,
         "seq_len_mean": round(statistics.mean(token_counts), 2) if token_counts else 0,
         "seq_len_median": statistics.median(token_counts) if token_counts else 0,
-        "seq_len_std": round(statistics.stdev(token_counts), 2) if len(token_counts) > 1 else 0,
+        "seq_len_std": round(statistics.stdev(token_counts), 2)
+        if len(token_counts) > 1
+        else 0,
         "seq_len_min": min(token_counts) if token_counts else 0,
         "seq_len_max": max(token_counts) if token_counts else 0,
-        "fertility_mean": round(statistics.mean(fertility_values), 4) if fertility_values else 0,
+        "fertility_mean": round(statistics.mean(fertility_values), 4)
+        if fertility_values
+        else 0,
         "unique_tokens_used": len(unique_tokens),
         "vocab_utilisation": None,  # no fixed vocab to compare against
         "round_trip_rate": 1.0,  # guaranteed by "".join(tokens) == smarts
@@ -147,17 +153,29 @@ def benchmark_sp_tokenizer(smarts_list: list[str], model_path: str) -> dict:
         "n_errors": 0,
         "error_rate": 0.0,
         "elapsed_s": round(elapsed, 4),
-        "throughput_smarts_per_s": round(len(smarts_list) / elapsed, 1) if elapsed > 0 else 0,
-        "throughput_chars_per_s": round(sum(char_counts) / elapsed, 1) if elapsed > 0 else 0,
+        "throughput_smarts_per_s": round(len(smarts_list) / elapsed, 1)
+        if elapsed > 0
+        else 0,
+        "throughput_chars_per_s": round(sum(char_counts) / elapsed, 1)
+        if elapsed > 0
+        else 0,
         "seq_len_mean": round(statistics.mean(token_counts), 2) if token_counts else 0,
         "seq_len_median": statistics.median(token_counts) if token_counts else 0,
-        "seq_len_std": round(statistics.stdev(token_counts), 2) if len(token_counts) > 1 else 0,
+        "seq_len_std": round(statistics.stdev(token_counts), 2)
+        if len(token_counts) > 1
+        else 0,
         "seq_len_min": min(token_counts) if token_counts else 0,
         "seq_len_max": max(token_counts) if token_counts else 0,
-        "fertility_mean": round(statistics.mean(fertility_values), 4) if fertility_values else 0,
+        "fertility_mean": round(statistics.mean(fertility_values), 4)
+        if fertility_values
+        else 0,
         "unique_tokens_used": len(unique_tokens),
-        "vocab_utilisation": round(len(unique_tokens) / vocab_size, 4) if vocab_size else 0,
-        "round_trip_rate": round(round_trips / len(smarts_list), 4) if smarts_list else 0,
+        "vocab_utilisation": round(len(unique_tokens) / vocab_size, 4)
+        if vocab_size
+        else 0,
+        "round_trip_rate": round(round_trips / len(smarts_list), 4)
+        if smarts_list
+        else 0,
         "seq_len_values": token_counts,
     }
 
@@ -167,20 +185,20 @@ def benchmark_sp_tokenizer(smarts_list: list[str], model_path: str) -> dict:
 # ---------------------------------------------------------------------------
 
 _ROWS: list[tuple[str, str, str]] = [
-    ("vocab_size",             "Vocabulary size",             ""),
-    ("n_samples",              "Samples evaluated",           ""),
-    ("error_rate",             "Error rate",                  "%"),
-    ("throughput_smarts_per_s","Throughput",                  "SMARTS/s"),
-    ("throughput_chars_per_s", "Throughput",                  "chars/s"),
-    ("seq_len_mean",           "Seq length (mean)",           "tokens"),
-    ("seq_len_median",         "Seq length (median)",         "tokens"),
-    ("seq_len_std",            "Seq length (std)",            "tokens"),
-    ("seq_len_min",            "Seq length (min)",            "tokens"),
-    ("seq_len_max",            "Seq length (max)",            "tokens"),
-    ("fertility_mean",         "Fertility ratio (mean)",      "tokens/char"),
-    ("unique_tokens_used",     "Unique tokens used",          ""),
-    ("vocab_utilisation",      "Vocabulary utilisation",      "%"),
-    ("round_trip_rate",        "Round-trip fidelity",         "%"),
+    ("vocab_size", "Vocabulary size", ""),
+    ("n_samples", "Samples evaluated", ""),
+    ("error_rate", "Error rate", "%"),
+    ("throughput_smarts_per_s", "Throughput", "SMARTS/s"),
+    ("throughput_chars_per_s", "Throughput", "chars/s"),
+    ("seq_len_mean", "Seq length (mean)", "tokens"),
+    ("seq_len_median", "Seq length (median)", "tokens"),
+    ("seq_len_std", "Seq length (std)", "tokens"),
+    ("seq_len_min", "Seq length (min)", "tokens"),
+    ("seq_len_max", "Seq length (max)", "tokens"),
+    ("fertility_mean", "Fertility ratio (mean)", "tokens/char"),
+    ("unique_tokens_used", "Unique tokens used", ""),
+    ("vocab_utilisation", "Vocabulary utilisation", "%"),
+    ("round_trip_rate", "Round-trip fidelity", "%"),
 ]
 
 
@@ -198,9 +216,7 @@ def print_report(results: list[dict]) -> None:
     col_w = 28
     name_w = 26
 
-    header = f"{'Metric':<{col_w}}" + "".join(
-        f"{r['name']:<{name_w}}" for r in results
-    )
+    header = f"{'Metric':<{col_w}}" + "".join(f"{r['name']:<{name_w}}" for r in results)
     print()
     print(header)
     print("-" * (col_w + name_w * len(results)))

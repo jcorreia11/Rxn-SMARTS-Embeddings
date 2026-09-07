@@ -103,7 +103,8 @@ def _setup_section(meta: dict) -> str:
 
     ec_classes_str = (
         ", ".join(f"EC {c} ({_EC_NAMES.get(c, '?')})" for c in label_names)
-        if label_names else "N/A"
+        if label_names
+        else "N/A"
     )
 
     lines = [
@@ -117,9 +118,11 @@ def _setup_section(meta: dict) -> str:
         f"| EC label depth | {meta.get('ec_depth', 'N/A')} |",
         f"| EC classes | {ec_classes_str} |",
         f"| Samples (requested) | {n_req:,} |"
-        if isinstance(n_req, int) else f"| Samples (requested) | {n_req} |",
+        if isinstance(n_req, int)
+        else f"| Samples (requested) | {n_req} |",
         f"| Samples (actual) | {n_actual:,} |"
-        if isinstance(n_actual, int) else f"| Samples (actual) | {n_actual} |",
+        if isinstance(n_actual, int)
+        else f"| Samples (actual) | {n_actual} |",
         f"| Train / test split | {meta.get('train_test_split', 'N/A')} |",
         f"| CV folds | {meta.get('folds', 'N/A')} |",
         f"| Random seed | {meta.get('random_seed', 'N/A')} |",
@@ -166,8 +169,12 @@ def _results_section(results: list[dict], figure_path: str | None) -> str:
     w_f1m = _winner("f1_macro_mean")
     w_f1w = _winner("f1_weighted_mean")
 
-    header = "| Method | Pooling | Head | Accuracy | F1 macro | F1 weighted | CV time (s) |"
-    sep =    "|--------|---------|------|----------|----------|-------------|-------------|"
+    header = (
+        "| Method | Pooling | Head | Accuracy | F1 macro | F1 weighted | CV time (s) |"
+    )
+    sep = (
+        "|--------|---------|------|----------|----------|-------------|-------------|"
+    )
 
     rows = [header, sep]
     for r in results:
@@ -225,9 +232,7 @@ def _per_class_section(results: list[dict]) -> str:
         for cls, stats in (r.get("per_class") or {}).items():
             support.setdefault(cls, int(stats.get("support", 0)))
 
-    name_cols = " | ".join(
-        f"F1 ({r['name']})" for r in results
-    )
+    name_cols = " | ".join(f"F1 ({r['name']})" for r in results)
     header = f"| EC Class | Name | Support | {name_cols} |"
     sep = "|----------|------|---------|" + "---------|" * len(results)
 
@@ -241,11 +246,13 @@ def _per_class_section(results: list[dict]) -> str:
             row += f" {f1:.3f} |"
         rows.append(row)
 
-    return "\n".join([
-        "## 4. Per-class Breakdown (F1)",
-        "",
-        "\n".join(rows),
-    ])
+    return "\n".join(
+        [
+            "## 4. Per-class Breakdown (F1)",
+            "",
+            "\n".join(rows),
+        ]
+    )
 
 
 def _summary_section(results: list[dict]) -> str:
@@ -296,6 +303,7 @@ def _summary_section(results: list[dict]) -> str:
 def _generate_figure(results: list[dict], output_path: Path) -> str | None:
     try:
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
         import numpy as np
@@ -315,10 +323,28 @@ def _generate_figure(results: list[dict], output_path: Path) -> str | None:
 
     fig, ax = plt.subplots(figsize=(max(6, n * 1.6), 5))
 
-    ax.bar(x - width / 2, acc_means, width, yerr=acc_stds, capsize=4,
-           label="Accuracy", color="#4c72b0", alpha=0.85, error_kw={"linewidth": 1.2})
-    ax.bar(x + width / 2, f1_means, width, yerr=f1_stds, capsize=4,
-           label="F1 macro", color="#dd8452", alpha=0.85, error_kw={"linewidth": 1.2})
+    ax.bar(
+        x - width / 2,
+        acc_means,
+        width,
+        yerr=acc_stds,
+        capsize=4,
+        label="Accuracy",
+        color="#4c72b0",
+        alpha=0.85,
+        error_kw={"linewidth": 1.2},
+    )
+    ax.bar(
+        x + width / 2,
+        f1_means,
+        width,
+        yerr=f1_stds,
+        capsize=4,
+        label="F1 macro",
+        color="#dd8452",
+        alpha=0.85,
+        error_kw={"linewidth": 1.2},
+    )
 
     # Shade by pooling strategy
     for i, name in enumerate(names):
@@ -336,9 +362,16 @@ def _generate_figure(results: list[dict], output_path: Path) -> str | None:
     # Group labels
     for label, start, end in [("CLS pooling", 0, 1), ("Mean pooling", 2, 3)]:
         mid = (start + end) / 2
-        ax.annotate(label, xy=(mid, -0.18), xycoords=("data", "axes fraction"),
-                    ha="center", va="top", fontsize=8, color="#555555",
-                    annotation_clip=False)
+        ax.annotate(
+            label,
+            xy=(mid, -0.18),
+            xycoords=("data", "axes fraction"),
+            ha="center",
+            va="top",
+            fontsize=8,
+            color="#555555",
+            annotation_clip=False,
+        )
 
     fig.tight_layout()
     fig.savefig(output_path, dpi=150, bbox_inches="tight")
@@ -408,19 +441,24 @@ def parse_args() -> argparse.Namespace:
         description="Generate a CLS vs mean-pooling ablation report."
     )
     p.add_argument(
-        "--results", required=True,
+        "--results",
+        required=True,
         help="Path to pooling_ablation.json produced by ablation_pooling.py",
     )
     p.add_argument(
-        "--env", default=None,
+        "--env",
+        default=None,
         help="Environment JSON from collect_env.py (optional; collected live if omitted)",
     )
     p.add_argument(
-        "--output", default=None,
+        "--output",
+        default=None,
         help="Output Markdown file (default: same dir as --results, .md extension)",
     )
     p.add_argument(
-        "--figure-format", default="pdf", choices=["pdf", "png", "svg"],
+        "--figure-format",
+        default="pdf",
+        choices=["pdf", "png", "svg"],
         help="Figure format (default: pdf)",
     )
     p.add_argument("--no-figure", action="store_true", help="Skip figure generation")
@@ -441,6 +479,7 @@ def main() -> None:
     else:
         logger.info("Collecting environment info from current machine ...")
         import importlib.util
+
         spec = importlib.util.spec_from_file_location(
             "collect_env", Path(__file__).parent / "collect_env.py"
         )

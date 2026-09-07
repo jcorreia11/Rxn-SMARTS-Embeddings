@@ -175,7 +175,11 @@ class TestBuildReactionGroups:
         # value — they should be assigned the same group.
         df = _make_df(REACTIONS=["RHEA:1;RHEA:2", "RHEA:1;RHEA:2", "RHEA:9"])
         result = build_reaction_groups(df)
-        assert result["reaction_group"].tolist() == ["RHEA:1;RHEA:2", "RHEA:1;RHEA:2", "RHEA:9"]
+        assert result["reaction_group"].tolist() == [
+            "RHEA:1;RHEA:2",
+            "RHEA:1;RHEA:2",
+            "RHEA:9",
+        ]
 
     def test_falls_back_to_smarts_when_reactions_blank(self):
         df = _make_df(REACTIONS=[None, "  ", "RHEA:9"])

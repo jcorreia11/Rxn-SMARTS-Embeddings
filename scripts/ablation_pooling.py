@@ -25,7 +25,11 @@ from pathlib import Path
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
-from sklearn.model_selection import StratifiedGroupKFold, cross_validate, train_test_split
+from sklearn.model_selection import (
+    StratifiedGroupKFold,
+    cross_validate,
+    train_test_split,
+)
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder, StandardScaler
@@ -116,12 +120,19 @@ def extract_both_poolings(
 def _build_classifier(head: str) -> object:
     if head == "logreg":
         return LogisticRegression(
-            max_iter=1000, solver="lbfgs", C=1.0,
-            class_weight="balanced", random_state=RANDOM_SEED,
+            max_iter=1000,
+            solver="lbfgs",
+            C=1.0,
+            class_weight="balanced",
+            random_state=RANDOM_SEED,
         )
     return MLPClassifier(
-        hidden_layer_sizes=(256, 128), activation="relu", max_iter=300,
-        random_state=RANDOM_SEED, early_stopping=True, validation_fraction=0.1,
+        hidden_layer_sizes=(256, 128),
+        activation="relu",
+        max_iter=300,
+        random_state=RANDOM_SEED,
+        early_stopping=True,
+        validation_fraction=0.1,
     )
 
 
@@ -141,16 +152,23 @@ def evaluate_embeddings(
     portion leaks into the scaling statistics used to transform it."""
 
     def _make_pipeline() -> Pipeline:
-        return Pipeline([("scaler", StandardScaler()), ("clf", _build_classifier(head))])
+        return Pipeline(
+            [("scaler", StandardScaler()), ("clf", _build_classifier(head))]
+        )
 
     cv = StratifiedGroupKFold(n_splits=n_folds, shuffle=True, random_state=RANDOM_SEED)
     t0_cv = time.perf_counter()
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         scores = cross_validate(
-            _make_pipeline(), X_emb_train, y_train, groups=groups_train, cv=cv,
+            _make_pipeline(),
+            X_emb_train,
+            y_train,
+            groups=groups_train,
+            cv=cv,
             scoring=["accuracy", "f1_macro", "f1_weighted"],
-            return_train_score=False, n_jobs=1,
+            return_train_score=False,
+            n_jobs=1,
         )
     cv_time_s = time.perf_counter() - t0_cv
 
@@ -164,25 +182,35 @@ def evaluate_embeddings(
     # side of the split, so y_test may not contain every label — pass the
     # labels actually present rather than assuming all of label_names appear.
     present_labels = sorted(set(y_test) | set(y_pred))
-    present_names = [
-        label_names[l] if isinstance(l, int) and l < len(label_names) else str(l)
-        for l in present_labels
-    ]
+    present_names = [label_names[int(lbl)] for lbl in present_labels]
     report_dict = classification_report(
-        y_test, y_pred, labels=present_labels, target_names=present_names,
-        zero_division=0, output_dict=True,
+        y_test,
+        y_pred,
+        labels=present_labels,
+        target_names=present_names,
+        zero_division=0,
+        output_dict=True,
     )
     report_str = classification_report(
-        y_test, y_pred, labels=present_labels, target_names=present_names,
+        y_test,
+        y_pred,
+        labels=present_labels,
+        target_names=present_names,
         zero_division=0,
     )
     logger.info(
         "\n%s — %d-fold CV (train=%d, test=%d, head=%s):\n"
         "  accuracy : %.4f ± %.4f\n"
         "  f1_macro : %.4f ± %.4f\n%s",
-        name, n_folds, len(X_emb_train), len(X_emb_test), head,
-        scores["test_accuracy"].mean(), scores["test_accuracy"].std(),
-        scores["test_f1_macro"].mean(), scores["test_f1_macro"].std(),
+        name,
+        n_folds,
+        len(X_emb_train),
+        len(X_emb_test),
+        head,
+        scores["test_accuracy"].mean(),
+        scores["test_accuracy"].std(),
+        scores["test_f1_macro"].mean(),
+        scores["test_f1_macro"].std(),
         report_str,
     )
 
@@ -231,27 +259,39 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--validated", default=VALIDATED_FILE, help="Validated SMARTS CSV")
     p.add_argument("--raw", nargs="+", default=RAW_FILES, help="Raw RetroRules CSVs")
     p.add_argument(
-        "--ec-depth", type=int, default=DEFAULT_EC_DEPTH, choices=[1, 2, 3],
+        "--ec-depth",
+        type=int,
+        default=DEFAULT_EC_DEPTH,
+        choices=[1, 2, 3],
         help="EC label depth (default: 1)",
     )
     p.add_argument(
-        "--n-samples", type=int, default=DEFAULT_N_SAMPLES,
+        "--n-samples",
+        type=int,
+        default=DEFAULT_N_SAMPLES,
         help="Max SMARTS to use, 0=all (default: 10000)",
     )
     p.add_argument(
-        "--folds", type=int, default=DEFAULT_FOLDS,
+        "--folds",
+        type=int,
+        default=DEFAULT_FOLDS,
         help="CV folds (default: 5)",
     )
     p.add_argument(
-        "--embed-batch-size", type=int, default=64,
+        "--embed-batch-size",
+        type=int,
+        default=64,
         help="Batch size for embedding extraction (default: 64)",
     )
     p.add_argument(
-        "--output", default="results/pooling_ablation.json",
+        "--output",
+        default="results/pooling_ablation.json",
         help="Output JSON path (default: results/pooling_ablation.json)",
     )
     p.add_argument(
-        "--split-strategy", default="group", choices=["group", "random"],
+        "--split-strategy",
+        default="group",
+        choices=["group", "random"],
         help=(
             "'group' (default) keeps RetroRules radius-siblings together, "
             "avoiding train/test leakage. 'random' reproduces the old "
@@ -273,7 +313,8 @@ def main() -> None:
     )
     logger.info(
         "%d labelled templates available (post rare-class filter) — using %d",
-        n_available, len(df),
+        n_available,
+        len(df),
     )
 
     X = df["smarts"].tolist()
@@ -298,7 +339,9 @@ def main() -> None:
     X_test_smarts = [X[i] for i in test_idx]
     logger.info(
         "Train: %d | Test: %d (80/20, split_strategy=%s)",
-        len(X_train_smarts), len(X_test_smarts), args.split_strategy,
+        len(X_train_smarts),
+        len(X_test_smarts),
+        args.split_strategy,
     )
 
     # --- Extract embeddings (model loaded once) ---
@@ -318,8 +361,15 @@ def main() -> None:
             logger.info("\n=== %s ===", name)
             results.append(
                 evaluate_embeddings(
-                    name, emb_train, emb_test,
-                    y_train, y_test, groups_train, args.folds, label_names, head,
+                    name,
+                    emb_train,
+                    emb_test,
+                    y_train,
+                    y_test,
+                    groups_train,
+                    args.folds,
+                    label_names,
+                    head,
                 )
             )
 

@@ -152,7 +152,10 @@ class TestMain:
         output_path = tmp_path / "out.csv"
         groups_path = tmp_path / "groups.csv"
         pd.DataFrame(
-            {"smarts": [VALID_SIMPLE, INVALID_SMARTS], "reaction_group": ["RHEA:1", "RHEA:2"]}
+            {
+                "smarts": [VALID_SIMPLE, INVALID_SMARTS],
+                "reaction_group": ["RHEA:1", "RHEA:2"],
+            }
         ).to_csv(groups_path, index=False)
 
         main(str(input_path), str(output_path), str(groups_path))
@@ -172,9 +175,9 @@ class TestMain:
 class TestAttachReactionGroups:
     def test_joins_matching_groups(self, tmp_path):
         groups_path = tmp_path / "groups.csv"
-        pd.DataFrame(
-            {"smarts": [VALID_SIMPLE], "reaction_group": ["RHEA:1"]}
-        ).to_csv(groups_path, index=False)
+        pd.DataFrame({"smarts": [VALID_SIMPLE], "reaction_group": ["RHEA:1"]}).to_csv(
+            groups_path, index=False
+        )
 
         df = validate([VALID_SIMPLE])
         result = attach_reaction_groups(df, str(groups_path))

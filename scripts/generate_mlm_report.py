@@ -20,7 +20,6 @@ Usage
 import argparse
 import json
 import logging
-import sys
 from datetime import date
 from pathlib import Path
 
@@ -125,8 +124,8 @@ def _model_section(cfg: dict) -> str:
         f"| Dropout | {mc.get('dropout', 'N/A')} |",
         f"| Max sequence length | {mc.get('max_seq_len', 'N/A')} |",
         f"| Vocabulary size | {mc.get('vocab_size', 'N/A'):,} |"
-        if isinstance(mc.get('vocab_size'), int) else
-        f"| Vocabulary size | {mc.get('vocab_size', 'N/A')} |",
+        if isinstance(mc.get("vocab_size"), int)
+        else f"| Vocabulary size | {mc.get('vocab_size', 'N/A')} |",
         f"| Total parameters | {n_params} |",
         f"| Masking probability | {tc.get('mask_prob', 0.15):.0%} |",
     ]
@@ -147,14 +146,18 @@ def _training_section(cfg: dict) -> str:
     clip_desc = f"Max norm {grad_clip}" if grad_clip > 0 else "Disabled"
 
     val_split = tc.get("val_split", 0.0)
-    split_desc = f"{val_split:.0%} held out" if val_split > 0 else "None (full dataset used for training)"
+    split_desc = (
+        f"{val_split:.0%} held out"
+        if val_split > 0
+        else "None (full dataset used for training)"
+    )
 
     lines = [
         "## Training Setup",
         "",
         "| Parameter | Value |",
         "|-----------|-------|",
-        f"| Optimizer | AdamW |",
+        "| Optimizer | AdamW |",
         f"| Learning rate | {tc.get('learning_rate', 'N/A')} |",
         f"| LR schedule | {scheduler_desc} |",
         f"| Batch size | {tc.get('batch_size', 'N/A')} |",
@@ -192,13 +195,13 @@ def _results_section(cfg: dict, figure_path: str | None) -> str:
             ]
         if val_top1:
             lines += [
-                f"| Final top-1 accuracy | {val_top1[-1]*100:.2f}% |",
-                f"| Best top-1 accuracy | {max(val_top1)*100:.2f}% (epoch {val_top1.index(max(val_top1)) + 1}) |",
+                f"| Final top-1 accuracy | {val_top1[-1] * 100:.2f}% |",
+                f"| Best top-1 accuracy | {max(val_top1) * 100:.2f}% (epoch {val_top1.index(max(val_top1)) + 1}) |",
             ]
         if val_top5:
             lines += [
-                f"| Final top-5 accuracy | {val_top5[-1]*100:.2f}% |",
-                f"| Best top-5 accuracy | {max(val_top5)*100:.2f}% (epoch {val_top5.index(max(val_top5)) + 1}) |",
+                f"| Final top-5 accuracy | {val_top5[-1] * 100:.2f}% |",
+                f"| Best top-5 accuracy | {max(val_top5) * 100:.2f}% (epoch {val_top5.index(max(val_top5)) + 1}) |",
             ]
         lines.append("")
 
@@ -206,7 +209,7 @@ def _results_section(cfg: dict, figure_path: str | None) -> str:
         lines += [
             f"![Training loss curve]({figure_path})",
             "",
-            f"*Figure: MLM training loss over epochs.*",
+            "*Figure: MLM training loss over epochs.*",
         ]
 
     return "\n".join(lines)
@@ -216,11 +219,11 @@ def _count_params(cfg: dict) -> str:
     """Estimate parameter count from config without loading the model."""
     mc = cfg.get("model_config", {})
     try:
-        import torch
         from smart_rxn_embeddings.models.smarts_transformer import (
             SmartsMLMModel,
             TransformerConfig,
         )
+
         model_cfg = TransformerConfig.from_dict(mc)
         model = SmartsMLMModel(model_cfg)
         n = sum(p.numel() for p in model.parameters())
@@ -236,7 +239,9 @@ def _count_params(cfg: dict) -> str:
 
 def build_report(cfg: dict, env: dict, figure_path: str | None) -> str:
     today = date.today().isoformat()
-    run_id = Path(cfg.get("training_config", {}).get("output_path", "")).stem or "unknown"
+    run_id = (
+        Path(cfg.get("training_config", {}).get("output_path", "")).stem or "unknown"
+    )
 
     sections = [
         "# MLM Pre-training Report",
@@ -313,7 +318,11 @@ def main() -> None:
         logger.info("Collecting environment info from current machine...")
         env = collect_env()
 
-    output_path = Path(args.output) if args.output else config_path.parent / "mlm_training_report.md"
+    output_path = (
+        Path(args.output)
+        if args.output
+        else config_path.parent / "mlm_training_report.md"
+    )
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     report = build_report(cfg, env, args.figure)

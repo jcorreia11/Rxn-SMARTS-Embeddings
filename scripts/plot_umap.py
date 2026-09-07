@@ -99,7 +99,11 @@ def _make_subclass_palette(subclasses: list[str]) -> tuple[dict, dict]:
         for i, sub in enumerate(sorted(subs)):
             t = 0.4 + 0.5 * (i / max(1, n - 1)) if n > 1 else 0.65
             colors[sub] = cmap(t)
-            names[sub] = f"EC {sub} ({top_name[:4]}…)" if len(top_name) > 4 else f"EC {sub} ({top_name})"
+            names[sub] = (
+                f"EC {sub} ({top_name[:4]}…)"
+                if len(top_name) > 4
+                else f"EC {sub} ({top_name})"
+            )
     return colors, names
 
 
@@ -108,7 +112,9 @@ def _make_subclass_palette(subclasses: list[str]) -> tuple[dict, dict]:
 # ---------------------------------------------------------------------------
 
 
-def load_ec_labels(raw_files: list[str], smarts_set: set[str], depth: int = 1) -> dict[str, str]:
+def load_ec_labels(
+    raw_files: list[str], smarts_set: set[str], depth: int = 1
+) -> dict[str, str]:
     """Return {smarts: EC label truncated to *depth* levels} for validated SMARTS."""
     frames = []
     for p in raw_files:
@@ -149,7 +155,9 @@ def load_ec_labels(raw_files: list[str], smarts_set: set[str], depth: int = 1) -
     raw["ec_class"] = raw["ECS"].apply(_ec_at_depth)
     raw = raw.dropna(subset=["ec_class"])
     raw = raw[raw["TEMPLATE"].isin(smarts_set)]
-    logger.info("SMARTS with EC label (depth=%d): %d / %d", depth, len(raw), len(smarts_set))
+    logger.info(
+        "SMARTS with EC label (depth=%d): %d / %d", depth, len(raw), len(smarts_set)
+    )
     return dict(zip(raw["TEMPLATE"], raw["ec_class"]))
 
 
@@ -270,7 +278,12 @@ def plot_umap(
 
     if unlabelled_in_legend:
         n_hidden = sum((labels == c).sum() for c in present[max_legend:])
-        ax.scatter([], [], s=0, label=f"… +{len(present) - max_legend} subclasses (n={n_hidden:,})")
+        ax.scatter(
+            [],
+            [],
+            s=0,
+            label=f"… +{len(present) - max_legend} subclasses (n={n_hidden:,})",
+        )
 
     depth_suffix = f" (EC depth {ec_depth})" if ec_depth > 1 else ""
     ax.set_xlabel("UMAP 1", fontsize=12)

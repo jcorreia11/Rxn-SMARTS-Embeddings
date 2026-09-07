@@ -30,6 +30,7 @@ def _seed_worker(worker_id: int) -> None:
     np.random.seed(worker_seed)
     random.seed(worker_seed)
 
+
 _MASK_TOKEN = "[MASK]"
 _SPECIAL_TOKENS = {"[PAD]", "[UNK]", "[BOS]", "[EOS]"}
 # Pure structural punctuation: syntactically necessary but carry no chemical

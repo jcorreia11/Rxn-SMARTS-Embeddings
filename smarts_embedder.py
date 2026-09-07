@@ -10,8 +10,8 @@ Dependencies: torch, numpy  (no RDKit, no sentencepiece)
 Quick start
 -----------
     embedder = SmartsEmbedder.from_checkpoint(
-        weights_path="smarts_transformer_20260410_111830.pt",
-        config_path="smarts_transformer_20260410_111830.json",
+        weights_path="smarts_transformer_20260715_111009.pt",
+        config_path="smarts_transformer_20260715_111009.json",
         vocab_path="vocab.json",
         pooling="mean",   # "mean" or "cls"
     )

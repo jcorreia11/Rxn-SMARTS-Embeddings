@@ -81,11 +81,15 @@ def parse_args() -> argparse.Namespace:
     train.add_argument("--epochs", type=int, default=10)
     train.add_argument("--mask-prob", type=float, default=0.25)
     train.add_argument(
-        "--mean-span", type=float, default=3.0,
+        "--mean-span",
+        type=float,
+        default=3.0,
         help="Mean span length for geometric span sampling (default: 3.0)",
     )
     train.add_argument(
-        "--max-span", type=int, default=10,
+        "--max-span",
+        type=int,
+        default=10,
         help="Hard cap on span length (default: 10)",
     )
     train.add_argument("--checkpoint-dir", default="models/checkpoints")
@@ -97,23 +101,33 @@ def parse_args() -> argparse.Namespace:
         "--log-every", type=int, default=10, help="Log batch loss every N steps"
     )
     train.add_argument(
-        "--val-split", type=float, default=0.1,
+        "--val-split",
+        type=float,
+        default=0.1,
         help="Fraction of data held out for validation (default: 0.1)",
     )
     train.add_argument(
-        "--warmup-steps", type=int, default=500,
+        "--warmup-steps",
+        type=int,
+        default=500,
         help="Linear LR warmup steps before cosine decay (default: 500)",
     )
     train.add_argument(
-        "--max-grad-norm", type=float, default=1.0,
+        "--max-grad-norm",
+        type=float,
+        default=1.0,
         help="Gradient clipping max norm, 0 to disable (default: 1.0)",
     )
     train.add_argument(
-        "--num-workers", type=int, default=4,
+        "--num-workers",
+        type=int,
+        default=4,
         help="DataLoader worker processes (default: 4)",
     )
     train.add_argument(
-        "--split-strategy", default="group", choices=["group", "random"],
+        "--split-strategy",
+        default="group",
+        choices=["group", "random"],
         help=(
             "'group' (default) keeps RetroRules radius-siblings (same "
             "reaction_group) on one side of the train/val split, avoiding "
@@ -122,11 +136,15 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     train.add_argument(
-        "--split-seed", type=int, default=42,
+        "--split-seed",
+        type=int,
+        default=42,
         help="Random seed for the group-aware train/val split (default: 42)",
     )
     train.add_argument(
-        "--seed", type=int, default=42,
+        "--seed",
+        type=int,
+        default=42,
         help=(
             "Random seed for weight init and data loader shuffling/masking "
             "(default: 42). Vary across replicate runs (e.g. same "
@@ -205,8 +223,13 @@ def main() -> None:
     )
 
     trainer = Trainer(
-        model, dataset, collator, training_config,
-        device=args.device, groups=groups, split_seed=args.split_seed,
+        model,
+        dataset,
+        collator,
+        training_config,
+        device=args.device,
+        groups=groups,
+        split_seed=args.split_seed,
     )
     losses = trainer.train()
     logger.info(

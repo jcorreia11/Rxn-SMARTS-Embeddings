@@ -25,7 +25,7 @@ jobs:
       - name: Audit dependencies for known vulnerabilities
         # CVE-2026-4539: pygments 2.19.2, no patched release available yet.
         # Remove --ignore-vuln once a patched version is released.
-        # VCS deps (e.g. rxnfp from git) are stripped before auditing because pip-audit
+        # VCS git-sourced deps are stripped before auditing because pip-audit
         # cannot hash them and fails at the install stage before --skip-editable applies.
         # torch/torchvision/torchaudio are sourced from download.pytorch.org (CUDA builds)
         # and are not resolvable by pip-audit's internal pip against PyPI.

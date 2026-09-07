@@ -34,8 +34,7 @@ def _find_latest_checkpoint(models_dir: str = _MODELS_DIR) -> tuple[str, str]:
     config = latest.with_suffix(".json")
     if not config.exists():
         raise FileNotFoundError(
-            f"Config file not found for checkpoint {latest}. "
-            f"Expected {config}."
+            f"Config file not found for checkpoint {latest}. Expected {config}."
         )
     return str(latest), str(config)
 
@@ -208,8 +207,8 @@ Examples:
 
   # Explicit model paths
   smarts-embed "[C:1]-[O:2]>>[C:1]=[O:2]" \\
-      --weights models/smarts_transformer_20260410_111830.pt \\
-      --config  models/smarts_transformer_20260410_111830.json
+      --weights models/smarts_transformer_20260715_111009.pt \\
+      --config  models/smarts_transformer_20260715_111009.json
 """,
     )
 

@@ -1,9 +1,7 @@
 """Tests for smart_rxn_embeddings.predict."""
 
 import json
-import sys
 from io import StringIO
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -40,7 +38,10 @@ def _fake_embedder(n: int = len(_SMARTS), d: int = _D) -> MagicMock:
 
 class TestFindLatestCheckpoint:
     def test_finds_most_recent(self, tmp_path):
-        for name in ("smarts_transformer_20260101_000000", "smarts_transformer_20260201_000000"):
+        for name in (
+            "smarts_transformer_20260101_000000",
+            "smarts_transformer_20260201_000000",
+        ):
             (tmp_path / f"{name}.pt").touch()
             (tmp_path / f"{name}.json").write_text("{}")
         weights, config = _find_latest_checkpoint(str(tmp_path))
@@ -161,7 +162,7 @@ class TestWriteOutputCsv:
     def test_row_count(self):
         embs = np.zeros((2, _D), dtype=np.float32)
         csv_text = self._capture_stdout(_SMARTS, embs)
-        lines = [l for l in csv_text.splitlines() if l]
+        lines = [line for line in csv_text.splitlines() if line]
         assert len(lines) == len(_SMARTS) + 1  # header + data rows
 
     def test_saves_to_file(self, tmp_path):
@@ -190,7 +191,9 @@ class TestLoadEmbedder:
         mock_fc.return_value = MagicMock()
         load_embedder(weights=None, config=None, vocab=str(tmp_path / "v.json"))
         mock_find.assert_called_once()
-        mock_fc.assert_called_once_with("w.pt", "c.json", str(tmp_path / "v.json"), "cls", None)
+        mock_fc.assert_called_once_with(
+            "w.pt", "c.json", str(tmp_path / "v.json"), "cls", None
+        )
 
     @patch("smart_rxn_embeddings.predict.SmartsEmbedder.from_checkpoint")
     def test_skips_autodiscovery_when_paths_given(self, mock_fc, tmp_path):
@@ -201,9 +204,9 @@ class TestLoadEmbedder:
     @patch("smart_rxn_embeddings.predict.SmartsEmbedder.from_checkpoint")
     def test_uses_default_vocab_when_none(self, mock_fc):
         from smart_rxn_embeddings.predict import _DEFAULT_VOCAB
+
         mock_fc.return_value = MagicMock()
         load_embedder(weights="w.pt", config="c.json")
-        _, call_vocab = mock_fc.call_args[0][2], mock_fc.call_args[0][2]
         assert mock_fc.call_args[0][2] == _DEFAULT_VOCAB
 
 

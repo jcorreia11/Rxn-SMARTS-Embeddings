@@ -145,11 +145,12 @@ def _results_section(stats: dict, figure_path: str | None) -> str:
         "| Metric | Value | p-value |",
         "|--------|-------|---------|",
         f"| Pearson $r$ | {pr:.4f} | {_fmt_p(pp)} |"
-        if pr is not None else "| Pearson $r$ | N/A | N/A |",
+        if pr is not None
+        else "| Pearson $r$ | N/A | N/A |",
         f"| Spearman $\\rho$ | {sr:.4f} | {_fmt_p(sp)} |"
-        if sr is not None else "| Spearman $\\rho$ | N/A | N/A |",
-        f"| Pairs | {n:,} | — |"
-        if isinstance(n, int) else f"| Pairs | {n} | — |",
+        if sr is not None
+        else "| Spearman $\\rho$ | N/A | N/A |",
+        f"| Pairs | {n:,} | — |" if isinstance(n, int) else f"| Pairs | {n} | — |",
         "",
         "### Distribution",
         "",
@@ -281,19 +282,23 @@ def parse_args() -> argparse.Namespace:
         description="Generate a similarity correlation report from JSON results."
     )
     p.add_argument(
-        "--results", required=True,
+        "--results",
+        required=True,
         help="Path to sim_corr_<JOB_ID>.json produced by similarity_correlation.py",
     )
     p.add_argument(
-        "--env", default=None,
+        "--env",
+        default=None,
         help="Environment JSON from collect_env.py (optional; collected live if omitted)",
     )
     p.add_argument(
-        "--figure", default=None,
+        "--figure",
+        default=None,
         help="Path to the figure file to embed in the report (optional)",
     )
     p.add_argument(
-        "--output", default=None,
+        "--output",
+        default=None,
         help="Output Markdown file (default: same dir as --results, .md extension)",
     )
     return p.parse_args()
@@ -313,6 +318,7 @@ def main() -> None:
     else:
         logger.info("Collecting environment info from current machine ...")
         import importlib.util
+
         spec = importlib.util.spec_from_file_location(
             "collect_env", Path(__file__).parent / "collect_env.py"
         )

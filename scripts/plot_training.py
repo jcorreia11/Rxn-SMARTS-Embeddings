@@ -55,6 +55,7 @@ def plot_losses(
     dpi: int,
 ) -> None:
     import matplotlib
+
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     import matplotlib.ticker as ticker
@@ -71,8 +72,14 @@ def plot_losses(
     ax.plot(epochs, train_losses, label="Train loss", linewidth=2, color="#2563eb")
     if val_losses:
         val_epochs = list(range(1, len(val_losses) + 1))
-        ax.plot(val_epochs, val_losses, label="Val loss", linewidth=2,
-                linestyle="--", color="#dc2626")
+        ax.plot(
+            val_epochs,
+            val_losses,
+            label="Val loss",
+            linewidth=2,
+            linestyle="--",
+            color="#dc2626",
+        )
         best_epoch = val_losses.index(min(val_losses)) + 1
         best_val = min(val_losses)
         ax.axvline(best_epoch, color="#dc2626", linestyle=":", alpha=0.5, linewidth=1)
@@ -80,7 +87,8 @@ def plot_losses(
             f"Best: {best_val:.4f}\n(epoch {best_epoch})",
             xy=(best_epoch, best_val),
             xytext=(best_epoch + max(1, len(epochs) * 0.05), best_val * 1.15),
-            fontsize=8, color="#dc2626",
+            fontsize=8,
+            color="#dc2626",
             arrowprops=dict(arrowstyle="->", color="#dc2626", lw=1),
         )
     ax.set_xlabel("Epoch", fontsize=12)
@@ -95,29 +103,46 @@ def plot_losses(
     if has_acc:
         ax2 = axes[1]
         acc_epochs = list(range(1, len(val_top1) + 1))
-        ax2.plot(acc_epochs, [v * 100 for v in val_top1], label="Top-1 accuracy",
-                 linewidth=2, color="#16a34a")
-        ax2.plot(acc_epochs, [v * 100 for v in val_top5], label="Top-5 accuracy",
-                 linewidth=2, linestyle="--", color="#d97706")
+        ax2.plot(
+            acc_epochs,
+            [v * 100 for v in val_top1],
+            label="Top-1 accuracy",
+            linewidth=2,
+            color="#16a34a",
+        )
+        ax2.plot(
+            acc_epochs,
+            [v * 100 for v in val_top5],
+            label="Top-5 accuracy",
+            linewidth=2,
+            linestyle="--",
+            color="#d97706",
+        )
         ax2.set_xlabel("Epoch", fontsize=12)
         ax2.set_ylabel("Accuracy (%)", fontsize=12)
-        ax2.set_title("Masked Token Prediction Accuracy", fontsize=14, fontweight="bold")
+        ax2.set_title(
+            "Masked Token Prediction Accuracy", fontsize=14, fontweight="bold"
+        )
         ax2.legend(fontsize=11)
         ax2.xaxis.set_major_locator(ticker.MaxNLocator(integer=True))
         ax2.grid(True, linestyle="--", alpha=0.4)
         ax2.spines[["top", "right"]].set_visible(False)
         # annotate final values
         ax2.annotate(
-            f"{val_top1[-1]*100:.1f}%",
+            f"{val_top1[-1] * 100:.1f}%",
             xy=(acc_epochs[-1], val_top1[-1] * 100),
-            xytext=(-30, 8), textcoords="offset points",
-            fontsize=9, color="#16a34a",
+            xytext=(-30, 8),
+            textcoords="offset points",
+            fontsize=9,
+            color="#16a34a",
         )
         ax2.annotate(
-            f"{val_top5[-1]*100:.1f}%",
+            f"{val_top5[-1] * 100:.1f}%",
             xy=(acc_epochs[-1], val_top5[-1] * 100),
-            xytext=(-30, 8), textcoords="offset points",
-            fontsize=9, color="#d97706",
+            xytext=(-30, 8),
+            textcoords="offset points",
+            fontsize=9,
+            color="#d97706",
         )
 
     fig.tight_layout()
@@ -144,9 +169,10 @@ def main() -> None:
 
     logger.info(
         "Loaded %d train epochs, %d val epochs (top-1: %s, top-5: %s) from %s",
-        len(train_losses), len(val_losses),
-        f"{val_top1[-1]*100:.1f}%" if val_top1 else "N/A",
-        f"{val_top5[-1]*100:.1f}%" if val_top5 else "N/A",
+        len(train_losses),
+        len(val_losses),
+        f"{val_top1[-1] * 100:.1f}%" if val_top1 else "N/A",
+        f"{val_top5[-1] * 100:.1f}%" if val_top5 else "N/A",
         config_path,
     )
 
@@ -158,7 +184,9 @@ def main() -> None:
             config_path.stem.replace("smarts_transformer", "training_loss")
         )
 
-    plot_losses(train_losses, val_losses, val_top1, val_top5, output_path, args.format, args.dpi)
+    plot_losses(
+        train_losses, val_losses, val_top1, val_top5, output_path, args.format, args.dpi
+    )
 
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ model's correlation carries less interpretive weight.
 Usage
 -----
     python scripts/similarity_correlation_random_baseline.py \\
-        --config  results/final/1-train-mlm/medium/smarts_transformer_20260428_160310.json \\
+        --config  models/smarts_transformer_20260715_111009.json \\
         --vocab   data/processed/vocab.json \\
         --smarts  data/embeddings/medium/smarts.txt \\
         --n-reactions 3000 \\
@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 # Ensure scripts/ is importable regardless of working directory
 sys.path.insert(0, str(Path(__file__).parent))
 
-from similarity_correlation import sample_and_compute, compute_stats, plot_correlation
+from similarity_correlation import sample_and_compute, compute_stats, plot_correlation  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -44,7 +44,9 @@ from similarity_correlation import sample_and_compute, compute_stats, plot_corre
 # ---------------------------------------------------------------------------
 
 
-def build_random_embedder(config_path: str, vocab_path: str, device: str | None, seed: int = 42):
+def build_random_embedder(
+    config_path: str, vocab_path: str, device: str | None, seed: int = 42
+):
     """Return a SmartsEmbedder with random (untrained) weights."""
     import json as _json
     from smart_rxn_embeddings.models.embed import SmartsEmbedder
@@ -166,7 +168,9 @@ def main() -> None:
     sub_smarts = [all_smarts[i] for i in idx]
     logger.info("Pre-sampled %d reactions (seed=%d)", n_reactions, args.seed)
 
-    embedder = build_random_embedder(args.config, args.vocab, args.device, seed=args.model_seed)
+    embedder = build_random_embedder(
+        args.config, args.vocab, args.device, seed=args.model_seed
+    )
 
     logger.info("Extracting random-init embeddings for sampled reactions ...")
     t0_total = time.perf_counter()
@@ -189,15 +193,21 @@ def main() -> None:
         "  N pairs    = %d\n"
         "  Cosine  : mean=%.4f  std=%.4f\n"
         "  Tanimoto: mean=%.4f  std=%.4f",
-        stats["pearson_r"], stats["pearson_p"],
-        stats["spearman_r"], stats["spearman_p"],
+        stats["pearson_r"],
+        stats["pearson_p"],
+        stats["spearman_r"],
+        stats["spearman_p"],
         stats["n_pairs"],
-        stats["cosine_mean"], stats["cosine_std"],
-        stats["tanimoto_mean"], stats["tanimoto_std"],
+        stats["cosine_mean"],
+        stats["cosine_std"],
+        stats["tanimoto_mean"],
+        stats["tanimoto_std"],
     )
 
     plot_correlation(
-        cosine, tanimoto, stats,
+        cosine,
+        tanimoto,
+        stats,
         output_path=Path(args.output),
         fmt=args.format,
         dpi=args.dpi,

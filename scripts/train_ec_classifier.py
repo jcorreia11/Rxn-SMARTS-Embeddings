@@ -38,7 +38,11 @@ from pathlib import Path
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
-from sklearn.model_selection import StratifiedGroupKFold, cross_validate, train_test_split
+from sklearn.model_selection import (
+    StratifiedGroupKFold,
+    cross_validate,
+    train_test_split,
+)
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -209,12 +213,21 @@ def evaluate(
     )
 
     present_labels = sorted(set(y_test) | set(y_pred))
-    present_names = [label_names[int(l)] for l in present_labels]
+    present_names = [label_names[int(lbl)] for lbl in present_labels]
     report_str = classification_report(
-        y_test, y_pred, labels=present_labels, target_names=present_names, zero_division=0
+        y_test,
+        y_pred,
+        labels=present_labels,
+        target_names=present_names,
+        zero_division=0,
     )
     report_dict = classification_report(
-        y_test, y_pred, labels=present_labels, target_names=present_names, zero_division=0, output_dict=True
+        y_test,
+        y_pred,
+        labels=present_labels,
+        target_names=present_names,
+        zero_division=0,
+        output_dict=True,
     )
     logger.info("\nClassification report (held-out test set):\n%s", report_str)
     logger.info(
@@ -358,12 +371,21 @@ def evaluate_embeddings(
     )
 
     present_labels = sorted(set(y_test) | set(y_pred))
-    present_names = [label_names[int(l)] for l in present_labels]
+    present_names = [label_names[int(lbl)] for lbl in present_labels]
     report_str = classification_report(
-        y_test, y_pred, labels=present_labels, target_names=present_names, zero_division=0
+        y_test,
+        y_pred,
+        labels=present_labels,
+        target_names=present_names,
+        zero_division=0,
     )
     report_dict = classification_report(
-        y_test, y_pred, labels=present_labels, target_names=present_names, zero_division=0, output_dict=True
+        y_test,
+        y_pred,
+        labels=present_labels,
+        target_names=present_names,
+        zero_division=0,
+        output_dict=True,
     )
     logger.info("\nClassification report (held-out test set):\n%s", report_str)
 

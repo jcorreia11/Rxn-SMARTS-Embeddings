@@ -49,8 +49,8 @@ The model checkpoint is auto-discovered from `models/`. To use a specific one:
 
 ```bash
 smarts-embed "[C:1]-[O:2]>>[C:1]=[O:2]" \
-    --weights models/smarts_transformer_20260410_111830.pt \
-    --config  models/smarts_transformer_20260410_111830.json
+    --weights models/smarts_transformer_20260715_111009.pt \
+    --config  models/smarts_transformer_20260715_111009.json
 ```
 
 Full options:
@@ -158,8 +158,7 @@ python src/smart_rxn_embeddings/tokenization/sentencepiece_tokenizer.py
 | `build_vocab.py` | `validated_smarts.csv` | `data/processed/vocab.json` |
 | `sentencepiece_tokenizer.py` | `validated_smarts.csv` | `data/processed/sp_tokenizer.{model,vocab}` |
 
-On HPC: `sbatch scripts/dvc_repro.sbatch` no longer exists — submit the four
-commands above directly, or wrap them in your own job script.
+On HPC, submit the four commands above directly, or wrap them in your own job script (see `scripts/preprocess.sbatch`).
 
 ## Training
 

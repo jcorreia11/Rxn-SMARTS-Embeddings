@@ -109,7 +109,8 @@ def load_reaction_groups(validated_file: str, smarts_set: set[str]) -> dict[str,
     """
     if not Path(validated_file).exists():
         logger.warning(
-            "Validated file not found, skipping reaction-group tagging: %s", validated_file
+            "Validated file not found, skipping reaction-group tagging: %s",
+            validated_file,
         )
         return {}
 
@@ -215,11 +216,15 @@ def print_results(
     print(f"TOP-{len(neighbor_indices)} NEAREST NEIGHBORS  ({score_label})")
     print("-" * 72)
 
-    all_cls = [query_cls] + [top_ec_class(ec_map.get(smarts_list[i], "")) for i in neighbor_indices]
+    all_cls = [query_cls] + [
+        top_ec_class(ec_map.get(smarts_list[i], "")) for i in neighbor_indices
+    ]
     n_same_class = sum(1 for c in all_cls[1:] if c == query_cls and query_cls != "?")
     n_same_group = 0
 
-    for rank, (idx, score) in enumerate(zip(neighbor_indices, neighbor_scores), start=1):
+    for rank, (idx, score) in enumerate(
+        zip(neighbor_indices, neighbor_scores), start=1
+    ):
         s = smarts_list[idx]
         ecs = ec_map.get(s, "")
         cls = top_ec_class(ecs)
@@ -278,7 +283,9 @@ def build_json_output(
     query_group = (group_map or {}).get(query_smarts)
 
     neighbors = []
-    for rank, (idx, score) in enumerate(zip(neighbor_indices, neighbor_scores), start=1):
+    for rank, (idx, score) in enumerate(
+        zip(neighbor_indices, neighbor_scores), start=1
+    ):
         s = smarts_list[int(idx)]
         ecs = ec_map.get(s, "")
         cls = top_ec_class(ecs)
@@ -326,7 +333,9 @@ def build_json_output(
             "n_same_ec_class": n_same,
             "fraction_same_ec_class": n_same / len(neighbors) if neighbors else 0.0,
             "n_same_group_as_query": n_same_group,
-            "fraction_same_group_as_query": n_same_group / len(neighbors) if neighbors else 0.0,
+            "fraction_same_group_as_query": n_same_group / len(neighbors)
+            if neighbors
+            else 0.0,
         },
     }
 
@@ -461,7 +470,9 @@ def main() -> None:
     # Reaction groups (RetroRules radius-siblings)
     logger.info("Loading reaction groups ...")
     group_map = load_reaction_groups(args.validated, set(smarts_list))
-    logger.info("  %d / %d SMARTS have a reaction group", len(group_map), len(smarts_list))
+    logger.info(
+        "  %d / %d SMARTS have a reaction group", len(group_map), len(smarts_list)
+    )
 
     exclude_indices = None
     if args.exclude_same_group:
@@ -472,7 +483,8 @@ def main() -> None:
             )
         else:
             exclude_indices = {
-                i for i, s in enumerate(smarts_list)
+                i
+                for i, s in enumerate(smarts_list)
                 if group_map.get(s) == query_reaction_group
             }
             exclude_indices.discard(query_idx)
@@ -490,7 +502,10 @@ def main() -> None:
     )
     t_search = time.perf_counter()
     neighbor_indices, neighbor_scores = find_neighbors(
-        query_idx, embeddings, k=args.top_k, metric=args.metric,
+        query_idx,
+        embeddings,
+        k=args.top_k,
+        metric=args.metric,
         exclude_indices=exclude_indices,
     )
     search_time_s = time.perf_counter() - t_search

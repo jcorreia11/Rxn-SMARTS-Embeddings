@@ -70,7 +70,9 @@ class TestLoadLabelledSmarts:
                 "reaction_group": templates,
             },
         )
-        df, n_available = load_labelled_smarts([raw], validated, ec_depth=1, n_samples=None, random_seed=42)
+        df, n_available = load_labelled_smarts(
+            [raw], validated, ec_depth=1, n_samples=None, random_seed=42
+        )
         assert list(df.columns) == ["smarts", "label", "group"]
         assert n_available == len(templates)
 
@@ -83,7 +85,9 @@ class TestLoadLabelledSmarts:
         validated = _write_validated(
             tmp_path, {"smarts": templates, "valid": ["True"] * len(templates)}
         )
-        df, _ = load_labelled_smarts([raw], validated, ec_depth=1, n_samples=None, random_seed=42)
+        df, _ = load_labelled_smarts(
+            [raw], validated, ec_depth=1, n_samples=None, random_seed=42
+        )
         assert (df["group"] == df["smarts"]).all()
 
     def test_drops_rare_classes(self, tmp_path):
@@ -143,6 +147,8 @@ class TestLoadLabelledSmarts:
                 "reaction_group": templates,
             },
         )
-        df, _ = load_labelled_smarts([raw], validated, ec_depth=1, n_samples=None, random_seed=42)
+        df, _ = load_labelled_smarts(
+            [raw], validated, ec_depth=1, n_samples=None, random_seed=42
+        )
         assert "UNLABELLED" not in set(df["smarts"])
         assert len(df) == 10

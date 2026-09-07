@@ -110,7 +110,11 @@ def _env_section(env: dict) -> str:
 
 def _setup_section(meta: dict, query: dict) -> str:
     metric = meta.get("metric", "N/A")
-    score_label = "Cosine similarity (higher = closer)" if metric == "cosine" else "Euclidean distance (lower = closer)"
+    score_label = (
+        "Cosine similarity (higher = closer)"
+        if metric == "cosine"
+        else "Euclidean distance (lower = closer)"
+    )
 
     lines = [
         "## 2. Experimental Setup",
@@ -119,7 +123,7 @@ def _setup_section(meta: dict, query: dict) -> str:
         "",
         "| Parameter | Value |",
         "|-----------|-------|",
-        f"| Source | RetroRules v3.0 |",
+        "| Source | RetroRules v3.0 |",
         f"| Embeddings file | `{Path(meta.get('embeddings_path', 'N/A')).name}` |",
         f"| SMARTS file | `{Path(meta.get('smarts_path', 'N/A')).name}` |",
         f"| Total reactions indexed | {meta.get('n_reactions', 'N/A'):,} |"
@@ -150,7 +154,9 @@ def _setup_section(meta: dict, query: dict) -> str:
     return "\n".join(lines)
 
 
-def _results_section(query: dict, neighbors: list[dict], summary: dict, metric: str) -> str:
+def _results_section(
+    query: dict, neighbors: list[dict], summary: dict, metric: str
+) -> str:
     if not neighbors:
         return "## 3. Results\n\n_No neighbors found._"
 
@@ -158,7 +164,7 @@ def _results_section(query: dict, neighbors: list[dict], summary: dict, metric: 
     query_cls = query.get("ec_class", "?")
 
     header = f"| Rank | {score_col} | EC Class | EC Name | Same EC? | Index | SMARTS |"
-    sep =     "|------|------------|----------|---------|----------|-------|--------|"
+    sep = "|------|------------|----------|---------|----------|-------|--------|"
 
     rows = [header, sep]
     for n in neighbors:
@@ -174,10 +180,6 @@ def _results_section(query: dict, neighbors: list[dict], summary: dict, metric: 
             f"| {n['index']} "
             f"| `{smarts_cell}` |"
         )
-
-    n_same = summary.get("n_same_ec_class", 0)
-    frac = summary.get("fraction_same_ec_class", 0.0)
-    k = len(neighbors)
 
     lines = [
         "## 3. Results",
@@ -205,9 +207,7 @@ def _summary_section(query: dict, neighbors: list[dict], summary: dict) -> str:
         )
     else:
         query_name = _EC_NAMES.get(query_cls, "Unknown")
-        lines.append(
-            f"- **Query class**: EC {query_cls} ({query_name})."
-        )
+        lines.append(f"- **Query class**: EC {query_cls} ({query_name}).")
         lines.append(
             f"- **EC class agreement**: {n_same} / {k} neighbors ({frac * 100:.0f}%) "
             f"share the query's EC class."

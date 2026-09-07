@@ -40,8 +40,8 @@ _COLORS = ["#2563eb", "#dc2626", "#16a34a", "#d97706", "#7c3aed", "#0891b2", "#b
 # Font sizes (publication-ready)
 _FS_TITLE = 14
 _FS_LABEL = 12
-_FS_TICK  = 10
-_FS_ANNOT =  9
+_FS_TICK = 10
+_FS_ANNOT = 9
 
 
 # ---------------------------------------------------------------------------
@@ -113,13 +113,21 @@ def _panel_a(df: pd.DataFrame):
 
     fig, ax = plt.subplots(figsize=(7, 5))
 
-    ax.hist(lengths, bins=80, color=_COLORS[0], alpha=0.85, edgecolor="white", linewidth=0.3)
-    ax.axvline(p50, color="#dc2626", linestyle="--", linewidth=1.5, label=f"Median = {p50}")
-    ax.axvline(p95, color="#d97706", linestyle=":",  linewidth=1.5, label=f"95th pct = {p95}")
+    ax.hist(
+        lengths, bins=80, color=_COLORS[0], alpha=0.85, edgecolor="white", linewidth=0.3
+    )
+    ax.axvline(
+        p50, color="#dc2626", linestyle="--", linewidth=1.5, label=f"Median = {p50}"
+    )
+    ax.axvline(
+        p95, color="#d97706", linestyle=":", linewidth=1.5, label=f"95th pct = {p95}"
+    )
 
     ax.set_xlabel("SMARTS length (characters)", fontsize=_FS_LABEL)
     ax.set_ylabel("Count", fontsize=_FS_LABEL)
-    ax.set_title("(A) SMARTS Length Distribution", fontsize=_FS_TITLE, fontweight="bold", pad=10)
+    ax.set_title(
+        "(A) SMARTS Length Distribution", fontsize=_FS_TITLE, fontweight="bold", pad=10
+    )
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{int(x):,}"))
     ax.tick_params(labelsize=_FS_TICK)
     ax.spines[["top", "right"]].set_visible(False)
@@ -129,11 +137,16 @@ def _panel_a(df: pd.DataFrame):
 
     # Stats box — lower right (no overlap with legend)
     ax.text(
-        0.97, 0.60,
+        0.97,
+        0.60,
         f"N = {len(df):,}\nMean = {lengths.mean():.0f}\nMax = {lengths.max():,}",
         transform=ax.transAxes,
-        ha="right", va="top", fontsize=_FS_ANNOT,
-        bbox=dict(boxstyle="round,pad=0.4", facecolor="white", edgecolor="#cccccc", alpha=0.9),
+        ha="right",
+        va="top",
+        fontsize=_FS_ANNOT,
+        bbox=dict(
+            boxstyle="round,pad=0.4", facecolor="white", edgecolor="#cccccc", alpha=0.9
+        ),
     )
 
     fig.tight_layout()
@@ -148,10 +161,19 @@ def _panel_b(ec_labels: pd.Series):
     fig, ax = plt.subplots(figsize=(7, 5))
 
     if ec_labels.empty:
-        ax.text(0.5, 0.5, "EC labels not available\n(raw files not found)",
-                ha="center", va="center", transform=ax.transAxes,
-                fontsize=_FS_LABEL, color="#888888")
-        ax.set_title("(B) EC Class Distribution", fontsize=_FS_TITLE, fontweight="bold", pad=10)
+        ax.text(
+            0.5,
+            0.5,
+            "EC labels not available\n(raw files not found)",
+            ha="center",
+            va="center",
+            transform=ax.transAxes,
+            fontsize=_FS_LABEL,
+            color="#888888",
+        )
+        ax.set_title(
+            "(B) EC Class Distribution", fontsize=_FS_TITLE, fontweight="bold", pad=10
+        )
         ax.axis("off")
         fig.tight_layout()
         return fig
@@ -159,16 +181,19 @@ def _panel_b(ec_labels: pd.Series):
     counts = ec_labels.value_counts().sort_index()
     labels = [f"EC {k}  {_EC_NAMES.get(k, '')}" for k in counts.index]
     colors = [_COLORS[int(k) - 1] for k in counts.index]
-    y_pos  = list(range(len(counts)))
+    y_pos = list(range(len(counts)))
 
-    bars = ax.barh(y_pos, counts.values, color=colors, edgecolor="white",
-                   linewidth=0.5, height=0.6)
+    bars = ax.barh(
+        y_pos, counts.values, color=colors, edgecolor="white", linewidth=0.5, height=0.6
+    )
     ax.set_yticks(y_pos)
     ax.set_yticklabels(labels, fontsize=_FS_TICK)
     ax.invert_yaxis()  # EC 1 at top
 
     ax.set_xlabel("Number of reactions", fontsize=_FS_LABEL)
-    ax.set_title("(B) EC Class Distribution", fontsize=_FS_TITLE, fontweight="bold", pad=10)
+    ax.set_title(
+        "(B) EC Class Distribution", fontsize=_FS_TITLE, fontweight="bold", pad=10
+    )
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{int(x):,}"))
     ax.tick_params(labelsize=_FS_TICK)
     ax.spines[["top", "right"]].set_visible(False)
@@ -181,7 +206,9 @@ def _panel_b(ec_labels: pd.Series):
             bar.get_width() + x_max * 0.01,
             bar.get_y() + bar.get_height() / 2,
             f"{val:,}",
-            ha="left", va="center", fontsize=_FS_ANNOT,
+            ha="left",
+            va="center",
+            fontsize=_FS_ANNOT,
         )
 
     fig.tight_layout()
@@ -194,7 +221,7 @@ def _panel_c(df: pd.DataFrame, val_split: float):
     import matplotlib.ticker as ticker
 
     n_total = len(df)
-    n_val   = max(1, int(n_total * val_split))
+    n_val = max(1, int(n_total * val_split))
     n_train = n_total - n_val
 
     fig, ax = plt.subplots(figsize=(5, 5))
@@ -213,13 +240,18 @@ def _panel_c(df: pd.DataFrame, val_split: float):
             bar.get_x() + bar.get_width() / 2,
             bar.get_height() + n_total * 0.005,
             f"{val:,}\n({pct:.1f}%)",
-            ha="center", va="bottom", fontsize=_FS_LABEL, fontweight="bold",
+            ha="center",
+            va="bottom",
+            fontsize=_FS_LABEL,
+            fontweight="bold",
         )
 
     ax.set_ylabel("Number of sequences", fontsize=_FS_LABEL)
     ax.set_title(
         f"(C) Train / Validation Split\n(val_split = {val_split:.0%})",
-        fontsize=_FS_TITLE, fontweight="bold", pad=10,
+        fontsize=_FS_TITLE,
+        fontweight="bold",
+        pad=10,
     )
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{int(x):,}"))
     ax.tick_params(labelsize=_FS_TICK)
@@ -228,10 +260,13 @@ def _panel_c(df: pd.DataFrame, val_split: float):
 
     # Total annotation — upper left, away from both bars
     ax.text(
-        0.04, 0.97,
+        0.04,
+        0.97,
         f"Total: {n_total:,}",
         transform=ax.transAxes,
-        ha="left", va="top", fontsize=_FS_TICK,
+        ha="left",
+        va="top",
+        fontsize=_FS_TICK,
         bbox=dict(boxstyle="round,pad=0.3", facecolor="white", edgecolor="#cccccc"),
     )
 
@@ -259,7 +294,7 @@ def _save_combined(fig_a, fig_b, fig_c, output_path: Path, dpi: int) -> None:
     import matplotlib.gridspec as gridspec
 
     fig = plt.figure(figsize=(19, 6))
-    gs  = gridspec.GridSpec(1, 3, figure=fig, wspace=0.35, width_ratios=[1.4, 1.4, 1.0])
+    gs = gridspec.GridSpec(1, 3, figure=fig, wspace=0.35, width_ratios=[1.4, 1.4, 1.0])
 
     for src_fig, col in [(fig_a, 0), (fig_b, 1), (fig_c, 2)]:
         src_ax = src_fig.axes[0]
@@ -289,6 +324,7 @@ def plot_dataset_overview(
     dpi: int,
 ) -> None:
     import matplotlib
+
     matplotlib.use("Agg")
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -297,7 +333,7 @@ def plot_dataset_overview(
     fig_b = _panel_b(ec_labels)
     fig_c = _panel_c(df, val_split)
 
-    _save(fig_a, output_path.parent / "panel_a_smarts_length",  dpi)
+    _save(fig_a, output_path.parent / "panel_a_smarts_length", dpi)
     _save(fig_b, output_path.parent / "panel_b_ec_distribution", dpi)
     _save(fig_c, output_path.parent / "panel_c_train_val_split", dpi)
 
@@ -306,17 +342,17 @@ def plot_dataset_overview(
     import matplotlib.gridspec as gridspec
 
     fig = plt.figure(figsize=(19, 6))
-    gs  = gridspec.GridSpec(1, 3, figure=fig, wspace=0.38, width_ratios=[1.4, 1.4, 1.0])
+    gs = gridspec.GridSpec(1, 3, figure=fig, wspace=0.38, width_ratios=[1.4, 1.4, 1.0])
 
     panels = [fig_a, fig_b, fig_c]
     for src_fig, col in zip(panels, range(3)):
-        src_ax  = src_fig.axes[0]
-        new_ax  = fig.add_subplot(gs[col])
+        new_ax = fig.add_subplot(gs[col])
         src_fig.canvas.draw()
         import numpy as np
+
         buf = np.frombuffer(src_fig.canvas.buffer_rgba(), dtype=np.uint8)
         w, h = src_fig.canvas.get_width_height()
-        img  = buf.reshape(h, w, 4)
+        img = buf.reshape(h, w, 4)
         new_ax.imshow(img)
         new_ax.axis("off")
 
@@ -362,7 +398,9 @@ def parse_args() -> argparse.Namespace:
         default="results/figures/dataset_overview",
         help="Output path stem (default: results/figures/dataset_overview)",
     )
-    p.add_argument("--dpi", type=int, default=300, help="DPI for raster outputs (default: 300)")
+    p.add_argument(
+        "--dpi", type=int, default=300, help="DPI for raster outputs (default: 300)"
+    )
     return p.parse_args()
 
 

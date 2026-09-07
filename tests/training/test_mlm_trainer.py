@@ -396,8 +396,11 @@ class TestTrainerGroupSplit:
     def test_defaults_to_random_split_strategy(self, tiny_setup, tmp_path):
         model, dataset, collator = tiny_setup
         cfg = TrainingConfig(
-            num_epochs=1, batch_size=4, val_split=0.25,
-            checkpoint_dir=str(tmp_path / "ckpts"), output_path=str(tmp_path / "model.pt"),
+            num_epochs=1,
+            batch_size=4,
+            val_split=0.25,
+            checkpoint_dir=str(tmp_path / "ckpts"),
+            output_path=str(tmp_path / "model.pt"),
         )
         trainer = Trainer(model, dataset, collator, cfg, device="cpu")
         assert trainer.split_strategy == "random"
@@ -406,8 +409,11 @@ class TestTrainerGroupSplit:
         model, dataset, collator = tiny_setup
         groups = [i // 4 for i in range(len(dataset))]  # 4 groups of 4
         cfg = TrainingConfig(
-            num_epochs=1, batch_size=4, val_split=0.25,
-            checkpoint_dir=str(tmp_path / "ckpts"), output_path=str(tmp_path / "model.pt"),
+            num_epochs=1,
+            batch_size=4,
+            val_split=0.25,
+            checkpoint_dir=str(tmp_path / "ckpts"),
+            output_path=str(tmp_path / "model.pt"),
         )
         trainer = Trainer(model, dataset, collator, cfg, device="cpu", groups=groups)
         assert trainer.split_strategy == "group"
@@ -416,8 +422,11 @@ class TestTrainerGroupSplit:
         model, dataset, collator = tiny_setup
         groups = [i // 4 for i in range(len(dataset))]  # 4 groups of 4
         cfg = TrainingConfig(
-            num_epochs=1, batch_size=4, val_split=0.25,
-            checkpoint_dir=str(tmp_path / "ckpts"), output_path=str(tmp_path / "model.pt"),
+            num_epochs=1,
+            batch_size=4,
+            val_split=0.25,
+            checkpoint_dir=str(tmp_path / "ckpts"),
+            output_path=str(tmp_path / "model.pt"),
         )
         trainer = Trainer(model, dataset, collator, cfg, device="cpu", groups=groups)
         train_groups = {groups[i] for i in trainer.train_dataset.indices}
@@ -429,11 +438,18 @@ class TestTrainerGroupSplit:
         model, dataset, collator = tiny_setup
         groups = [i // 4 for i in range(len(dataset))]
         cfg = TrainingConfig(
-            num_epochs=1, batch_size=4, val_split=0.25,
-            checkpoint_dir=str(tmp_path / "ckpts"), output_path=str(tmp_path / "model.pt"),
+            num_epochs=1,
+            batch_size=4,
+            val_split=0.25,
+            checkpoint_dir=str(tmp_path / "ckpts"),
+            output_path=str(tmp_path / "model.pt"),
         )
-        t1 = Trainer(model, dataset, collator, cfg, device="cpu", groups=groups, split_seed=7)
-        t2 = Trainer(model, dataset, collator, cfg, device="cpu", groups=groups, split_seed=7)
+        t1 = Trainer(
+            model, dataset, collator, cfg, device="cpu", groups=groups, split_seed=7
+        )
+        t2 = Trainer(
+            model, dataset, collator, cfg, device="cpu", groups=groups, split_seed=7
+        )
         assert list(t1.train_dataset.indices) == list(t2.train_dataset.indices)
         assert list(t1.val_dataset.indices) == list(t2.val_dataset.indices)
 
@@ -444,8 +460,11 @@ class TestTrainerGroupSplit:
         groups = [i // 4 for i in range(len(dataset))]
         output = tmp_path / "model.pt"
         cfg = TrainingConfig(
-            num_epochs=1, batch_size=4, val_split=0.25,
-            checkpoint_dir=str(tmp_path / "ckpts"), output_path=str(output),
+            num_epochs=1,
+            batch_size=4,
+            val_split=0.25,
+            checkpoint_dir=str(tmp_path / "ckpts"),
+            output_path=str(output),
         )
         Trainer(model, dataset, collator, cfg, device="cpu", groups=groups).train()
         saved = json.loads(output.with_suffix(".json").read_text())

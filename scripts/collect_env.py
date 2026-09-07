@@ -25,6 +25,7 @@ def collect_env() -> dict:
 
     try:
         import torch
+
         env["torch_version"] = torch.__version__
         env["cuda_available"] = torch.cuda.is_available()
         if torch.cuda.is_available():
@@ -44,16 +45,20 @@ def collect_env() -> dict:
 
     try:
         cpu_lines = Path("/proc/cpuinfo").read_text().splitlines()
-        model_lines = [l for l in cpu_lines if l.startswith("model name")]
+        model_lines = [line for line in cpu_lines if line.startswith("model name")]
         env["cpu_model"] = model_lines[0].split(": ", 1)[1] if model_lines else "N/A"
-        env["cpu_cores"] = len([l for l in cpu_lines if l.startswith("processor")])
+        env["cpu_cores"] = len(
+            [line for line in cpu_lines if line.startswith("processor")]
+        )
     except Exception:
         env["cpu_model"] = platform.processor() or "N/A"
         env["cpu_cores"] = None
 
     try:
         mem_lines = Path("/proc/meminfo").read_text().splitlines()
-        total_kb = int([l for l in mem_lines if l.startswith("MemTotal")][0].split()[1])
+        total_kb = int(
+            [line for line in mem_lines if line.startswith("MemTotal")][0].split()[1]
+        )
         env["ram_gb"] = round(total_kb / 1024**2, 1)
     except Exception:
         env["ram_gb"] = None
