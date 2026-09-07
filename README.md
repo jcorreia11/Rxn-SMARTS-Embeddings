@@ -63,6 +63,9 @@ src/rxn_smarts_embeddings/
 
 ## Reproducing the data pipeline
 
+Download the raw RetroRules v3.0 CSVs from [retrorules.org](https://retrorules.org/)
+into `data/raw/`, then:
+
 ```bash
 python src/rxn_smarts_embeddings/preprocessing/load_data.py
 python src/rxn_smarts_embeddings/preprocessing/validate_smarts.py
