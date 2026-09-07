@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/jcorreia11/Rxn-SMARTS-Embeddings/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/jcorreia11/Rxn-SMARTS-Embeddings/actions/workflows/ci.yml)
 [![Docs](https://readthedocs.org/projects/rxn-smarts-embeddings/badge/?version=latest)](https://rxn-smarts-embeddings.readthedocs.io/en/latest/?badge=latest)
+[![PyPI](https://img.shields.io/pypi/v/rxn-smarts-embeddings.svg)](https://pypi.org/project/rxn-smarts-embeddings/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Self-supervised transformer embeddings for reaction SMARTS, pretrained via
@@ -15,7 +16,15 @@ span-masked language modelling directly on [RetroRules v3.0](https://retrorules.
 
 ## Installation
 
-Requires Python 3.10–3.12 and [uv](https://github.com/astral-sh/uv).
+Requires Python 3.10–3.12.
+
+```bash
+pip install rxn-smarts-embeddings              # embedding SMARTS only — just torch + numpy
+pip install "rxn-smarts-embeddings[all]"       # + preprocessing/training/evaluation/visualisation
+```
+
+To work from a clone instead (needed for the full pipeline scripts, or for development —
+requires [uv](https://github.com/astral-sh/uv)):
 
 ```bash
 git clone https://github.com/jcorreia11/Rxn-SMARTS-Embeddings.git
