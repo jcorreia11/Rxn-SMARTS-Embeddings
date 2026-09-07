@@ -46,7 +46,7 @@ Dataset = "https://doi.org/10.5281/zenodo.22645328"
 [project.optional-dependencies]
 all = [
     "matplotlib>=3.10.8",
-    "pillow>=12.2.0",
+    "pillow>=12.3.0",
     "pandas>=2.3.3",
     "rdkit>=2025.9.6",
     "scikit-learn>=1.6.1",
