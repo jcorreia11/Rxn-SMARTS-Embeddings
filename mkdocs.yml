@@ -1,0 +1,51 @@
+site_name: Rxn-SMARTS-Embeddings
+site_description: Self-supervised transformer embeddings for reaction SMARTS
+repo_url: https://github.com/jcorreia11/Rxn-SMARTS-Embeddings
+repo_name: jcorreia11/Rxn-SMARTS-Embeddings
+edit_uri: edit/main/docs/
+
+nav:
+  - Home: index.md
+  - Quick Start: quickstart.md
+  - API Reference: api.md
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: numpy
+            show_source: true
+            show_root_heading: true
+            merge_init_into_class: true
+            show_signature_annotations: true
+            separate_signature: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - toc:
+      permalink: true

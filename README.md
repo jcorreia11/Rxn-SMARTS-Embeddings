@@ -92,6 +92,13 @@ uv run pytest
 ruff check src tests && ruff format src tests
 ```
 
+Docs (built with [MkDocs](https://www.mkdocs.org/) + [Material](https://squidfunk.github.io/mkdocs-material/)):
+
+```bash
+uv sync --group docs
+uv run mkdocs serve   # http://127.0.0.1:8000, live-reloads on edit
+```
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
