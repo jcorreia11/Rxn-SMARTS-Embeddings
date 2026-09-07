@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 import torch
 
-from smart_rxn_embeddings.models.embed import SmartsEmbedder
-from smart_rxn_embeddings.models.smarts_transformer import (
+from rxn_smarts_embeddings.models.embed import SmartsEmbedder
+from rxn_smarts_embeddings.models.smarts_transformer import (
     SmartsMLMModel,
     TransformerConfig,
 )
@@ -184,7 +184,7 @@ class TestFromCheckpoint:
         model, weights, cfg, vocab = _write_checkpoint(config, tmp_path)
         direct = SmartsEmbedder(model, _VOCAB, pooling="cls", device="cpu")
         loaded = SmartsEmbedder.from_checkpoint(
-            str(weights), str(cfg), str(vocab), device="cpu"
+            str(weights), str(cfg), str(vocab), pooling="cls", device="cpu"
         )
         np.testing.assert_allclose(
             direct.embed(_SMARTS), loaded.embed(_SMARTS), atol=1e-5

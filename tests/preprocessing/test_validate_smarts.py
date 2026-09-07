@@ -2,7 +2,12 @@ from unittest.mock import MagicMock, patch
 
 import pandas as pd
 
-from smart_rxn_embeddings.preprocessing.validate_smarts import _extract, main, validate
+from rxn_smarts_embeddings.preprocessing.validate_smarts import (
+    _extract,
+    attach_reaction_groups,
+    main,
+    validate,
+)
 
 # ---------------------------------------------------------------------------
 # Fixtures — real reaction SMARTS from RetroRules
@@ -63,7 +68,7 @@ class TestExtract:
 
     def test_reaction_from_smarts_returns_none(self):
         with patch(
-            "smart_rxn_embeddings.preprocessing.validate_smarts.AllChem.ReactionFromSmarts",
+            "rxn_smarts_embeddings.preprocessing.validate_smarts.AllChem.ReactionFromSmarts",
             return_value=None,
         ):
             result = _extract(VALID_SIMPLE)
@@ -73,7 +78,7 @@ class TestExtract:
         mock_rxn = MagicMock()
         mock_rxn.Initialize.side_effect = RuntimeError("boom")
         with patch(
-            "smart_rxn_embeddings.preprocessing.validate_smarts.AllChem.ReactionFromSmarts",
+            "rxn_smarts_embeddings.preprocessing.validate_smarts.AllChem.ReactionFromSmarts",
             return_value=mock_rxn,
         ):
             result = _extract(VALID_SIMPLE)
@@ -134,8 +139,66 @@ class TestMain:
         input_path = tmp_path / "smarts.txt"
         input_path.write_text(f"{VALID_SIMPLE}\n{INVALID_SMARTS}\n")
         output_path = tmp_path / "out.csv"
-        main(str(input_path), str(output_path))
+        groups_path = tmp_path / "groups.csv"  # deliberately absent
+        main(str(input_path), str(output_path), str(groups_path))
         assert output_path.exists()
         df = pd.read_csv(output_path)
         assert len(df) == 2
         assert "valid" in df.columns
+
+    def test_main_attaches_reaction_groups(self, tmp_path):
+        input_path = tmp_path / "smarts.txt"
+        input_path.write_text(f"{VALID_SIMPLE}\n{INVALID_SMARTS}\n")
+        output_path = tmp_path / "out.csv"
+        groups_path = tmp_path / "groups.csv"
+        pd.DataFrame(
+            {
+                "smarts": [VALID_SIMPLE, INVALID_SMARTS],
+                "reaction_group": ["RHEA:1", "RHEA:2"],
+            }
+        ).to_csv(groups_path, index=False)
+
+        main(str(input_path), str(output_path), str(groups_path))
+
+        df = pd.read_csv(output_path)
+        assert df.set_index("smarts")["reaction_group"].to_dict() == {
+            VALID_SIMPLE: "RHEA:1",
+            INVALID_SMARTS: "RHEA:2",
+        }
+
+
+# ---------------------------------------------------------------------------
+# attach_reaction_groups
+# ---------------------------------------------------------------------------
+
+
+class TestAttachReactionGroups:
+    def test_joins_matching_groups(self, tmp_path):
+        groups_path = tmp_path / "groups.csv"
+        pd.DataFrame({"smarts": [VALID_SIMPLE], "reaction_group": ["RHEA:1"]}).to_csv(
+            groups_path, index=False
+        )
+
+        df = validate([VALID_SIMPLE])
+        result = attach_reaction_groups(df, str(groups_path))
+        assert result.loc[0, "reaction_group"] == "RHEA:1"
+
+    def test_falls_back_to_smarts_when_file_missing(self, tmp_path):
+        df = validate([VALID_SIMPLE])
+        result = attach_reaction_groups(df, str(tmp_path / "does_not_exist.csv"))
+        assert result.loc[0, "reaction_group"] == VALID_SIMPLE
+
+    def test_falls_back_to_smarts_when_row_unmatched(self, tmp_path):
+        groups_path = tmp_path / "groups.csv"
+        pd.DataFrame(
+            {"smarts": ["some other smarts"], "reaction_group": ["RHEA:1"]}
+        ).to_csv(groups_path, index=False)
+
+        df = validate([VALID_SIMPLE])
+        result = attach_reaction_groups(df, str(groups_path))
+        assert result.loc[0, "reaction_group"] == VALID_SIMPLE
+
+    def test_reaction_group_never_null(self, tmp_path):
+        df = validate([VALID_SIMPLE, INVALID_SMARTS])
+        result = attach_reaction_groups(df, str(tmp_path / "missing.csv"))
+        assert result["reaction_group"].notna().all()

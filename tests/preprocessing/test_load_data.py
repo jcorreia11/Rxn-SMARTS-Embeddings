@@ -1,6 +1,13 @@
 import pandas as pd
 
-from smart_rxn_embeddings.preprocessing.load_data import clean, load_raw, main, save
+from rxn_smarts_embeddings.preprocessing.load_data import (
+    build_reaction_groups,
+    clean,
+    load_raw,
+    main,
+    save,
+    save_groups,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -29,6 +36,7 @@ def _make_df(n: int = 1, **kwargs) -> pd.DataFrame:
         "TEMPLATE_ID": [f"RR:0{i}" for i in range(n)],
         "TEMPLATE": [_SMARTS[i % len(_SMARTS)] for i in range(n)],
         "VALID": ["True"] * n,
+        "REACTIONS": [f"RXN:{i}" for i in range(n)],
     }
     base.update(kwargs)
     return pd.DataFrame(base)
@@ -50,7 +58,7 @@ class TestLoadRaw:
         path = tmp_path / "data.csv"
         _make_df().to_csv(path, index=False)
         df = load_raw([str(path)])
-        assert {"TEMPLATE_ID", "TEMPLATE", "VALID"}.issubset(df.columns)
+        assert {"TEMPLATE_ID", "TEMPLATE", "VALID", "REACTIONS"}.issubset(df.columns)
 
 
 # ---------------------------------------------------------------------------
@@ -126,7 +134,90 @@ class TestMain:
             input_path, index=False
         )
         output_path = tmp_path / "out.txt"
-        main([str(input_path)], str(output_path))
+        groups_path = tmp_path / "groups.csv"
+        main([str(input_path)], str(output_path), str(groups_path))
         assert output_path.exists()
         lines = [ln for ln in output_path.read_text().splitlines() if ln.strip()]
         assert len(lines) == 2
+
+    def test_main_produces_groups_file(self, tmp_path):
+        input_path = tmp_path / "data.csv"
+        _make_df(TEMPLATE=["[C:1]>>[O:1]", "[N:1]>>[O:1]"]).to_csv(
+            input_path, index=False
+        )
+        output_path = tmp_path / "out.txt"
+        groups_path = tmp_path / "groups.csv"
+        main([str(input_path)], str(output_path), str(groups_path))
+        assert groups_path.exists()
+        groups_df = pd.read_csv(groups_path)
+        assert list(groups_df.columns) == ["smarts", "reaction_group"]
+        assert len(groups_df) == 2
+
+
+# ---------------------------------------------------------------------------
+# build_reaction_groups
+# ---------------------------------------------------------------------------
+
+
+class TestBuildReactionGroups:
+    def test_returns_smarts_and_group_columns(self):
+        df = _make_df()
+        result = build_reaction_groups(df)
+        assert list(result.columns) == ["smarts", "reaction_group"]
+
+    def test_applies_same_filters_as_clean(self):
+        df = _make_df(VALID=["True", "False", "True"])
+        result = build_reaction_groups(df)
+        assert len(result) == 2
+
+    def test_uses_reactions_field_as_group(self):
+        # Distinct TEMPLATE values (dedup key) but two rows share a REACTIONS
+        # value — they should be assigned the same group.
+        df = _make_df(REACTIONS=["RHEA:1;RHEA:2", "RHEA:1;RHEA:2", "RHEA:9"])
+        result = build_reaction_groups(df)
+        assert result["reaction_group"].tolist() == [
+            "RHEA:1;RHEA:2",
+            "RHEA:1;RHEA:2",
+            "RHEA:9",
+        ]
+
+    def test_falls_back_to_smarts_when_reactions_blank(self):
+        df = _make_df(REACTIONS=[None, "  ", "RHEA:9"])
+        result = build_reaction_groups(df)
+        expected_smarts = result["smarts"].tolist()
+        assert result["reaction_group"].tolist() == [
+            expected_smarts[0],
+            expected_smarts[1],
+            "RHEA:9",
+        ]
+
+    def test_no_group_is_null(self):
+        df = _make_df(REACTIONS=[None, "RHEA:1", None])
+        result = build_reaction_groups(df)
+        assert result["reaction_group"].notna().all()
+
+
+# ---------------------------------------------------------------------------
+# save_groups
+# ---------------------------------------------------------------------------
+
+
+class TestSaveGroups:
+    def test_writes_csv_with_header(self, tmp_path):
+        groups = pd.DataFrame(
+            {"smarts": ["[C:1]>>[O:1]"], "reaction_group": ["RHEA:1"]}
+        )
+        out = tmp_path / "groups.csv"
+        save_groups(groups, str(out))
+        result = pd.read_csv(out)
+        assert result.to_dict("records") == [
+            {"smarts": "[C:1]>>[O:1]", "reaction_group": "RHEA:1"}
+        ]
+
+    def test_creates_parent_directory(self, tmp_path):
+        out = tmp_path / "nested" / "dir" / "groups.csv"
+        save_groups(
+            pd.DataFrame({"smarts": ["[C:1]>>[O:1]"], "reaction_group": ["RHEA:1"]}),
+            str(out),
+        )
+        assert out.exists()

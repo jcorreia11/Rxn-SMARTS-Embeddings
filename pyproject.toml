@@ -1,33 +1,71 @@
 [project]
-name = "smartrxnembeddings"
+name = "rxn-smarts-embeddings"
 version = "0.1.0"
-description = "Add your description here"
+description = "Self-supervised transformer embeddings for reaction SMARTS, pretrained via span-masked language modeling on RetroRules v3.0"
 readme = "README.md"
 requires-python = ">=3.10, <3.13"
+license = { file = "LICENSE" }
+authors = [
+    { name = "João Correia", email = "jfcorreia@fe.up.pt" },
+]
+keywords = [
+    "cheminformatics",
+    "reaction-smarts",
+    "transformer",
+    "embeddings",
+    "self-supervised-learning",
+    "masked-language-modeling",
+    "retrosynthesis",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Chemistry",
+]
 dependencies = [
+    "torch>=2.0.0",
+    "numpy>=1.24.0",
+    "huggingface-hub>=0.20.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/jcorreia11/Rxn-SMARTS-Embeddings"
+Repository = "https://github.com/jcorreia11/Rxn-SMARTS-Embeddings"
+Issues = "https://github.com/jcorreia11/Rxn-SMARTS-Embeddings/issues"
+Experiments = "https://github.com/jcorreia11/Rxn-SMARTS-Embeddings-paper"
+"Model Weights" = "https://huggingface.co/jcorreia11/Rxn-SMARTS-Embeddings"
+Dataset = "https://doi.org/10.5281/zenodo.22645328"
+
+[project.optional-dependencies]
+all = [
     "matplotlib>=3.10.8",
-    "pillow>=12.2.0",
+    "pillow>=12.3.0",
     "pandas>=2.3.3",
     "rdkit>=2025.9.6",
     "scikit-learn>=1.6.1",
     "sentencepiece>=0.2.0",
-    "torch>=2.0.0",
-    "torchaudio>=2.4.0",
-    "torchvision>=0.19.0",
     "umap-learn>=0.5.0",
+    "ipykernel>=7.2.0",
 ]
+
+[project.scripts]
+smarts-embed = "rxn_smarts_embeddings.predict:main"
 
 [dependency-groups]
 dev = [
-    "dvc>=3.67.1",
     "pytest>=8.4.2",
     "pytest-cov>=6.0.0",
 ]
 
 [tool.uv.sources]
 torch = { index = "pytorch-cu124" }
-torchvision = { index = "pytorch-cu124" }
-torchaudio = { index = "pytorch-cu124" }
 
 [[tool.uv.index]]
 name = "pytorch-cu124"
@@ -39,4 +77,4 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/smart_rxn_embeddings"]
+packages = ["src/rxn_smarts_embeddings"]

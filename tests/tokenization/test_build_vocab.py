@@ -2,7 +2,7 @@ import json
 
 import pandas as pd
 
-from smart_rxn_embeddings.tokenization.build_vocab import (
+from rxn_smarts_embeddings.tokenization.build_vocab import (
     SPECIAL_TOKENS,
     build_vocab,
     main,

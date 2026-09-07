@@ -3,7 +3,7 @@ import json
 import pytest
 import torch
 
-from smart_rxn_embeddings.datasets.smarts_dataset import SMARTSDataset
+from rxn_smarts_embeddings.datasets.smarts_dataset import SMARTSDataset
 
 # ---------------------------------------------------------------------------
 # Shared fixtures

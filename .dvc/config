@@ -1,4 +1,0 @@
-[core]
-    remote = local
-['remote "local"']
-    url = /home/joao-correia/PycharmProjects/SmartRxnEmbeddings/.dvc-storage

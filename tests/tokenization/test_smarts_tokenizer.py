@@ -1,6 +1,6 @@
 import pytest
 
-from smart_rxn_embeddings.tokenization.smarts_tokenizer import SmartsTokenizer
+from rxn_smarts_embeddings.tokenization.smarts_tokenizer import SmartsTokenizer
 
 
 @pytest.fixture

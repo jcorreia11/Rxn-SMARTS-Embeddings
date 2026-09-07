@@ -1,0 +1,134 @@
+{
+  "meta": {
+    "run_id": "ec_classifier",
+    "date": "2026-07-15",
+    "ec_depth": 1,
+    "n_samples_requested": "all",
+    "n_available": 214007,
+    "n_samples_actual": 214007,
+    "split_strategy": "group",
+    "train_test_split": "80/20 (group-aware, stratified)",
+    "random_seed": 42,
+    "folds": 5,
+    "label_names": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7"
+    ],
+    "total_time_s": 211.05
+  },
+  "results": [
+    {
+      "name": "SmartsTokenizer",
+      "n_train": 171206,
+      "n_test": 42801,
+      "n_classes": 7,
+      "n_folds": 5,
+      "accuracy_mean": 0.5902,
+      "accuracy_std": 0.0042,
+      "f1_macro_mean": 0.4273,
+      "f1_macro_std": 0.0042,
+      "f1_weighted_mean": 0.6197,
+      "f1_weighted_std": 0.0034,
+      "cv_time_s": 43.68,
+      "fit_time_s": 47.52,
+      "per_class": {
+        "1": {
+          "precision": 0.8799,
+          "recall": 0.6524,
+          "f1": 0.7493,
+          "support": 18463
+        },
+        "2": {
+          "precision": 0.5631,
+          "recall": 0.5491,
+          "f1": 0.556,
+          "support": 6753
+        },
+        "3": {
+          "precision": 0.4048,
+          "recall": 0.5207,
+          "f1": 0.4555,
+          "support": 3655
+        },
+        "4": {
+          "precision": 0.203,
+          "recall": 0.8309,
+          "f1": 0.3262,
+          "support": 958
+        },
+        "5": {
+          "precision": 0.2363,
+          "recall": 0.7374,
+          "f1": 0.3579,
+          "support": 1645
+        },
+        "6": {
+          "precision": 0.0127,
+          "recall": 0.2308,
+          "f1": 0.024,
+          "support": 13
+        }
+      },
+      "n_samples": 214007
+    },
+    {
+      "name": "SentencePieceTokenizer",
+      "n_train": 171206,
+      "n_test": 42801,
+      "n_classes": 7,
+      "n_folds": 5,
+      "accuracy_mean": 0.6322,
+      "accuracy_std": 0.0019,
+      "f1_macro_mean": 0.4627,
+      "f1_macro_std": 0.0025,
+      "f1_weighted_mean": 0.656,
+      "f1_weighted_std": 0.0022,
+      "cv_time_s": 50.52,
+      "fit_time_s": 46.53,
+      "per_class": {
+        "1": {
+          "precision": 0.8853,
+          "recall": 0.6959,
+          "f1": 0.7793,
+          "support": 18463
+        },
+        "2": {
+          "precision": 0.5538,
+          "recall": 0.5697,
+          "f1": 0.5616,
+          "support": 6753
+        },
+        "3": {
+          "precision": 0.4392,
+          "recall": 0.6063,
+          "f1": 0.5094,
+          "support": 3655
+        },
+        "4": {
+          "precision": 0.2424,
+          "recall": 0.8372,
+          "f1": 0.3759,
+          "support": 958
+        },
+        "5": {
+          "precision": 0.2819,
+          "recall": 0.7623,
+          "f1": 0.4116,
+          "support": 1645
+        },
+        "6": {
+          "precision": 0.04,
+          "recall": 0.2308,
+          "f1": 0.0682,
+          "support": 13
+        }
+      },
+      "n_samples": 214007
+    }
+  ]
+}

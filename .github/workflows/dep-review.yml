@@ -20,14 +20,17 @@ jobs:
         run: uv python install 3.11
 
       - name: Install dependencies
-        run: uv sync --frozen
+        run: uv sync --frozen --extra all
 
       - name: Audit dependencies for known vulnerabilities
-        # CVE-2025-69872: diskcache transitive dep via DVC, no fix available yet.
         # CVE-2026-4539: pygments 2.19.2, no patched release available yet.
-        # Remove each --ignore-vuln once a patched version is released.
-        # VCS deps (e.g. rxnfp from git) are stripped before auditing because pip-audit
+        # Remove --ignore-vuln once a patched version is released.
+        # --extra all: audit the full dependency surface (preprocessing/training/
+        # evaluation/visualisation extras), not just the minimal base install.
+        # VCS git-sourced deps are stripped before auditing because pip-audit
         # cannot hash them and fails at the install stage before --skip-editable applies.
         # torch/torchvision/torchaudio are sourced from download.pytorch.org (CUDA builds)
-        # and are not resolvable by pip-audit's internal pip against PyPI.
-        run: uvx pip-audit --requirement <(uv export --no-dev --no-emit-project --format requirements-txt | grep -v ' @ git+' | grep -vE '^torch(vision|audio)?==') --ignore-vuln CVE-2025-69872 --ignore-vuln CVE-2026-4539
+        # and are not resolvable by pip-audit's internal pip against PyPI. Their bundled
+        # CUDA toolkit components (nvidia-*-cu12, triton) are stripped for the same reason
+        # and are multi-hundred-MB downloads with no independently tracked CVEs.
+        run: uvx --python 3.11 pip-audit --requirement <(uv export --no-dev --no-emit-project --extra all --format requirements-txt | grep -v ' @ git+' | grep -vE '^torch(vision|audio)?==' | grep -vE '^(nvidia-|triton==)') --ignore-vuln CVE-2026-4539

@@ -3,11 +3,11 @@ import random
 import pytest
 import torch
 
-from smart_rxn_embeddings.models.smarts_transformer import (
+from rxn_smarts_embeddings.models.smarts_transformer import (
     SmartsMLMModel,
     TransformerConfig,
 )
-from smart_rxn_embeddings.training.mlm_trainer import (
+from rxn_smarts_embeddings.training.mlm_trainer import (
     MLMCollator,
     Trainer,
     TrainingConfig,
@@ -388,6 +388,87 @@ class TestTrainerValSplit:
         losses = Trainer(model, dataset, collator, cfg, device="cpu").train()
         assert len(losses) == 2
         assert all(isinstance(v, float) and torch.tensor(v).isfinite() for v in losses)
+
+
+class TestTrainerGroupSplit:
+    """`groups=` keeps RetroRules radius-siblings out of both sides of the split."""
+
+    def test_defaults_to_random_split_strategy(self, tiny_setup, tmp_path):
+        model, dataset, collator = tiny_setup
+        cfg = TrainingConfig(
+            num_epochs=1,
+            batch_size=4,
+            val_split=0.25,
+            checkpoint_dir=str(tmp_path / "ckpts"),
+            output_path=str(tmp_path / "model.pt"),
+        )
+        trainer = Trainer(model, dataset, collator, cfg, device="cpu")
+        assert trainer.split_strategy == "random"
+
+    def test_group_split_records_strategy(self, tiny_setup, tmp_path):
+        model, dataset, collator = tiny_setup
+        groups = [i // 4 for i in range(len(dataset))]  # 4 groups of 4
+        cfg = TrainingConfig(
+            num_epochs=1,
+            batch_size=4,
+            val_split=0.25,
+            checkpoint_dir=str(tmp_path / "ckpts"),
+            output_path=str(tmp_path / "model.pt"),
+        )
+        trainer = Trainer(model, dataset, collator, cfg, device="cpu", groups=groups)
+        assert trainer.split_strategy == "group"
+
+    def test_no_group_straddles_train_val(self, tiny_setup, tmp_path):
+        model, dataset, collator = tiny_setup
+        groups = [i // 4 for i in range(len(dataset))]  # 4 groups of 4
+        cfg = TrainingConfig(
+            num_epochs=1,
+            batch_size=4,
+            val_split=0.25,
+            checkpoint_dir=str(tmp_path / "ckpts"),
+            output_path=str(tmp_path / "model.pt"),
+        )
+        trainer = Trainer(model, dataset, collator, cfg, device="cpu", groups=groups)
+        train_groups = {groups[i] for i in trainer.train_dataset.indices}
+        val_groups = {groups[i] for i in trainer.val_dataset.indices}
+        assert train_groups.isdisjoint(val_groups)
+        assert len(trainer.train_dataset) + len(trainer.val_dataset) == len(dataset)
+
+    def test_group_split_deterministic_given_seed(self, tiny_setup, tmp_path):
+        model, dataset, collator = tiny_setup
+        groups = [i // 4 for i in range(len(dataset))]
+        cfg = TrainingConfig(
+            num_epochs=1,
+            batch_size=4,
+            val_split=0.25,
+            checkpoint_dir=str(tmp_path / "ckpts"),
+            output_path=str(tmp_path / "model.pt"),
+        )
+        t1 = Trainer(
+            model, dataset, collator, cfg, device="cpu", groups=groups, split_seed=7
+        )
+        t2 = Trainer(
+            model, dataset, collator, cfg, device="cpu", groups=groups, split_seed=7
+        )
+        assert list(t1.train_dataset.indices) == list(t2.train_dataset.indices)
+        assert list(t1.val_dataset.indices) == list(t2.val_dataset.indices)
+
+    def test_group_split_saved_in_config_json(self, tiny_setup, tmp_path):
+        import json
+
+        model, dataset, collator = tiny_setup
+        groups = [i // 4 for i in range(len(dataset))]
+        output = tmp_path / "model.pt"
+        cfg = TrainingConfig(
+            num_epochs=1,
+            batch_size=4,
+            val_split=0.25,
+            checkpoint_dir=str(tmp_path / "ckpts"),
+            output_path=str(output),
+        )
+        Trainer(model, dataset, collator, cfg, device="cpu", groups=groups).train()
+        saved = json.loads(output.with_suffix(".json").read_text())
+        assert saved["split_strategy"] == "group"
 
 
 class TestTrainerSchedulerAndClipping:
