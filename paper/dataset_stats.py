@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 import pandas as pd
 import numpy as np
-from src.smart_rxn_embeddings.tokenization.smarts_tokenizer import SmartsTokenizer
+from src.rxn_smarts_embeddings.tokenization.smarts_tokenizer import SmartsTokenizer
 
 OUTPUT_JSON = Path('paper/dataset_stats.json')
 

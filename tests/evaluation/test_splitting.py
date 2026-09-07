@@ -1,6 +1,6 @@
 import numpy as np
 
-from smart_rxn_embeddings.evaluation.splitting import (
+from rxn_smarts_embeddings.evaluation.splitting import (
     group_holdout_split,
     stratified_group_holdout_split,
 )

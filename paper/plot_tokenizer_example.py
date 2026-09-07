@@ -19,7 +19,7 @@ import matplotlib.patches as mpatches
 from matplotlib.patches import FancyBboxPatch
 from pathlib import Path
 
-from src.smart_rxn_embeddings.tokenization.smarts_tokenizer import SmartsTokenizer
+from src.rxn_smarts_embeddings.tokenization.smarts_tokenizer import SmartsTokenizer
 
 # ── Example reaction (aromatic decarboxylation from RetroRules v3.0) ───────
 SMARTS = (

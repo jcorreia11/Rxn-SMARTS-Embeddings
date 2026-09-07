@@ -19,7 +19,7 @@ echo "Running on node(s): $SLURM_NODELIST"
 module purge
 module load Python/3.12.3-GCCcore-13.3.0
 
-cd /projects/F202607628CPCAA1/joao.correia/work/SmartRxnEmbeddings
+cd /projects/F202607628CPCAA1/joao.correia/work/Rxn-SMARTS-Embeddings
 
 source ../smartrxn_env/bin/activate
 

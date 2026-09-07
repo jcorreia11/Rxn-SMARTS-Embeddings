@@ -1,6 +1,6 @@
 import pandas as pd
 
-from smart_rxn_embeddings.preprocessing.load_data import (
+from rxn_smarts_embeddings.preprocessing.load_data import (
     build_reaction_groups,
     clean,
     load_raw,

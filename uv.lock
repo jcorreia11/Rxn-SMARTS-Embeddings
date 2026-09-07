@@ -1530,6 +1530,59 @@ wheels = [
 ]
 
 [[package]]
+name = "rxn-smarts-embeddings"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "huggingface-hub" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "numpy", version = "2.4.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "torch" },
+]
+
+[package.optional-dependencies]
+all = [
+    { name = "ipykernel" },
+    { name = "matplotlib" },
+    { name = "pandas", version = "2.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "pandas", version = "3.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "pillow" },
+    { name = "rdkit" },
+    { name = "scikit-learn", version = "1.7.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "scikit-learn", version = "1.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "sentencepiece" },
+    { name = "umap-learn" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+    { name = "pytest-cov" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "huggingface-hub", specifier = ">=0.20.0" },
+    { name = "ipykernel", marker = "extra == 'all'", specifier = ">=7.2.0" },
+    { name = "matplotlib", marker = "extra == 'all'", specifier = ">=3.10.8" },
+    { name = "numpy", specifier = ">=1.24.0" },
+    { name = "pandas", marker = "extra == 'all'", specifier = ">=2.3.3" },
+    { name = "pillow", marker = "extra == 'all'", specifier = ">=12.2.0" },
+    { name = "rdkit", marker = "extra == 'all'", specifier = ">=2025.9.6" },
+    { name = "scikit-learn", marker = "extra == 'all'", specifier = ">=1.6.1" },
+    { name = "sentencepiece", marker = "extra == 'all'", specifier = ">=0.2.0" },
+    { name = "torch", specifier = ">=2.0.0", index = "https://download.pytorch.org/whl/cu124" },
+    { name = "umap-learn", marker = "extra == 'all'", specifier = ">=0.5.0" },
+]
+provides-extras = ["all"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pytest", specifier = ">=8.4.2" },
+    { name = "pytest-cov", specifier = ">=6.0.0" },
+]
+
+[[package]]
 name = "scikit-learn"
 version = "1.7.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1723,59 +1776,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/94/e7/b2c673351809dca68a0e064b6af791aa332cf192da575fd474ed7d6f16a2/six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81", size = 34031, upload-time = "2024-12-04T17:35:28.174Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274", size = 11050, upload-time = "2024-12-04T17:35:26.475Z" },
-]
-
-[[package]]
-name = "smartrxnembeddings"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "huggingface-hub" },
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "numpy", version = "2.4.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "torch" },
-]
-
-[package.optional-dependencies]
-all = [
-    { name = "ipykernel" },
-    { name = "matplotlib" },
-    { name = "pandas", version = "2.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "pandas", version = "3.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "pillow" },
-    { name = "rdkit" },
-    { name = "scikit-learn", version = "1.7.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "scikit-learn", version = "1.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "sentencepiece" },
-    { name = "umap-learn" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pytest" },
-    { name = "pytest-cov" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "huggingface-hub", specifier = ">=0.20.0" },
-    { name = "ipykernel", marker = "extra == 'all'", specifier = ">=7.2.0" },
-    { name = "matplotlib", marker = "extra == 'all'", specifier = ">=3.10.8" },
-    { name = "numpy", specifier = ">=1.24.0" },
-    { name = "pandas", marker = "extra == 'all'", specifier = ">=2.3.3" },
-    { name = "pillow", marker = "extra == 'all'", specifier = ">=12.2.0" },
-    { name = "rdkit", marker = "extra == 'all'", specifier = ">=2025.9.6" },
-    { name = "scikit-learn", marker = "extra == 'all'", specifier = ">=1.6.1" },
-    { name = "sentencepiece", marker = "extra == 'all'", specifier = ">=0.2.0" },
-    { name = "torch", specifier = ">=2.0.0", index = "https://download.pytorch.org/whl/cu124" },
-    { name = "umap-learn", marker = "extra == 'all'", specifier = ">=0.5.0" },
-]
-provides-extras = ["all"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pytest", specifier = ">=8.4.2" },
-    { name = "pytest-cov", specifier = ">=6.0.0" },
 ]
 
 [[package]]

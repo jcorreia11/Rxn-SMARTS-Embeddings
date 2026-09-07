@@ -219,7 +219,7 @@ def _count_params(cfg: dict) -> str:
     """Estimate parameter count from config without loading the model."""
     mc = cfg.get("model_config", {})
     try:
-        from smart_rxn_embeddings.models.smarts_transformer import (
+        from rxn_smarts_embeddings.models.smarts_transformer import (
             SmartsMLMModel,
             TransformerConfig,
         )

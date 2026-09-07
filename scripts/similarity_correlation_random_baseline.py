@@ -49,8 +49,8 @@ def build_random_embedder(
 ):
     """Return a SmartsEmbedder with random (untrained) weights."""
     import json as _json
-    from smart_rxn_embeddings.models.embed import SmartsEmbedder
-    from smart_rxn_embeddings.models.smarts_transformer import (
+    from rxn_smarts_embeddings.models.embed import SmartsEmbedder
+    from rxn_smarts_embeddings.models.smarts_transformer import (
         SmartsMLMModel,
         TransformerConfig,
     )

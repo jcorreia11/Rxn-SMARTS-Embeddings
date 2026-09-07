@@ -19,7 +19,7 @@ from pathlib import Path
 
 import torch
 
-from src.smart_rxn_embeddings.models.smarts_transformer import (
+from src.rxn_smarts_embeddings.models.smarts_transformer import (
     SmartsMLMModel,
     TransformerConfig,
 )

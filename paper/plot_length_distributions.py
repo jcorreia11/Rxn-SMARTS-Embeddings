@@ -35,8 +35,8 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from src.smart_rxn_embeddings.tokenization.smarts_tokenizer import SmartsTokenizer
-from src.smart_rxn_embeddings.tokenization.sentencepiece_tokenizer import SentencePieceTokenizer
+from src.rxn_smarts_embeddings.tokenization.smarts_tokenizer import SmartsTokenizer
+from src.rxn_smarts_embeddings.tokenization.sentencepiece_tokenizer import SentencePieceTokenizer
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)

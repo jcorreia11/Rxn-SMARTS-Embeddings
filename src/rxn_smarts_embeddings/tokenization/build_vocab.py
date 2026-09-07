@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from smart_rxn_embeddings.tokenization.smarts_tokenizer import SmartsTokenizer
+from rxn_smarts_embeddings.tokenization.smarts_tokenizer import SmartsTokenizer
 
 logger = logging.getLogger(__name__)
 

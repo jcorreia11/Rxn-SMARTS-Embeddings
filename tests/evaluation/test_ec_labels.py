@@ -1,6 +1,6 @@
 import pandas as pd
 
-from smart_rxn_embeddings.evaluation.ec_labels import load_labelled_smarts, primary_ec
+from rxn_smarts_embeddings.evaluation.ec_labels import load_labelled_smarts, primary_ec
 
 # ---------------------------------------------------------------------------
 # primary_ec

@@ -1,4 +1,4 @@
-# SmartRxnEmbeddings
+# Rxn-SMARTS-Embeddings
 
 Self-supervised transformer embeddings for reaction SMARTS, trained on [RetroRules v3.0](https://retrorules.org/) using a masked language modelling objective.
 
@@ -7,8 +7,8 @@ Self-supervised transformer embeddings for reaction SMARTS, trained on [RetroRul
 Requires Python ≥ 3.10 and [uv](https://github.com/astral-sh/uv).
 
 ```bash
-git clone https://github.com/jcorreia11/SmartRxnEmbeddings.git
-cd SmartRxnEmbeddings
+git clone https://github.com/jcorreia11/Rxn-SMARTS-Embeddings.git
+cd Rxn-SMARTS-Embeddings
 ```
 
 **Embedding SMARTS (default)** — just `torch` + `numpy`:
@@ -29,7 +29,7 @@ The `dev` group (pytest) is included automatically with `uv sync`.
 
 No setup beyond installation is required: the first call downloads and caches
 the medium model and vocabulary from the
-[Hugging Face Hub](https://huggingface.co/jcorreia11/SmartRxnEmbeddings)
+[Hugging Face Hub](https://huggingface.co/jcorreia11/Rxn-SMARTS-Embeddings)
 automatically. If a local checkpoint already exists in `models/` (e.g. from
 training your own), that one is used instead — see "Data pipeline" and
 "Training" below to reproduce one.
@@ -79,7 +79,7 @@ positional args:  one or more SMARTS strings
 ### Python API
 
 ```python
-from smart_rxn_embeddings.predict import predict, load_embedder
+from rxn_smarts_embeddings.predict import predict, load_embedder
 
 # Single reaction — returns (d_model,) array
 emb = predict("[C:1]-[O:2]>>[C:1]=[O:2]")
@@ -125,7 +125,7 @@ SmartsMLMModel       TransformerEncoder (d_model=256, 6 layers, 8 heads)
 ## Project structure
 
 ```
-src/smart_rxn_embeddings/
+src/rxn_smarts_embeddings/
 ├── predict.py            # predict() API + smarts-embed CLI entry point
 ├── preprocessing/
 │   ├── load_data.py      # load & deduplicate RetroRules CSVs
@@ -154,10 +154,10 @@ minutes on the full corpus) and deterministic, so just re-run them in order
 when a dependency changes:
 
 ```bash
-python src/smart_rxn_embeddings/preprocessing/load_data.py
-python src/smart_rxn_embeddings/preprocessing/validate_smarts.py
-python src/smart_rxn_embeddings/tokenization/build_vocab.py
-python src/smart_rxn_embeddings/tokenization/sentencepiece_tokenizer.py
+python src/rxn_smarts_embeddings/preprocessing/load_data.py
+python src/rxn_smarts_embeddings/preprocessing/validate_smarts.py
+python src/rxn_smarts_embeddings/tokenization/build_vocab.py
+python src/rxn_smarts_embeddings/tokenization/sentencepiece_tokenizer.py
 ```
 
 | Stage | Input | Output |

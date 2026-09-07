@@ -26,8 +26,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from smart_rxn_embeddings.tokenization.smarts_tokenizer import SmartsTokenizer
-from smart_rxn_embeddings.tokenization.sentencepiece_tokenizer import (
+from rxn_smarts_embeddings.tokenization.smarts_tokenizer import SmartsTokenizer
+from rxn_smarts_embeddings.tokenization.sentencepiece_tokenizer import (
     SentencePieceTokenizer,
 )
 
@@ -282,7 +282,7 @@ def main() -> None:
     else:
         logger.warning(
             "SentencePiece model not found at %s — skipping.\n"
-            "Run `python src/smart_rxn_embeddings/tokenization/sentencepiece_tokenizer.py` "
+            "Run `python src/rxn_smarts_embeddings/tokenization/sentencepiece_tokenizer.py` "
             "or pass --sp-model to specify the path.",
             sp_model,
         )

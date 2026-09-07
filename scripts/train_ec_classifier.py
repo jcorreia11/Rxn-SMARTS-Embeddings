@@ -48,10 +48,10 @@ from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
-from smart_rxn_embeddings.evaluation.ec_labels import load_labelled_smarts
-from smart_rxn_embeddings.evaluation.splitting import stratified_group_holdout_split
-from smart_rxn_embeddings.tokenization.smarts_tokenizer import SmartsTokenizer
-from smart_rxn_embeddings.tokenization.sentencepiece_tokenizer import (
+from rxn_smarts_embeddings.evaluation.ec_labels import load_labelled_smarts
+from rxn_smarts_embeddings.evaluation.splitting import stratified_group_holdout_split
+from rxn_smarts_embeddings.tokenization.smarts_tokenizer import SmartsTokenizer
+from rxn_smarts_embeddings.tokenization.sentencepiece_tokenizer import (
     SentencePieceTokenizer,
 )
 
@@ -71,7 +71,7 @@ RANDOM_SEED = 42
 
 
 # ---------------------------------------------------------------------------
-# Data loading — see smart_rxn_embeddings.evaluation.ec_labels for
+# Data loading — see rxn_smarts_embeddings.evaluation.ec_labels for
 # load_labelled_smarts() / primary_ec(), shared with ablation_pooling.py.
 # ---------------------------------------------------------------------------
 
@@ -423,8 +423,8 @@ def _extract_embeddings(
     """
     import torch
 
-    from smart_rxn_embeddings.models.embed import SmartsEmbedder
-    from smart_rxn_embeddings.models.smarts_transformer import (
+    from rxn_smarts_embeddings.models.embed import SmartsEmbedder
+    from rxn_smarts_embeddings.models.smarts_transformer import (
         SmartsMLMModel,
         TransformerConfig,
     )

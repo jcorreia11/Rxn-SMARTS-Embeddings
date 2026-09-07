@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from smart_rxn_embeddings.tokenization.sentencepiece_tokenizer import (
+from rxn_smarts_embeddings.tokenization.sentencepiece_tokenizer import (
     SentencePieceTokenizer,
     main,
 )

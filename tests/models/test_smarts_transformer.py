@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from smart_rxn_embeddings.models.smarts_transformer import (
+from rxn_smarts_embeddings.models.smarts_transformer import (
     MLMHead,
     SmartsMLMModel,
     SmartsTransformerEncoder,

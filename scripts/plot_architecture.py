@@ -1,4 +1,4 @@
-"""Generate a BERT-style architecture diagram for SmartRxnEmbeddings."""
+"""Generate a BERT-style architecture diagram for Rxn-SMARTS-Embeddings."""
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -98,7 +98,7 @@ ax.axis("off")
 ax.text(
     FIG_W / 2,
     11.6,
-    "SmartRxnEmbeddings — Model Architecture",
+    "Rxn-SMARTS-Embeddings — Model Architecture",
     ha="center",
     va="center",
     fontsize=12,

@@ -24,7 +24,7 @@ echo "Running on node(s): $SLURM_NODELIST"
 module purge
 module load Python/3.12.3-GCCcore-13.3.0
 
-cd /projects/F202607628CPCAA1/joao.correia/work/SmartRxnEmbeddings
+cd /projects/F202607628CPCAA1/joao.correia/work/Rxn-SMARTS-Embeddings
 
 source ../smartrxn_env/bin/activate
 
@@ -34,22 +34,22 @@ python -V
 # ---- step 1/4: load & deduplicate raw RetroRules CSVs ----
 echo ""
 echo "=== Step 1/4: load_data.py ($(date)) ==="
-python src/smart_rxn_embeddings/preprocessing/load_data.py
+python src/rxn_smarts_embeddings/preprocessing/load_data.py
 
 # ---- step 2/4: RDKit validation + reaction_group join ----
 echo ""
 echo "=== Step 2/4: validate_smarts.py ($(date)) ==="
-python src/smart_rxn_embeddings/preprocessing/validate_smarts.py
+python src/rxn_smarts_embeddings/preprocessing/validate_smarts.py
 
 # ---- step 3/4: build rule-based tokenizer vocabulary ----
 echo ""
 echo "=== Step 3/4: build_vocab.py ($(date)) ==="
-python src/smart_rxn_embeddings/tokenization/build_vocab.py
+python src/rxn_smarts_embeddings/tokenization/build_vocab.py
 
 # ---- step 4/4: train SentencePiece BPE baseline tokenizer ----
 echo ""
 echo "=== Step 4/4: sentencepiece_tokenizer.py ($(date)) ==="
-python src/smart_rxn_embeddings/tokenization/sentencepiece_tokenizer.py
+python src/rxn_smarts_embeddings/tokenization/sentencepiece_tokenizer.py
 
 echo ""
 echo "Outputs:"

@@ -10,7 +10,7 @@ from pathlib import Path
 
 import numpy as np
 
-from smart_rxn_embeddings.models.embed import SmartsEmbedder
+from rxn_smarts_embeddings.models.embed import SmartsEmbedder
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ _MODELS_DIR = "models"
 # weights for all three model sizes, expected under a `<size>/` prefix
 # (e.g. `medium/smarts_transformer_medium.pt`), plus a shared `vocab.json`
 # at the repo root (mirrored from the Zenodo data deposit for convenience).
-_HF_REPO_ID = "jcorreia11/SmartRxnEmbeddings"
+_HF_REPO_ID = "jcorreia11/Rxn-SMARTS-Embeddings"
 _HF_SIZES = ("small", "medium", "large")
 _DEFAULT_HF_SIZE = "medium"
 
@@ -85,7 +85,7 @@ def load_embedder(
     device: str | None = None,
     hf_size: str = _DEFAULT_HF_SIZE,
 ) -> SmartsEmbedder:
-    """Load a :class:`~smart_rxn_embeddings.models.embed.SmartsEmbedder`.
+    """Load a :class:`~rxn_smarts_embeddings.models.embed.SmartsEmbedder`.
 
     When *weights* or *config* are ``None``, the most recent checkpoint in
     ``models/`` is discovered automatically; if none is found, the *hf_size*
@@ -169,7 +169,7 @@ def predict(
 
     Examples
     --------
-    >>> from smart_rxn_embeddings.predict import predict
+    >>> from rxn_smarts_embeddings.predict import predict
     >>> emb = predict("[C:1]-[O:2]>>[C:1]=[O:2]")   # shape (256,)
     >>> embs = predict(["[C:1]-[O:2]>>[C:1]=[O:2]", "c1ccccc1>>c1cccnc1"])  # (2, 256)
     """

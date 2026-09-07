@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from smart_rxn_embeddings.models.embed import SmartsEmbedder
+from rxn_smarts_embeddings.models.embed import SmartsEmbedder
 
 logging.basicConfig(
     level=logging.INFO,

@@ -10,12 +10,12 @@ import numpy as np
 import pandas as pd
 import torch
 
-from smart_rxn_embeddings.datasets.smarts_dataset import SMARTSDataset
-from smart_rxn_embeddings.models.smarts_transformer import (
+from rxn_smarts_embeddings.datasets.smarts_dataset import SMARTSDataset
+from rxn_smarts_embeddings.models.smarts_transformer import (
     SmartsMLMModel,
     TransformerConfig,
 )
-from smart_rxn_embeddings.training.mlm_trainer import (
+from rxn_smarts_embeddings.training.mlm_trainer import (
     MLMCollator,
     Trainer,
     TrainingConfig,

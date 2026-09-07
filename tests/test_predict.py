@@ -1,4 +1,4 @@
-"""Tests for smart_rxn_embeddings.predict."""
+"""Tests for rxn_smarts_embeddings.predict."""
 
 import json
 from io import StringIO
@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pytest
 
-from smart_rxn_embeddings.predict import (
+from rxn_smarts_embeddings.predict import (
     _find_latest_checkpoint,
     _infer_format,
     _write_output,
@@ -74,7 +74,7 @@ class TestFindLatestCheckpoint:
 class TestDownloadFromHub:
     @patch("huggingface_hub.hf_hub_download")
     def test_download_checkpoint_fetches_weights_and_config(self, mock_dl):
-        from smart_rxn_embeddings.predict import _download_checkpoint_from_hub
+        from rxn_smarts_embeddings.predict import _download_checkpoint_from_hub
 
         mock_dl.side_effect = ["/cache/medium.pt", "/cache/medium.json"]
         weights, config = _download_checkpoint_from_hub("medium")
@@ -87,14 +87,14 @@ class TestDownloadFromHub:
         )
 
     def test_download_checkpoint_rejects_invalid_size(self):
-        from smart_rxn_embeddings.predict import _download_checkpoint_from_hub
+        from rxn_smarts_embeddings.predict import _download_checkpoint_from_hub
 
         with pytest.raises(ValueError, match="size must be one of"):
             _download_checkpoint_from_hub("huge")
 
     @patch("huggingface_hub.hf_hub_download")
     def test_download_vocab_fetches_vocab_json(self, mock_dl):
-        from smart_rxn_embeddings.predict import _download_vocab_from_hub
+        from rxn_smarts_embeddings.predict import _download_vocab_from_hub
 
         mock_dl.return_value = "/cache/vocab.json"
         assert _download_vocab_from_hub() == "/cache/vocab.json"
@@ -219,8 +219,8 @@ class TestWriteOutputCsv:
 
 
 class TestLoadEmbedder:
-    @patch("smart_rxn_embeddings.predict._find_latest_checkpoint")
-    @patch("smart_rxn_embeddings.predict.SmartsEmbedder.from_checkpoint")
+    @patch("rxn_smarts_embeddings.predict._find_latest_checkpoint")
+    @patch("rxn_smarts_embeddings.predict.SmartsEmbedder.from_checkpoint")
     def test_auto_discovers_when_paths_none(self, mock_fc, mock_find, tmp_path):
         mock_find.return_value = ("w.pt", "c.json")
         mock_fc.return_value = MagicMock()
@@ -230,24 +230,24 @@ class TestLoadEmbedder:
             "w.pt", "c.json", str(tmp_path / "v.json"), "mean", None
         )
 
-    @patch("smart_rxn_embeddings.predict.SmartsEmbedder.from_checkpoint")
+    @patch("rxn_smarts_embeddings.predict.SmartsEmbedder.from_checkpoint")
     def test_skips_autodiscovery_when_paths_given(self, mock_fc, tmp_path):
         mock_fc.return_value = MagicMock()
         load_embedder(weights="w.pt", config="c.json", vocab="v.json")
         mock_fc.assert_called_once_with("w.pt", "c.json", "v.json", "mean", None)
 
     @patch("pathlib.Path.exists", return_value=True)
-    @patch("smart_rxn_embeddings.predict.SmartsEmbedder.from_checkpoint")
+    @patch("rxn_smarts_embeddings.predict.SmartsEmbedder.from_checkpoint")
     def test_uses_default_vocab_when_present_on_disk(self, mock_fc, _mock_exists):
-        from smart_rxn_embeddings.predict import _DEFAULT_VOCAB
+        from rxn_smarts_embeddings.predict import _DEFAULT_VOCAB
 
         mock_fc.return_value = MagicMock()
         load_embedder(weights="w.pt", config="c.json")
         assert mock_fc.call_args[0][2] == _DEFAULT_VOCAB
 
-    @patch("smart_rxn_embeddings.predict._download_vocab_from_hub")
+    @patch("rxn_smarts_embeddings.predict._download_vocab_from_hub")
     @patch("pathlib.Path.exists", return_value=False)
-    @patch("smart_rxn_embeddings.predict.SmartsEmbedder.from_checkpoint")
+    @patch("rxn_smarts_embeddings.predict.SmartsEmbedder.from_checkpoint")
     def test_falls_back_to_hub_vocab_when_absent_on_disk(
         self, mock_fc, _mock_exists, mock_dl_vocab
     ):
@@ -257,10 +257,10 @@ class TestLoadEmbedder:
         mock_dl_vocab.assert_called_once()
         assert mock_fc.call_args[0][2] == "/cache/vocab.json"
 
-    @patch("smart_rxn_embeddings.predict._download_checkpoint_from_hub")
-    @patch("smart_rxn_embeddings.predict._find_latest_checkpoint")
+    @patch("rxn_smarts_embeddings.predict._download_checkpoint_from_hub")
+    @patch("rxn_smarts_embeddings.predict._find_latest_checkpoint")
     @patch("pathlib.Path.exists", return_value=True)
-    @patch("smart_rxn_embeddings.predict.SmartsEmbedder.from_checkpoint")
+    @patch("rxn_smarts_embeddings.predict.SmartsEmbedder.from_checkpoint")
     def test_falls_back_to_hub_checkpoint_when_no_local_checkpoint(
         self, mock_fc, _mock_exists, mock_find, mock_dl_ckpt
     ):
@@ -278,21 +278,21 @@ class TestLoadEmbedder:
 
 
 class TestPredict:
-    @patch("smart_rxn_embeddings.predict.load_embedder")
+    @patch("rxn_smarts_embeddings.predict.load_embedder")
     def test_single_string_returns_1d(self, mock_le):
         mock_le.return_value = _fake_embedder(n=1, d=_D)
         result = predict(_SMARTS[0])
         assert result.ndim == 1
         assert result.shape == (_D,)
 
-    @patch("smart_rxn_embeddings.predict.load_embedder")
+    @patch("rxn_smarts_embeddings.predict.load_embedder")
     def test_list_returns_2d(self, mock_le):
         mock_le.return_value = _fake_embedder(n=len(_SMARTS), d=_D)
         result = predict(_SMARTS)
         assert result.ndim == 2
         assert result.shape == (len(_SMARTS), _D)
 
-    @patch("smart_rxn_embeddings.predict.load_embedder")
+    @patch("rxn_smarts_embeddings.predict.load_embedder")
     def test_passes_kwargs_to_embedder(self, mock_le):
         fake = _fake_embedder(n=1, d=_D)
         mock_le.return_value = fake
@@ -306,7 +306,7 @@ class TestPredict:
 
 
 class TestMain:
-    @patch("smart_rxn_embeddings.predict.load_embedder")
+    @patch("rxn_smarts_embeddings.predict.load_embedder")
     def test_positional_smarts(self, mock_le, capsys):
         mock_le.return_value = _fake_embedder()
         main([_SMARTS[0], _SMARTS[1]])
@@ -314,7 +314,7 @@ class TestMain:
         data = json.loads(out)
         assert len(data) == 2
 
-    @patch("smart_rxn_embeddings.predict.load_embedder")
+    @patch("rxn_smarts_embeddings.predict.load_embedder")
     def test_file_input(self, mock_le, tmp_path, capsys):
         mock_le.return_value = _fake_embedder()
         f = tmp_path / "smarts.txt"
@@ -323,7 +323,7 @@ class TestMain:
         out = capsys.readouterr().out
         assert len(json.loads(out)) == len(_SMARTS)
 
-    @patch("smart_rxn_embeddings.predict.load_embedder")
+    @patch("rxn_smarts_embeddings.predict.load_embedder")
     def test_stdin_input(self, mock_le, monkeypatch, capsys):
         mock_le.return_value = _fake_embedder(n=1)
         monkeypatch.setattr("sys.stdin", StringIO(_SMARTS[0] + "\n"))
@@ -331,7 +331,7 @@ class TestMain:
         out = capsys.readouterr().out
         assert len(json.loads(out)) == 1
 
-    @patch("smart_rxn_embeddings.predict.load_embedder")
+    @patch("rxn_smarts_embeddings.predict.load_embedder")
     def test_output_npy(self, mock_le, tmp_path):
         mock_le.return_value = _fake_embedder()
         out = tmp_path / "emb.npy"
@@ -340,7 +340,7 @@ class TestMain:
         arr = np.load(out)
         assert arr.shape == (len(_SMARTS), _D)
 
-    @patch("smart_rxn_embeddings.predict.load_embedder")
+    @patch("rxn_smarts_embeddings.predict.load_embedder")
     def test_output_csv(self, mock_le, tmp_path):
         mock_le.return_value = _fake_embedder()
         out = tmp_path / "emb.csv"
@@ -349,7 +349,7 @@ class TestMain:
         assert lines[0].startswith("smarts,dim_0")
         assert len(lines) == len(_SMARTS) + 1
 
-    @patch("smart_rxn_embeddings.predict.load_embedder")
+    @patch("rxn_smarts_embeddings.predict.load_embedder")
     def test_output_json_file(self, mock_le, tmp_path):
         mock_le.return_value = _fake_embedder()
         out = tmp_path / "emb.json"

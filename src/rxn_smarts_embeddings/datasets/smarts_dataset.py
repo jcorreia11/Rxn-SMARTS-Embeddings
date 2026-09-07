@@ -9,7 +9,7 @@ import torch
 from torch import Tensor
 from torch.utils.data import Dataset
 
-from smart_rxn_embeddings.tokenization.smarts_tokenizer import SmartsTokenizer
+from rxn_smarts_embeddings.tokenization.smarts_tokenizer import SmartsTokenizer
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class SMARTSDataset(Dataset):
 
     Examples
     --------
-    >>> from smart_rxn_embeddings.datasets.smarts_dataset import SMARTSDataset
+    >>> from rxn_smarts_embeddings.datasets.smarts_dataset import SMARTSDataset
     >>> dataset = SMARTSDataset.from_vocab_file(smarts, "data/processed/vocab.json")
     >>> item = dataset[0]
     >>> item["input_ids"].shape, item["attention_mask"].shape

@@ -9,8 +9,8 @@ import torch
 from torch import Tensor
 from torch.utils.data import DataLoader
 
-from smart_rxn_embeddings.datasets.smarts_dataset import SMARTSDataset
-from smart_rxn_embeddings.models.smarts_transformer import (
+from rxn_smarts_embeddings.datasets.smarts_dataset import SMARTSDataset
+from rxn_smarts_embeddings.models.smarts_transformer import (
     SmartsMLMModel,
     TransformerConfig,
 )

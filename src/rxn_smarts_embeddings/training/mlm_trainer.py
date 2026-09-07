@@ -13,7 +13,7 @@ import torch.nn as nn
 from torch import Tensor
 from torch.utils.data import DataLoader, Dataset, Subset, random_split
 
-from smart_rxn_embeddings.evaluation.splitting import group_holdout_split
+from rxn_smarts_embeddings.evaluation.splitting import group_holdout_split
 
 logger = logging.getLogger(__name__)
 

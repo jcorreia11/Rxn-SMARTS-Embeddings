@@ -6,7 +6,7 @@ produced by ``load_data.py``/``validate_smarts.py``: RetroRules generates
 several templates per underlying reaction at different context radii, and
 templates sharing a group are near-duplicates with identical EC annotations.
 Any split downstream of this loader must keep whole groups together — see
-``smart_rxn_embeddings.evaluation.splitting``.
+``rxn_smarts_embeddings.evaluation.splitting``.
 """
 
 import logging

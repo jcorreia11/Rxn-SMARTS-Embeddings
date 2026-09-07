@@ -1,7 +1,7 @@
 """Group-aware train/test holdout splits.
 
 RetroRules templates that share a ``reaction_group`` (see
-``smart_rxn_embeddings.evaluation.ec_labels``) are near-duplicate
+``rxn_smarts_embeddings.evaluation.ec_labels``) are near-duplicate
 radius-variants of the same underlying reaction with identical labels.
 Plain (stratified) random splitting lets a template's siblings leak across
 train/test, inflating every downstream metric. The helpers here keep whole

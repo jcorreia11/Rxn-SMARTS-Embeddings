@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pandas as pd
 
-from smart_rxn_embeddings.preprocessing.validate_smarts import (
+from rxn_smarts_embeddings.preprocessing.validate_smarts import (
     _extract,
     attach_reaction_groups,
     main,
@@ -68,7 +68,7 @@ class TestExtract:
 
     def test_reaction_from_smarts_returns_none(self):
         with patch(
-            "smart_rxn_embeddings.preprocessing.validate_smarts.AllChem.ReactionFromSmarts",
+            "rxn_smarts_embeddings.preprocessing.validate_smarts.AllChem.ReactionFromSmarts",
             return_value=None,
         ):
             result = _extract(VALID_SIMPLE)
@@ -78,7 +78,7 @@ class TestExtract:
         mock_rxn = MagicMock()
         mock_rxn.Initialize.side_effect = RuntimeError("boom")
         with patch(
-            "smart_rxn_embeddings.preprocessing.validate_smarts.AllChem.ReactionFromSmarts",
+            "rxn_smarts_embeddings.preprocessing.validate_smarts.AllChem.ReactionFromSmarts",
             return_value=mock_rxn,
         ):
             result = _extract(VALID_SIMPLE)
