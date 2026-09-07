@@ -25,12 +25,14 @@ class SmartsEmbedder:
 
     Two pooling strategies are supported:
 
+    ``"mean"`` (default, recommended)
+        Mean of all non-padding token hidden states. Validated as strictly
+        better than CLS pooling across all model sizes and classifier heads
+        (span-masked pretraining imposes no sequence-level aggregation loss
+        on the ``[BOS]`` position).
     ``"cls"``
         Uses the ``[BOS]`` token at position 0 as a sequence-level representation
         (BERT-style CLS pooling).  ``add_bos=True`` is set automatically.
-    ``"mean"``
-        Mean of all non-padding token hidden states.  More robust when the model
-        was not trained with a dedicated pooling objective.
 
     Parameters
     ----------
@@ -39,7 +41,8 @@ class SmartsEmbedder:
     token_to_id:
         Vocabulary mapping (as loaded from ``vocab.json``).
     pooling:
-        ``"cls"`` or ``"mean"`` (default ``"cls"``).
+        ``"cls"`` or ``"mean"`` (default ``"mean"`` — validated as strictly
+        better than CLS pooling across all model sizes and classifier heads).
     device:
         ``"cuda"`` / ``"cpu"`` — auto-detected when ``None``.
 
@@ -57,7 +60,7 @@ class SmartsEmbedder:
         self,
         model: SmartsMLMModel,
         token_to_id: dict[str, int],
-        pooling: str = "cls",
+        pooling: str = "mean",
         device: str | None = None,
     ) -> None:
         if pooling not in _POOLING_OPTIONS:
@@ -80,7 +83,7 @@ class SmartsEmbedder:
         weights_path: str,
         config_path: str,
         vocab_path: str,
-        pooling: str = "cls",
+        pooling: str = "mean",
         device: str | None = None,
     ) -> "SmartsEmbedder":
         """Load a :class:`SmartsEmbedder` from saved checkpoint files.

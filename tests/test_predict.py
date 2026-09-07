@@ -67,6 +67,41 @@ class TestFindLatestCheckpoint:
 
 
 # ---------------------------------------------------------------------------
+# Hugging Face Hub fallback
+# ---------------------------------------------------------------------------
+
+
+class TestDownloadFromHub:
+    @patch("huggingface_hub.hf_hub_download")
+    def test_download_checkpoint_fetches_weights_and_config(self, mock_dl):
+        from smart_rxn_embeddings.predict import _download_checkpoint_from_hub
+
+        mock_dl.side_effect = ["/cache/medium.pt", "/cache/medium.json"]
+        weights, config = _download_checkpoint_from_hub("medium")
+        assert (weights, config) == ("/cache/medium.pt", "/cache/medium.json")
+        assert (
+            mock_dl.call_args_list[0].args[1] == "medium/smarts_transformer_medium.pt"
+        )
+        assert (
+            mock_dl.call_args_list[1].args[1] == "medium/smarts_transformer_medium.json"
+        )
+
+    def test_download_checkpoint_rejects_invalid_size(self):
+        from smart_rxn_embeddings.predict import _download_checkpoint_from_hub
+
+        with pytest.raises(ValueError, match="size must be one of"):
+            _download_checkpoint_from_hub("huge")
+
+    @patch("huggingface_hub.hf_hub_download")
+    def test_download_vocab_fetches_vocab_json(self, mock_dl):
+        from smart_rxn_embeddings.predict import _download_vocab_from_hub
+
+        mock_dl.return_value = "/cache/vocab.json"
+        assert _download_vocab_from_hub() == "/cache/vocab.json"
+        assert mock_dl.call_args.args[1] == "vocab.json"
+
+
+# ---------------------------------------------------------------------------
 # _infer_format
 # ---------------------------------------------------------------------------
 
@@ -192,22 +227,49 @@ class TestLoadEmbedder:
         load_embedder(weights=None, config=None, vocab=str(tmp_path / "v.json"))
         mock_find.assert_called_once()
         mock_fc.assert_called_once_with(
-            "w.pt", "c.json", str(tmp_path / "v.json"), "cls", None
+            "w.pt", "c.json", str(tmp_path / "v.json"), "mean", None
         )
 
     @patch("smart_rxn_embeddings.predict.SmartsEmbedder.from_checkpoint")
     def test_skips_autodiscovery_when_paths_given(self, mock_fc, tmp_path):
         mock_fc.return_value = MagicMock()
         load_embedder(weights="w.pt", config="c.json", vocab="v.json")
-        mock_fc.assert_called_once_with("w.pt", "c.json", "v.json", "cls", None)
+        mock_fc.assert_called_once_with("w.pt", "c.json", "v.json", "mean", None)
 
+    @patch("pathlib.Path.exists", return_value=True)
     @patch("smart_rxn_embeddings.predict.SmartsEmbedder.from_checkpoint")
-    def test_uses_default_vocab_when_none(self, mock_fc):
+    def test_uses_default_vocab_when_present_on_disk(self, mock_fc, _mock_exists):
         from smart_rxn_embeddings.predict import _DEFAULT_VOCAB
 
         mock_fc.return_value = MagicMock()
         load_embedder(weights="w.pt", config="c.json")
         assert mock_fc.call_args[0][2] == _DEFAULT_VOCAB
+
+    @patch("smart_rxn_embeddings.predict._download_vocab_from_hub")
+    @patch("pathlib.Path.exists", return_value=False)
+    @patch("smart_rxn_embeddings.predict.SmartsEmbedder.from_checkpoint")
+    def test_falls_back_to_hub_vocab_when_absent_on_disk(
+        self, mock_fc, _mock_exists, mock_dl_vocab
+    ):
+        mock_fc.return_value = MagicMock()
+        mock_dl_vocab.return_value = "/cache/vocab.json"
+        load_embedder(weights="w.pt", config="c.json")
+        mock_dl_vocab.assert_called_once()
+        assert mock_fc.call_args[0][2] == "/cache/vocab.json"
+
+    @patch("smart_rxn_embeddings.predict._download_checkpoint_from_hub")
+    @patch("smart_rxn_embeddings.predict._find_latest_checkpoint")
+    @patch("pathlib.Path.exists", return_value=True)
+    @patch("smart_rxn_embeddings.predict.SmartsEmbedder.from_checkpoint")
+    def test_falls_back_to_hub_checkpoint_when_no_local_checkpoint(
+        self, mock_fc, _mock_exists, mock_find, mock_dl_ckpt
+    ):
+        mock_find.side_effect = FileNotFoundError("no checkpoints")
+        mock_dl_ckpt.return_value = ("/cache/w.pt", "/cache/c.json")
+        mock_fc.return_value = MagicMock()
+        load_embedder(weights=None, config=None, hf_size="small")
+        mock_dl_ckpt.assert_called_once_with("small")
+        assert mock_fc.call_args[0][:2] == ("/cache/w.pt", "/cache/c.json")
 
 
 # ---------------------------------------------------------------------------

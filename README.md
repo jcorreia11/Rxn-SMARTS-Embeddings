@@ -11,26 +11,28 @@ git clone https://github.com/jcorreia11/SmartRxnEmbeddings.git
 cd SmartRxnEmbeddings
 ```
 
-**Prediction only** — just `torch`:
+**Embedding SMARTS (default)** — just `torch` + `numpy`:
 
 ```bash
 uv sync --no-dev
 ```
 
-**Full install** — adds preprocessing, training, evaluation, and visualisation dependencies:
+**Everything** — adds preprocessing, training, evaluation, and visualisation dependencies, for reproducing the full experiment pipeline:
 
 ```bash
-uv sync --extra full
+uv sync --extra all
 ```
 
 The `dev` group (pytest) is included automatically with `uv sync`.
 
-Model weights, embeddings, and processed data are local artifacts (gitignored,
-not distributed with the repo) — see "Data pipeline" and "Training" below to
-regenerate them, or copy an existing `models/smarts_transformer_<RUN_ID>.*`
-from wherever you trained it.
-
 ## Getting started
+
+No setup beyond installation is required: the first call downloads and caches
+the medium model and vocabulary from the
+[Hugging Face Hub](https://huggingface.co/jcorreia11/SmartRxnEmbeddings)
+automatically. If a local checkpoint already exists in `models/` (e.g. from
+training your own), that one is used instead — see "Data pipeline" and
+"Training" below to reproduce one.
 
 ### Command line
 
@@ -43,9 +45,12 @@ smarts-embed --file smarts.txt --output embeddings.npy
 
 # Pipe from stdin → CSV
 echo "[C:1]-[O:2]>>[C:1]=[O:2]" | smarts-embed --format csv
+
+# Use the small or large released model instead of medium
+smarts-embed "[C:1]-[O:2]>>[C:1]=[O:2]" --size large
 ```
 
-The model checkpoint is auto-discovered from `models/`. To use a specific one:
+To use a specific local checkpoint instead of the auto-discovered/downloaded one:
 
 ```bash
 smarts-embed "[C:1]-[O:2]>>[C:1]=[O:2]" \
@@ -60,13 +65,15 @@ positional args:  one or more SMARTS strings
 --file PATH       text file with one SMARTS per line (alternative to positional)
 --output PATH     write to file; format inferred from extension (.npy, .json, .csv)
 --format          override output format: npy | json | csv  (default: json)
---pooling         cls | mean  (default: cls)
+--pooling         mean | cls  (default: mean)
 --batch-size N    sequences per forward pass (default: 64)
 --max-length N    pad/truncate length (default: from model)
 --device          cuda | cpu  (auto-detected)
---weights PATH    model weights (.pt)
+--weights PATH    model weights (.pt); auto-discovered locally, else downloaded
 --config PATH     model config (.json)
---vocab PATH      vocab.json (default: data/processed/vocab.json)
+--vocab PATH      vocab.json (default: data/processed/vocab.json, else downloaded)
+--size            small | medium | large  (default: medium) — which released
+                  model to download when no local checkpoint is found
 ```
 
 ### Python API
@@ -84,11 +91,13 @@ embs = predict([
 ])
 
 # Reuse the same loaded model for multiple calls
-embedder = load_embedder(pooling="mean")
+embedder = load_embedder()
 embs = embedder.embed(smarts_list, batch_size=128)
 ```
 
-Both functions auto-discover the latest checkpoint in `models/`. Pass `weights=`, `config=`, and `vocab=` to use a specific run.
+Both functions auto-discover the latest local checkpoint in `models/`, falling
+back to a Hugging Face Hub download (`hf_size="medium"` by default) when none
+is found. Pass `weights=`, `config=`, and `vocab=` to use a specific run.
 
 ## Overview
 
