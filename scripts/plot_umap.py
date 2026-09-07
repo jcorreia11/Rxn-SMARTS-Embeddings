@@ -123,7 +123,19 @@ def load_ec_labels(raw_files: list[str], smarts_set: set[str], depth: int = 1) -
         logger.warning("No raw files loaded — all points will be unlabelled.")
         return {}
 
-    raw = pd.concat(frames, ignore_index=True).drop_duplicates(subset="TEMPLATE")
+    raw_all = pd.concat(frames, ignore_index=True)
+    # Resolve each template's ECS across *all* raw occurrences before deduping —
+    # a template that appears in both MetaNetX and Rhea can have the annotation
+    # on only one of the duplicate rows, so deduplicate-then-check silently
+    # drops it (same fix as paper/dataset_stats.py, commit cb19403).
+    has_ecs_mask = raw_all["ECS"].notna() & (raw_all["ECS"].str.strip() != "")
+    ecs_resolved = (
+        raw_all[has_ecs_mask]
+        .drop_duplicates(subset="TEMPLATE")
+        .set_index("TEMPLATE")["ECS"]
+    )
+    raw = raw_all.drop_duplicates(subset="TEMPLATE").copy()
+    raw["ECS"] = raw["TEMPLATE"].map(ecs_resolved)
 
     def _ec_at_depth(ecs: str) -> str | None:
         if not isinstance(ecs, str) or not ecs.strip():
