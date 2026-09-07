@@ -111,7 +111,9 @@ class _Encoder(nn.Module):
     def __init__(self, cfg: _Config) -> None:
         super().__init__()
         self.config = cfg
-        self.token_embedding = nn.Embedding(cfg.vocab_size, cfg.d_model, padding_idx=cfg.pad_id)
+        self.token_embedding = nn.Embedding(
+            cfg.vocab_size, cfg.d_model, padding_idx=cfg.pad_id
+        )
         self.pos_embedding = nn.Embedding(cfg.max_seq_len, cfg.d_model)
         self.encoder = nn.TransformerEncoder(
             nn.TransformerEncoderLayer(
@@ -126,8 +128,12 @@ class _Encoder(nn.Module):
         self.dropout = nn.Dropout(cfg.dropout)
 
     def forward(self, input_ids: Tensor, attention_mask: Tensor) -> Tensor:
-        positions = torch.arange(input_ids.size(1), device=input_ids.device).unsqueeze(0)
-        x = self.dropout(self.token_embedding(input_ids) + self.pos_embedding(positions))
+        positions = torch.arange(input_ids.size(1), device=input_ids.device).unsqueeze(
+            0
+        )
+        x = self.dropout(
+            self.token_embedding(input_ids) + self.pos_embedding(positions)
+        )
         return self.encoder(x, src_key_padding_mask=(attention_mask == 0))
 
 
@@ -157,6 +163,7 @@ class _Model(nn.Module):
 # ---------------------------------------------------------------------------
 # Dataset (encoding + padding, no PyTorch dependency beyond Dataset/DataLoader)
 # ---------------------------------------------------------------------------
+
 
 class _SMARTSDataset(Dataset):
     def __init__(
@@ -195,6 +202,7 @@ class _SMARTSDataset(Dataset):
 # Public API
 # ---------------------------------------------------------------------------
 
+
 class SmartsEmbedder:
     """Embed reaction SMARTS strings using a pretrained transformer.
 
@@ -219,7 +227,9 @@ class SmartsEmbedder:
         self._model = model
         self._token_to_id = token_to_id
         self._pooling = pooling
-        self._device = torch.device(device or ("cuda" if torch.cuda.is_available() else "cpu"))
+        self._device = torch.device(
+            device or ("cuda" if torch.cuda.is_available() else "cpu")
+        )
         self._model.to(self._device).eval()
 
     @classmethod
@@ -231,7 +241,21 @@ class SmartsEmbedder:
         pooling: str = "mean",
         device: str | None = None,
     ) -> "SmartsEmbedder":
-        """Load from the three artifact files."""
+        """Load a :class:`SmartsEmbedder` from the three artifact files.
+
+        Parameters
+        ----------
+        weights_path:
+            Path to ``smarts_transformer_<RUN_ID>.pt``.
+        config_path:
+            Path to the companion ``smarts_transformer_<RUN_ID>.json``.
+        vocab_path:
+            Path to ``vocab.json``.
+        pooling:
+            ``"mean"`` (default, recommended) or ``"cls"``.
+        device:
+            ``"cuda"`` / ``"cpu"`` — auto-detected when ``None``.
+        """
         cfg_raw = json.loads(Path(config_path).read_text())
         model = _Model(_Config.from_dict(cfg_raw["model_config"]))
         state = torch.load(weights_path, map_location="cpu", weights_only=True)
@@ -269,7 +293,7 @@ class SmartsEmbedder:
                 input_ids = batch["input_ids"].to(self._device)
                 attention_mask = batch["attention_mask"].to(self._device)
                 hidden = self._model.encoder(input_ids, attention_mask)  # (B, L, d)
-                emb = self._pool(hidden, attention_mask)                  # (B, d)
+                emb = self._pool(hidden, attention_mask)  # (B, d)
                 chunks.append(emb.cpu().float().numpy())
 
         return np.concatenate(chunks, axis=0)

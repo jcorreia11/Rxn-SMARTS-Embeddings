@@ -17,7 +17,20 @@ logger = logging.getLogger(__name__)
 
 
 def primary_ec(ecs_field: str, depth: int) -> str | None:
-    """Return the first EC number in *ecs_field*, truncated to *depth* components."""
+    """Return the first EC number in *ecs_field*, truncated to *depth* components.
+
+    Parameters
+    ----------
+    ecs_field:
+        Semicolon-separated EC numbers, e.g. ``"1.14.13.39;1.14.13.40"``.
+    depth:
+        Number of leading components to keep (1-4).
+
+    Returns
+    -------
+    str or None
+        The truncated EC number, or ``None`` if *ecs_field* is blank or not a string.
+    """
     if not isinstance(ecs_field, str) or not ecs_field.strip():
         return None
     first = ecs_field.split(";")[0].strip()
@@ -33,13 +46,32 @@ def load_labelled_smarts(
     n_samples: int | None,
     random_seed: int,
 ) -> tuple[pd.DataFrame, int]:
-    """Return (DataFrame[smarts, label, group], n_available).
+    """Join EC labels onto validated SMARTS, dropping rare classes and unlabelled rows.
 
-    ``n_available`` is the number of labelled templates left after dropping
-    rare classes but *before* any ``n_samples`` subsampling — callers should
-    record this alongside the actual sample size used, since subsampling a
-    large annotated pool down to ``n_samples`` is otherwise easy to conflate
-    with rare-class filtering when reading results later.
+    Parameters
+    ----------
+    raw_files:
+        RetroRules CSVs (``TEMPLATE``/``ECS``/``VALID`` columns) to source EC
+        annotations from.
+    validated_file:
+        Path to ``validated_smarts.csv`` (output of ``validate_smarts.py``).
+    ec_depth:
+        EC-number truncation depth passed to :func:`primary_ec`.
+    n_samples:
+        Optional stratified subsample size. ``None`` keeps every labelled row.
+    random_seed:
+        Seed for the stratified subsample.
+
+    Returns
+    -------
+    df : pandas.DataFrame
+        Columns ``smarts``, ``label``, ``group``.
+    n_available : int
+        Labelled templates remaining after dropping rare classes but *before*
+        any ``n_samples`` subsampling — callers should record this alongside
+        the actual sample size used, since subsampling a large annotated pool
+        down to ``n_samples`` is otherwise easy to conflate with rare-class
+        filtering when reading results later.
     """
     frames = []
     for p in raw_files:
@@ -71,7 +103,7 @@ def load_labelled_smarts(
     val["reaction_group"] = val["reaction_group"].fillna(val["smarts"])
     logger.info("After join with validated set: %d SMARTS with EC labels", len(val))
 
-    # --- Drop classes too rare to survive stratified splitting ---
+    # Drop classes too rare to survive stratified splitting.
     min_count = max(10, int(n_samples / len(val) * 10) + 2) if n_samples else 10
     class_counts = val["label"].value_counts()
     valid_classes = class_counts[class_counts >= min_count].index
@@ -87,11 +119,9 @@ def load_labelled_smarts(
 
     n_available = len(val)
 
-    # --- Class balance summary ---
     counts = val["label"].value_counts()
     logger.info("Class distribution:\n%s", counts.to_string())
 
-    # --- Optional sample (stratified) ---
     if n_samples and n_samples < len(val):
         total = len(val)
         sampled = [
