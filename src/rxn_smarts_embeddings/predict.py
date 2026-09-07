@@ -128,7 +128,7 @@ def load_embedder(
 
 
 def predict(
-    smarts: "str | list[str]",
+    smarts: str | list[str],
     *,
     weights: str | None = None,
     config: str | None = None,
@@ -173,8 +173,12 @@ def predict(
     >>> emb = predict("[C:1]-[O:2]>>[C:1]=[O:2]")   # shape (256,)
     >>> embs = predict(["[C:1]-[O:2]>>[C:1]=[O:2]", "c1ccccc1>>c1cccnc1"])  # (2, 256)
     """
-    single = isinstance(smarts, str)
-    smarts_list = [smarts] if single else list(smarts)
+    if isinstance(smarts, str):
+        single = True
+        smarts_list: list[str] = [smarts]
+    else:
+        single = False
+        smarts_list = list(smarts)
     embedder = load_embedder(weights, config, vocab, pooling, device, hf_size)
     result = embedder.embed(smarts_list, batch_size=batch_size, max_length=max_length)
     return result[0] if single else result

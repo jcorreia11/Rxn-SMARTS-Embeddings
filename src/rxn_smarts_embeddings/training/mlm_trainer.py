@@ -253,7 +253,7 @@ class Trainer:
         collator: MLMCollator,
         config: TrainingConfig,
         device: str | None = None,
-        groups=None,
+        groups: np.ndarray | list[int] | None = None,
         split_seed: int = 42,
     ) -> None:
         self.model = model

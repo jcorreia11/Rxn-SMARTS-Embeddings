@@ -77,6 +77,7 @@ def build_vocab(
 
 
 def save_vocab(vocab: dict, output_path: str) -> None:
+    """Write *vocab* to *output_path* as JSON."""
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:
         json.dump(vocab, f, indent=2)
@@ -84,6 +85,7 @@ def save_vocab(vocab: dict, output_path: str) -> None:
 
 
 def main(input_file: str, output_file: str) -> None:
+    """Build and save a vocabulary from the valid rows of *input_file*."""
     df = pd.read_csv(input_file)
     valid_mask = df["valid"].astype(str).str.upper() == "TRUE"
     smarts_list = df.loc[valid_mask, "smarts"].tolist()

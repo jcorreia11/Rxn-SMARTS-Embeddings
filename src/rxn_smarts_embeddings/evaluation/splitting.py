@@ -26,6 +26,22 @@ def group_holdout_split(
 
     Used for the MLM pretraining train/val split, where masked-language
     modelling has no downstream label.
+
+    Parameters
+    ----------
+    n:
+        Total number of samples.
+    groups:
+        Group id per sample, length *n*.
+    test_size:
+        Fraction of samples (approximately) held out for test.
+    seed:
+        Random seed.
+
+    Returns
+    -------
+    train_idx, test_idx : numpy.ndarray
+        Index arrays into the original *n* samples.
     """
     splitter = GroupShuffleSplit(n_splits=1, test_size=test_size, random_state=seed)
     train_idx, test_idx = next(splitter.split(np.arange(n), groups=groups))
@@ -43,6 +59,22 @@ def stratified_group_holdout_split(
     Implemented via ``StratifiedGroupKFold`` with ``n_splits =
     round(1 / test_size)``, taking fold 0's test indices as the held-out set.
     Used for the EC-classifier and pooling-ablation 80/20 train/test split.
+
+    Parameters
+    ----------
+    y:
+        Class label per sample.
+    groups:
+        Group id per sample, same length as *y*.
+    test_size:
+        Approximate fraction of samples held out for test.
+    seed:
+        Random seed.
+
+    Returns
+    -------
+    train_idx, test_idx : numpy.ndarray
+        Index arrays into the original samples.
     """
     n_splits = round(1 / test_size)
     splitter = StratifiedGroupKFold(n_splits=n_splits, shuffle=True, random_state=seed)

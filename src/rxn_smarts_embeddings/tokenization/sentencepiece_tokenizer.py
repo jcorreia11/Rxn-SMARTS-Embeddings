@@ -133,6 +133,7 @@ def main(
     vocab_size: int = DEFAULT_VOCAB_SIZE,
     model_type: str = DEFAULT_MODEL_TYPE,
 ) -> None:
+    """Train a SentencePiece tokenizer on the valid rows of *input_file*."""
     df = pd.read_csv(input_file)
     valid_mask = df["valid"].astype(str).str.upper() == "TRUE"
     smarts_list = df.loc[valid_mask, "smarts"].tolist()

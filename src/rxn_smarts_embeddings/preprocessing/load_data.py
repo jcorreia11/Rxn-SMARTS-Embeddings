@@ -17,6 +17,7 @@ GROUPS_OUTPUT_FILE = "data/processed/reaction_groups.csv"
 
 
 def load_raw(paths: list[str]) -> pd.DataFrame:
+    """Concatenate the RetroRules CSVs at *paths* into one DataFrame."""
     frames = []
     for p in paths:
         df = pd.read_csv(p, usecols=["TEMPLATE_ID", "TEMPLATE", "VALID", "REACTIONS"])
@@ -30,15 +31,12 @@ def _filtered(df: pd.DataFrame) -> pd.DataFrame:
     ``build_reaction_groups``, so both operate on the identical row set."""
     n_start = len(df)
 
-    # Keep only rows marked valid by RetroRules itself
     df = df[df["VALID"].astype(str).str.upper() == "TRUE"]
     logger.info("After VALID filter: %d / %d rows", len(df), n_start)
 
-    # Drop empty SMARTS
     df = df[df["TEMPLATE"].notna() & (df["TEMPLATE"].str.strip() != "")]
     logger.info("After empty filter: %d rows", len(df))
 
-    # Drop duplicates by SMARTS string (keep first occurrence)
     df = df.drop_duplicates(subset="TEMPLATE")
     logger.info("After dedup: %d unique SMARTS", len(df))
 
@@ -46,6 +44,7 @@ def _filtered(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def clean(df: pd.DataFrame) -> pd.Series:
+    """Return the valid, non-empty, deduplicated SMARTS from *df*."""
     return _filtered(df)["TEMPLATE"].reset_index(drop=True)
 
 
@@ -74,12 +73,14 @@ def build_reaction_groups(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def save(smarts: pd.Series, output: str) -> None:
+    """Write *smarts* to *output*, one SMARTS per line."""
     Path(output).parent.mkdir(parents=True, exist_ok=True)
     smarts.to_csv(output, index=False, header=False)
     logger.info("Saved %d SMARTS to %s", len(smarts), output)
 
 
 def save_groups(groups: pd.DataFrame, output: str) -> None:
+    """Write *groups* (``smarts``, ``reaction_group`` columns) to CSV."""
     Path(output).parent.mkdir(parents=True, exist_ok=True)
     groups.to_csv(output, index=False)
     logger.info("Saved %d reaction groups to %s", len(groups), output)
@@ -90,6 +91,7 @@ def main(
     output: str,
     groups_output: str = GROUPS_OUTPUT_FILE,
 ) -> None:
+    """Load, clean, and save SMARTS and their reaction groups from *raw_files*."""
     df = load_raw(raw_files)
     smarts = clean(df)
     save(smarts, output)

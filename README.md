@@ -1,5 +1,9 @@
 # Rxn-SMARTS-Embeddings
 
+[![CI](https://github.com/jcorreia11/Rxn-SMARTS-Embeddings/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/jcorreia11/Rxn-SMARTS-Embeddings/actions/workflows/ci.yml)
+[![Docs](https://readthedocs.org/projects/rxn-smarts-embeddings/badge/?version=latest)](https://rxn-smarts-embeddings.readthedocs.io/en/latest/?badge=latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Self-supervised transformer embeddings for reaction SMARTS, pretrained via
 span-masked language modelling directly on [RetroRules v3.0](https://retrorules.org/).
 
@@ -90,6 +94,13 @@ the [companion repo](https://github.com/jcorreia11/Rxn-SMARTS-Embeddings-paper).
 ```bash
 uv run pytest
 ruff check src tests && ruff format src tests
+```
+
+Docs (built with [MkDocs](https://www.mkdocs.org/) + [Material](https://squidfunk.github.io/mkdocs-material/)):
+
+```bash
+uv sync --group docs
+uv run mkdocs serve   # http://127.0.0.1:8000, live-reloads on edit
 ```
 
 ## License

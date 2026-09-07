@@ -15,6 +15,7 @@ GROUPS_FILE = "data/processed/reaction_groups.csv"
 
 
 def _extract(smarts: str) -> dict:
+    """Parse *smarts* with RDKit and return its validity and structural features."""
     try:
         rxn = AllChem.ReactionFromSmarts(smarts)
     except Exception:  # noqa: BLE001
@@ -52,6 +53,7 @@ def _extract(smarts: str) -> dict:
 
 
 def validate(smarts_list: list[str]) -> pd.DataFrame:
+    """Return one validation/feature row per entry in *smarts_list*."""
     records = []
     n_invalid = 0
     for smarts in smarts_list:
@@ -93,6 +95,7 @@ def attach_reaction_groups(df: pd.DataFrame, groups_file: str) -> pd.DataFrame:
 
 
 def main(input_file: str, output_file: str, groups_file: str = GROUPS_FILE) -> None:
+    """Validate the SMARTS in *input_file* and save the annotated result."""
     smarts_list = Path(input_file).read_text().splitlines()
     smarts_list = [s.strip() for s in smarts_list if s.strip()]
     logger.info("Loaded %d SMARTS from %s", len(smarts_list), input_file)
