@@ -25,6 +25,11 @@ uv sync --extra all
 
 The `dev` group (pytest) is included automatically with `uv sync`.
 
+This repo is the pip-installable package only. The experiment pipeline scripts,
+SLURM job scripts, and paper-statistics code used to produce the paper's results
+live in a separate companion repo:
+[Rxn-SMARTS-Embeddings-paper](https://github.com/jcorreia11/Rxn-SMARTS-Embeddings-paper).
+
 ## Getting started
 
 No setup beyond installation is required: the first call downloads and caches
@@ -140,11 +145,6 @@ src/rxn_smarts_embeddings/
 │   └── embed.py              # SmartsEmbedder
 └── training/
     └── mlm_trainer.py        # MLMCollator, Trainer
-
-scripts/
-├── train_mlm.py              # MLM pretraining
-├── extract_embeddings.py     # batch embedding extraction from a validated CSV
-└── train_ec_classifier.py    # EC number classification benchmark
 ```
 
 ## Data pipeline
@@ -167,28 +167,15 @@ python src/rxn_smarts_embeddings/tokenization/sentencepiece_tokenizer.py
 | `build_vocab.py` | `validated_smarts.csv` | `data/processed/vocab.json` |
 | `sentencepiece_tokenizer.py` | `validated_smarts.csv` | `data/processed/sp_tokenizer.{model,vocab}` |
 
-On HPC, submit the four commands above directly, or wrap them in your own job script (see `scripts/preprocess.sbatch`).
+On HPC, submit the four commands above directly, or use the `.sbatch` job scripts in
+[Rxn-SMARTS-Embeddings-paper](https://github.com/jcorreia11/Rxn-SMARTS-Embeddings-paper).
 
 ## Training
 
-```bash
-python scripts/train_mlm.py \
-    --data  data/processed/validated_smarts.csv \
-    --vocab data/processed/vocab.json \
-    --epochs 100 \
-    --d-model 256 --nhead 8 --num-layers 6 --dim-feedforward 1024 \
-    --batch-size 64 --val-split 0.1 --warmup-steps 2000
-```
-
-On HPC (SLURM / A100):
-
-```bash
-sbatch scripts/train_mlm.sbatch
-
-# Override hyperparameters at submission time
-sbatch --export=ALL,EPOCHS=100,D_MODEL=256,NHEAD=8,NUM_LAYERS=6,DIM_FEEDFORWARD=1024,BATCH_SIZE=256 \
-    scripts/train_mlm.sbatch
-```
+Training is done via `MLMTrainer` (`rxn_smarts_embeddings.training.mlm_trainer`); the
+`train_mlm.py` CLI wrapper and its `.sbatch` SLURM job script live in
+[Rxn-SMARTS-Embeddings-paper](https://github.com/jcorreia11/Rxn-SMARTS-Embeddings-paper),
+along with the full phase-by-phase reproduction guide (`hpc-runbook.md`).
 
 Output files are stamped `models/smarts_transformer_<YYYYMMDD_HHMMSS>.{pt,json}`.
 
@@ -196,5 +183,5 @@ Output files are stamped `models/smarts_transformer_<YYYYMMDD_HHMMSS>.{pt,json}`
 
 ```bash
 uv run pytest
-ruff check src tests scripts && ruff format src tests scripts
+ruff check src tests && ruff format src tests
 ```
