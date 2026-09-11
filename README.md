@@ -9,6 +9,7 @@ Self-supervised transformer embeddings for reaction SMARTS, pretrained via
 span-masked language modelling directly on [RetroRules v3.0](https://retrorules.org/).
 
 - **Paper**: citation to follow upon publication
+- **Documentation**: [rxn-smarts-embeddings.readthedocs.io](https://rxn-smarts-embeddings.readthedocs.io/)
 - **Companion repo** (experiment pipeline, SLURM scripts, paper stats): [Rxn-SMARTS-Embeddings-paper](https://github.com/jcorreia11/Rxn-SMARTS-Embeddings-paper)
 - **Pretrained weights**: [Hugging Face Hub](https://huggingface.co/jcorreia11/Rxn-SMARTS-Embeddings)
 - **Training corpus, tokenizer, embeddings**: [Zenodo](https://doi.org/10.5281/zenodo.22645328)
